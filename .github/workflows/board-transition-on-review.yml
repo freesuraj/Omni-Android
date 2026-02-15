@@ -18,7 +18,7 @@ jobs:
       PROJECT_OWNER: ${{ vars.OMNI_PROJECT_OWNER }}
       PROJECT_NUMBER: ${{ vars.OMNI_PROJECT_NUMBER }}
       STATUS_FIELD_ID: ${{ vars.OMNI_STATUS_FIELD_ID }}
-      STATUS_OPTION_BACKLOG: ${{ vars.OMNI_STATUS_OPTION_BACKLOG }}
+      STATUS_OPTION_TODO: ${{ vars.OMNI_STATUS_OPTION_TODO }}
       STATUS_OPTION_IN_PROGRESS: ${{ vars.OMNI_STATUS_OPTION_IN_PROGRESS }}
       STATUS_OPTION_DONE: ${{ vars.OMNI_STATUS_OPTION_DONE }}
     steps:
@@ -27,7 +27,7 @@ jobs:
           test -n "${PROJECT_OWNER}" || (echo "Missing repo variable: OMNI_PROJECT_OWNER" && exit 1)
           test -n "${PROJECT_NUMBER}" || (echo "Missing repo variable: OMNI_PROJECT_NUMBER" && exit 1)
           test -n "${STATUS_FIELD_ID}" || (echo "Missing repo variable: OMNI_STATUS_FIELD_ID" && exit 1)
-          test -n "${STATUS_OPTION_BACKLOG}" || (echo "Missing repo variable: OMNI_STATUS_OPTION_BACKLOG" && exit 1)
+          test -n "${STATUS_OPTION_TODO}" || (echo "Missing repo variable: OMNI_STATUS_OPTION_TODO" && exit 1)
           test -n "${STATUS_OPTION_IN_PROGRESS}" || (echo "Missing repo variable: OMNI_STATUS_OPTION_IN_PROGRESS" && exit 1)
           test -n "${STATUS_OPTION_DONE}" || (echo "Missing repo variable: OMNI_STATUS_OPTION_DONE" && exit 1)
 
@@ -55,10 +55,10 @@ jobs:
             }
 
             const reviewState = context.payload.review.state;
-            const toState = reviewState === "approved" ? "Done" : "Backlog";
+            const toState = reviewState === "approved" ? "Done" : "Todo";
             const optionId = reviewState === "approved"
               ? process.env.STATUS_OPTION_DONE
-              : process.env.STATUS_OPTION_BACKLOG;
+              : process.env.STATUS_OPTION_TODO;
 
             core.setOutput("issue_number", String(issueNumber));
             core.setOutput("to_state", toState);

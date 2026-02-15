@@ -5,7 +5,7 @@ Run Android ticket delivery end-to-end using subagents with minimal manual steps
 
 ## Standard execution order
 1. `board-state-manager`
-   - Move ticket `Backlog -> In Progress`.
+   - Move ticket `Todo -> In Progress`.
 2. `android-implementer`
    - Implement scope and run mandatory local validation.
 3. `qa-fastlane-manager`
@@ -15,7 +15,7 @@ Run Android ticket delivery end-to-end using subagents with minimal manual steps
 5. `board-state-manager`
    - Apply final transition:
      - approve -> `Done`
-     - reject -> `Backlog`
+     - reject -> `Todo`
 
 ## Parallelization guidance
 - Implementation can split into parallel tracks when independent:
@@ -32,4 +32,3 @@ Run Android ticket delivery end-to-end using subagents with minimal manual steps
 - lint/build/test results
 - Screenshot paths and PR upload/comment proof
 - Review verdict and board transition record
-

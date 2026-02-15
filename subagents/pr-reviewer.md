@@ -24,7 +24,7 @@ Provide final quality gate for Omni Android PRs and drive board state outcome.
 - If approved:
   - Request `In Progress -> Done`.
 - If rejected:
-  - Request `In Progress -> Backlog` and include actionable fixes.
+  - Request `In Progress -> Todo` and include actionable fixes.
 
 ## Review output format
 - Verdict:

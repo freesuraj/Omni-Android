@@ -1,6 +1,6 @@
 ---
 name: github-board-tracker
-description: Use this skill to manage Omni Android ticket states on the GitHub Project board with exactly three states (Backlog, In Progress, Done), including review-driven rollback to Backlog.
+description: Use this skill to manage Omni Android ticket states on the GitHub Project board with exactly three states (Todo, In Progress, Done), including review-driven rollback to Todo.
 ---
 
 # GitHub Board Tracker
@@ -9,13 +9,13 @@ Use this skill whenever a ticket or PR lifecycle state changes.
 
 ## Board model
 - Allowed states only:
-  - `Backlog`
+  - `Todo`
   - `In Progress`
   - `Done`
 - Allowed transitions only:
-  - `Backlog -> In Progress`
+  - `Todo -> In Progress`
   - `In Progress -> Done`
-  - `In Progress -> Backlog` (must include rejection reason)
+  - `In Progress -> Todo` (must include rejection reason)
 
 ## Ownership
 - This skill is owned by `subagents/board-state-manager.md`.
@@ -37,11 +37,11 @@ Use this skill whenever a ticket or PR lifecycle state changes.
    - Include from-state, to-state, actor, and reason.
 
 ## Transition rules
-- `Backlog -> In Progress`:
+- `Todo -> In Progress`:
   - Requires active owner and start timestamp.
 - `In Progress -> Done`:
   - Requires PR review pass and green validation.
-- `In Progress -> Backlog`:
+- `In Progress -> Todo`:
   - Requires review findings with actionable steps.
 
 ## Output template
@@ -51,4 +51,3 @@ Use this skill whenever a ticket or PR lifecycle state changes.
 - Linked PR:
 - Validation status:
 - Next owner:
-

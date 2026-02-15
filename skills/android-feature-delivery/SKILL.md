@@ -15,7 +15,7 @@ Use this workflow for any ticket that changes Android code.
 
 ## Workflow
 1. Start lifecycle:
-   - Ask `board-state-manager` to move ticket `Backlog -> In Progress`.
+   - Ask `board-state-manager` to move ticket `Todo -> In Progress`.
 2. Plan implementation slices:
    - Split work by layer for parallel execution where safe:
      - UI (Compose screen/components)

@@ -4,6 +4,8 @@
 - This folder is the operating model for building the native Android app for Omni using Jetpack Compose.
 - Work is expected to run through agents/subagents with minimal human intervention.
 - Source product baseline is the current iOS app behavior (Omni, previously Doc2Quiz).
+- Session memory and latest progress snapshot:
+  - `docs/codex-memory.md`
 
 ## Product baseline to preserve on Android
 - App brand: `Omni` (do not change bundle/package IDs unless explicitly requested).
@@ -49,13 +51,13 @@
 ## Board and ticket workflow (required)
 - Dedicated GitHub Project board is the source of truth.
 - Only three states are allowed:
-  - `Backlog`
+  - `Todo`
   - `In Progress`
   - `Done`
 - Allowed transitions:
-  - `Backlog -> In Progress`
+  - `Todo -> In Progress`
   - `In Progress -> Done`
-  - `In Progress -> Backlog` (only with explicit review feedback)
+  - `In Progress -> Todo` (only with explicit review feedback)
 - A dedicated subagent owns state transitions and audit logging.
 
 ## PR workflow automation requirements
@@ -68,7 +70,7 @@
   - Upload screenshots to the PR (comment with image references or committed artifact paths).
 - Dedicated PR-review subagent decides:
   - `Done` if accepted.
-  - `Backlog` with actionable findings if changes are rejected.
+  - `Todo` with actionable findings if changes are rejected.
 
 ## CI/CD scaffolding files
 - Fastlane:
@@ -85,7 +87,7 @@
 - `OMNI_PROJECT_OWNER` (user/org that owns the project board)
 - `OMNI_PROJECT_NUMBER` (ProjectV2 number)
 - `OMNI_STATUS_FIELD_ID` (single-select status field ID)
-- `OMNI_STATUS_OPTION_BACKLOG`
+- `OMNI_STATUS_OPTION_TODO`
 - `OMNI_STATUS_OPTION_IN_PROGRESS`
 - `OMNI_STATUS_OPTION_DONE`
 
@@ -119,7 +121,7 @@ Note: branch protection should require `Android Verify` and `Board Status Gate` 
   1. Board manager moves selected ticket to `In Progress`.
   2. Android implementer executes ticket and prepares PR.
   3. QA/Fastlane manager runs verification and screenshots, updates PR.
-  4. PR reviewer approves/rejects and triggers board move to `Done` or `Backlog`.
+  4. PR reviewer approves/rejects and triggers board move to `Done` or `Todo`.
 - Each handoff must include:
   - Files changed.
   - Commands executed.
