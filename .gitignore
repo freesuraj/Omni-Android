@@ -1,0 +1,49 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# VS Code
+.vscode/
+
+# Gradle
+.gradle/
+build/
+*/build/
+captures/
+
+# Android local config
+local.properties
+
+# Signing / secrets
+*.jks
+*.keystore
+keystore.properties
+google-services.json
+
+# Kotlin / Java
+*.class
+out/
+
+# Native
+.cxx/
+externalNativeBuild/
+
+# Logs
+*.log
+
+# Fastlane / artifacts
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/test_output/
+artifacts/
+
+# Bundler
+.bundle/
+vendor/bundle/
+

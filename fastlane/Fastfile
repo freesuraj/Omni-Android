@@ -1,0 +1,54 @@
+default_platform(:android)
+
+platform :android do
+  desc "Required CI gate: lint + debug build + unit tests"
+  lane :verify do
+    gradle(task: "lintDebug")
+    gradle(task: "assembleDebug")
+    gradle(task: "testDebugUnitTest")
+  end
+
+  desc "Build screenshots artifact set for a PR"
+  lane :screenshots_pr do |options|
+    pr_number = (options[:pr] || ENV["PR_NUMBER"]).to_s.strip
+    UI.user_error!("Pass PR number: fastlane android screenshots_pr pr:<PR_NUMBER>") if pr_number.empty?
+
+    gradle(task: "assembleDebug")
+    gradle(task: "assembleAndroidTest")
+    gradle(task: "connectedDebugAndroidTest")
+
+    artifact_dir = "artifacts/pr/#{pr_number}/screenshots"
+    sh("mkdir -p #{artifact_dir}")
+
+    # Common screenshot output locations (Screengrab / connected tests)
+    sh("if [ -d fastlane/metadata/android/en-US/images/phoneScreenshots ]; then cp -R fastlane/metadata/android/en-US/images/phoneScreenshots/. #{artifact_dir}/; fi")
+    sh("if [ -d app/build/outputs/connected_android_test_additional_output ]; then cp -R app/build/outputs/connected_android_test_additional_output/. #{artifact_dir}/; fi")
+    sh("if [ -d app/build/reports/androidTests/connected ]; then cp -R app/build/reports/androidTests/connected #{artifact_dir}/connected-report; fi")
+
+    if ENV["GITHUB_ACTIONS"] == "true"
+      UI.message("Screenshots prepared in #{artifact_dir}")
+    end
+  end
+
+  desc "Deploy release bundle to internal testing track (optional)"
+  lane :internal do
+    gradle(task: "bundleRelease")
+    aab_path = lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH]
+    UI.user_error!("AAB path not found from Gradle output.") if aab_path.to_s.empty?
+
+    if ENV["SUPPLY_JSON_KEY"].to_s.empty? && ENV["SUPPLY_JSON_KEY_FILE"].to_s.empty?
+      UI.user_error!("Set SUPPLY_JSON_KEY or SUPPLY_JSON_KEY_FILE to deploy with fastlane supply.")
+    end
+
+    upload_to_play_store(
+      track: "internal",
+      aab: aab_path,
+      json_key: ENV["SUPPLY_JSON_KEY_FILE"],
+      json_key_data: ENV["SUPPLY_JSON_KEY"],
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+end
+

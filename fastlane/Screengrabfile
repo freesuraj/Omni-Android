@@ -1,0 +1,4 @@
+locales(["en-US"])
+clear_previous_screenshots(true)
+output_directory("fastlane/metadata/android")
+

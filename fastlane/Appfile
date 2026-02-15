@@ -1,0 +1,6 @@
+package_name(ENV.fetch("ANDROID_PACKAGE_NAME", "com.suraj.apps.Doc2Quiz"))
+
+# For Play Store deployment lanes, set either:
+# - SUPPLY_JSON_KEY (raw JSON string) OR
+# - SUPPLY_JSON_KEY_FILE (path to service account file)
+
