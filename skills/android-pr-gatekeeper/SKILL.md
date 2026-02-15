@@ -1,6 +1,6 @@
 ---
 name: android-pr-gatekeeper
-description: Use this skill to perform final PR review for Omni Android, enforce quality gates, and decide whether tickets move to Done or back to Backlog with actionable findings.
+description: Use this skill to perform final PR review for Omni Android, enforce quality gates, and decide whether tickets move to Done or back to Todo with actionable findings.
 ---
 
 # Android PR Gatekeeper
@@ -28,7 +28,7 @@ Use this skill as the final merge gate.
   - Request board transition `In Progress -> Done`.
 - Reject:
   - Provide severity-ordered findings with file references.
-  - Request board transition `In Progress -> Backlog`.
+  - Request board transition `In Progress -> Todo`.
   - Include exact re-entry criteria.
 
 ## Review output template
@@ -38,4 +38,3 @@ Use this skill as the final merge gate.
 - Required fixes:
 - Validation evidence checked:
 - Board action requested:
-
