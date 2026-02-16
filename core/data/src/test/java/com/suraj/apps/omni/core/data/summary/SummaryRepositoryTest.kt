@@ -7,6 +7,7 @@ import com.suraj.apps.omni.core.data.importing.DocumentImportRepository
 import com.suraj.apps.omni.core.data.importing.DocumentImportResult
 import com.suraj.apps.omni.core.data.importing.PremiumAccessChecker
 import com.suraj.apps.omni.core.data.local.OmniDatabase
+import com.suraj.apps.omni.core.data.provider.PROVIDER_PREFS_NAME
 import java.io.File
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -28,6 +29,11 @@ class SummaryRepositoryTest {
         appContext = ApplicationProvider.getApplicationContext()
         appContext
             .getSharedPreferences("omni_access", android.content.Context.MODE_PRIVATE)
+            .edit()
+            .clear()
+            .commit()
+        appContext
+            .getSharedPreferences(PROVIDER_PREFS_NAME, android.content.Context.MODE_PRIVATE)
             .edit()
             .clear()
             .commit()

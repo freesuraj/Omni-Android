@@ -7,6 +7,7 @@ import com.suraj.apps.omni.core.data.importing.DocumentImportRepository
 import com.suraj.apps.omni.core.data.importing.DocumentImportResult
 import com.suraj.apps.omni.core.data.importing.PremiumAccessChecker
 import com.suraj.apps.omni.core.data.local.OmniDatabase
+import com.suraj.apps.omni.core.data.provider.PROVIDER_PREFS_NAME
 import com.suraj.apps.omni.core.model.QuizDifficulty
 import com.suraj.apps.omni.core.model.QuizSettings
 import java.io.File
@@ -31,6 +32,11 @@ class QuizRepositoryTest {
         appContext = ApplicationProvider.getApplicationContext()
         appContext
             .getSharedPreferences("omni_access", android.content.Context.MODE_PRIVATE)
+            .edit()
+            .clear()
+            .commit()
+        appContext
+            .getSharedPreferences(PROVIDER_PREFS_NAME, android.content.Context.MODE_PRIVATE)
             .edit()
             .clear()
             .commit()

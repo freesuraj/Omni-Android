@@ -9,6 +9,7 @@ import com.suraj.apps.omni.core.data.importing.DocumentImportResult
 import com.suraj.apps.omni.core.data.importing.PremiumAccessChecker
 import com.suraj.apps.omni.core.data.local.OmniDatabase
 import com.suraj.apps.omni.core.data.local.entity.DocumentEntity
+import com.suraj.apps.omni.core.data.provider.PROVIDER_PREFS_NAME
 import com.suraj.apps.omni.core.model.DocumentFileType
 import java.io.File
 import kotlinx.coroutines.runBlocking
@@ -32,6 +33,11 @@ class QaRepositoryTest {
         appContext = ApplicationProvider.getApplicationContext()
         appContext
             .getSharedPreferences("omni_access", Context.MODE_PRIVATE)
+            .edit()
+            .clear()
+            .commit()
+        appContext
+            .getSharedPreferences(PROVIDER_PREFS_NAME, Context.MODE_PRIVATE)
             .edit()
             .clear()
             .commit()

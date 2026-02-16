@@ -7,6 +7,8 @@ import com.suraj.apps.omni.core.data.importing.SharedPrefsPremiumAccessChecker
 import com.suraj.apps.omni.core.data.local.OmniDatabase
 import com.suraj.apps.omni.core.data.local.OmniDatabaseFactory
 import com.suraj.apps.omni.core.data.local.entity.DocumentSummaryEntity
+import com.suraj.apps.omni.core.data.provider.ProviderGatewayResult
+import com.suraj.apps.omni.core.data.provider.StudyGenerationGateway
 import java.util.UUID
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -33,6 +35,7 @@ class SummaryRepository(
     context: Context,
     private val database: OmniDatabase = OmniDatabaseFactory.create(context),
     private val premiumAccessChecker: PremiumAccessChecker = SharedPrefsPremiumAccessChecker(context),
+    private val generationGateway: StudyGenerationGateway = StudyGenerationGateway(context),
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     private val importRepository = DocumentImportRepository(
@@ -76,7 +79,19 @@ class SummaryRepository(
             )
         }
 
-        val summaryContent = buildSummary(fullText = fullText, targetWordCount = safeTarget)
+        val summaryContent = when (
+            val providerResult = generationGateway.generateSummary(
+                sourceText = fullText,
+                targetWordCount = safeTarget
+            )
+        ) {
+            is ProviderGatewayResult.Failure -> {
+                return@withContext SummaryGenerationResult.Failure(providerResult.message)
+            }
+
+            is ProviderGatewayResult.Success -> providerResult.execution.value
+        }
+
         if (summaryContent.isBlank()) {
             return@withContext SummaryGenerationResult.Failure(
                 "Unable to generate summary from this source."
@@ -87,45 +102,14 @@ class SummaryRepository(
             id = UUID.randomUUID().toString(),
             documentId = document.id,
             content = summaryContent,
-            wordCount = summaryContent.wordCount(),
+            wordCount = summaryContent
+                .trim()
+                .split(Regex("\\s+"))
+                .count { it.isNotBlank() },
             createdAtEpochMs = System.currentTimeMillis()
         )
 
         database.documentSummaryDao().upsert(summary)
         SummaryGenerationResult.Success(summary)
     }
-}
-
-private fun buildSummary(
-    fullText: String,
-    targetWordCount: Int
-): String {
-    val sentences = fullText
-        .replace(Regex("\\s+"), " ")
-        .split(Regex("(?<=[.!?])\\s+"))
-        .map { it.trim() }
-        .filter { it.length >= 24 }
-
-    if (sentences.isEmpty()) return ""
-
-    val selected = mutableListOf<String>()
-    var currentWords = 0
-    for (sentence in sentences) {
-        selected += sentence
-        currentWords += sentence.wordCount()
-        if (currentWords >= targetWordCount) break
-    }
-
-    if (selected.isEmpty()) return ""
-    val merged = selected.joinToString(" ")
-    val words = merged.split(Regex("\\s+"))
-    if (words.size <= targetWordCount) return merged
-
-    return words.take(targetWordCount).joinToString(" ").trimEnd('.', '!', '?') + "."
-}
-
-private fun String.wordCount(): Int {
-    return trim()
-        .split(Regex("\\s+"))
-        .count { it.isNotBlank() }
 }
