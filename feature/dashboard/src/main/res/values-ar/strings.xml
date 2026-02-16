@@ -1,5 +1,6 @@
 <resources>
     <string name="dashboard_title_fallback">لوحة التحكم</string>
+    <string name="dashboard_back_content_description">رجوع</string>
     <string name="dashboard_document_id">معرف المستند: %1$s</string>
 
     <string name="dashboard_onboarding_in_progress_title">الإعداد قيد التنفيذ</string>
@@ -28,6 +29,12 @@
     <string name="dashboard_feature_analysis_title">تحليل مفصل</string>
     <string name="dashboard_feature_analysis_subtitle">شغّل تحليلاً أعمق للصفحات والنصوص (مميز).</string>
     <string name="dashboard_upgrade_button">الترقية إلى سير عمل مميز</string>
+    <string name="dashboard_card_quiz_trailing">10 أسئلة</string>
+    <string name="dashboard_card_notes_trailing">17 بطاقة</string>
+    <string name="dashboard_card_summary_trailing">أهم النقاط</string>
+    <string name="dashboard_card_analysis_trailing">صفحة بصفحة</string>
+    <string name="dashboard_card_qa_trailing">تعلّم بالذكاء الاصطناعي</string>
+    <string name="dashboard_onboarding_footer">قد يستغرق هذا لحظة...</string>
 
     <string name="dashboard_audio_preview_title">مشغل صوت + نص</string>
     <string name="dashboard_audio_preview_playing">جارٍ تشغيل الصوت المستورد.</string>
