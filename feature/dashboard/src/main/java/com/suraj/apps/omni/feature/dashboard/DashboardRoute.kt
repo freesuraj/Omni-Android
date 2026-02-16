@@ -61,7 +61,7 @@ fun DashboardRoute(
     documentId: String,
     onOpenQuiz: (String) -> Unit,
     onOpenNotes: (String) -> Unit,
-    onOpenSummary: () -> Unit,
+    onOpenSummary: (String) -> Unit,
     onOpenQa: () -> Unit,
     onOpenAnalysis: () -> Unit,
     onOpenPaywall: () -> Unit
@@ -181,7 +181,7 @@ fun DashboardRoute(
                     featureAction(
                         enabled = !uiState.isOnboarding,
                         text = "Open",
-                        onClick = onOpenSummary
+                        onClick = { onOpenSummary(documentId) }
                     )
                 }
             )

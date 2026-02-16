@@ -10,7 +10,8 @@ object AppRoutes {
     const val QUIZ_ARG_DOCUMENT_ID = "documentId"
     const val NOTES = "notes/{documentId}"
     const val NOTES_ARG_DOCUMENT_ID = "documentId"
-    const val SUMMARY = "summary"
+    const val SUMMARY = "summary/{documentId}"
+    const val SUMMARY_ARG_DOCUMENT_ID = "documentId"
     const val QA = "qa"
     const val ANALYSIS = "analysis"
     const val PAYWALL = "paywall"
@@ -18,4 +19,5 @@ object AppRoutes {
     fun dashboard(documentId: String): String = "dashboard/$documentId"
     fun quiz(documentId: String): String = "quiz/$documentId"
     fun notes(documentId: String): String = "notes/$documentId"
+    fun summary(documentId: String): String = "summary/$documentId"
 }
