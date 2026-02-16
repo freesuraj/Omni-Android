@@ -66,7 +66,7 @@
   - Validation results (lint/build/tests).
   - Duplication check/refactor notes.
 - After each PR implementation is complete:
-  - Run fastlane screenshot lane for the affected flow(s).
+  - Capture screenshots on a local emulator for the affected flow(s) (fastlane lane or manual adb capture).
   - Upload screenshots to the PR (comment with image references or committed artifact paths).
 - Dedicated PR-review subagent decides:
   - `Done` if accepted.
@@ -79,7 +79,6 @@
   - `fastlane/Screengrabfile`
 - GitHub workflows:
   - `.github/workflows/android-verify.yml`
-  - `.github/workflows/pr-screenshots.yml`
   - `.github/workflows/board-status-gate.yml`
   - `.github/workflows/board-transition-on-review.yml`
 
@@ -99,7 +98,7 @@ Note: branch protection should require `Android Verify` and `Board Status Gate` 
 - `subagents/android-implementer.md`
   - Builds feature/fix using Compose architecture and DRY policy.
 - `subagents/qa-fastlane-manager.md`
-  - Runs fastlane validation, tests, and screenshot capture/upload.
+  - Runs fastlane validation, tests, and local emulator screenshot capture/upload.
 - `subagents/pr-reviewer.md`
   - Performs review gate and final board state decision.
 
@@ -120,7 +119,7 @@ Note: branch protection should require `Android Verify` and `Board Status Gate` 
 - Primary coordinator delegates tasks in this order:
   1. Board manager moves selected ticket to `In Progress`.
   2. Android implementer executes ticket and prepares PR.
-  3. QA/Fastlane manager runs verification and screenshots, updates PR.
+  3. QA/Fastlane manager runs verification and captures local emulator screenshots, updates PR.
   4. PR reviewer approves/rejects and triggers board move to `Done` or `Todo`.
 - Each handoff must include:
   - Files changed.

@@ -8,7 +8,7 @@ platform :android do
     gradle(task: "testDebugUnitTest")
   end
 
-  desc "Build screenshots artifact set for a PR"
+  desc "Capture local emulator screenshots for a PR"
   lane :screenshots_pr do |options|
     pr_number = (options[:pr] || ENV["PR_NUMBER"]).to_s.strip
     UI.user_error!("Pass PR number: fastlane android screenshots_pr pr:<PR_NUMBER>") if pr_number.empty?
@@ -43,7 +43,17 @@ platform :android do
       run_with_timeout() {
         local seconds="$1"
         shift
-        timeout "$seconds" "$@"
+
+        if command -v timeout >/dev/null 2>&1; then
+          timeout "$seconds" "$@"
+        elif command -v gtimeout >/dev/null 2>&1; then
+          gtimeout "$seconds" "$@"
+        elif command -v perl >/dev/null 2>&1; then
+          perl -e 'alarm shift; exec @ARGV' "$seconds" "$@"
+        else
+          echo "No timeout command found; running without timeout: $*"
+          "$@"
+        fi
       }
 
       capture() {
