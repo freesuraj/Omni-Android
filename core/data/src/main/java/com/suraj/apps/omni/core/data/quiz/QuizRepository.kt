@@ -9,12 +9,12 @@ import com.suraj.apps.omni.core.data.local.OmniDatabaseFactory
 import com.suraj.apps.omni.core.data.local.entity.QuestionEntity
 import com.suraj.apps.omni.core.data.local.entity.QuizEntity
 import com.suraj.apps.omni.core.data.local.model.QuizWithQuestions
+import com.suraj.apps.omni.core.data.provider.ProviderGatewayResult
+import com.suraj.apps.omni.core.data.provider.StudyGenerationGateway
 import com.suraj.apps.omni.core.model.QuestionStatus
 import com.suraj.apps.omni.core.model.QuizDifficulty
 import com.suraj.apps.omni.core.model.QuizSettings
-import java.util.Locale
 import java.util.UUID
-import kotlin.random.Random
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -59,6 +59,7 @@ class QuizRepository(
     context: Context,
     private val database: OmniDatabase = OmniDatabaseFactory.create(context),
     private val premiumAccessChecker: PremiumAccessChecker = SharedPrefsPremiumAccessChecker(context),
+    private val generationGateway: StudyGenerationGateway = StudyGenerationGateway(context),
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     private val importRepository = DocumentImportRepository(
@@ -110,14 +111,23 @@ class QuizRepository(
             )
         }
 
-        val drafts = buildQuestionDrafts(
-            sourceText = fullText,
-            questionCount = settings.questionCount,
-            difficulty = settings.difficulty,
-            includeSnippet = settings.showSourceSnippet
-        )
+        val providerQuestions = when (
+            val providerResult = generationGateway.generateQuizQuestions(
+                sourceText = fullText,
+                questionCount = settings.questionCount,
+                difficulty = settings.difficulty,
+                includeSnippet = settings.showSourceSnippet
+            )
+        ) {
+            is ProviderGatewayResult.Failure -> {
+                return@withContext QuizGenerationResult.Failure(providerResult.message)
+            }
 
-        if (drafts.isEmpty()) {
+            is ProviderGatewayResult.Success -> providerResult.execution
+        }
+
+        val questions = providerQuestions.value
+        if (questions.isEmpty()) {
             return@withContext QuizGenerationResult.Failure(
                 "Could not generate enough quiz questions from this source."
             )
@@ -135,15 +145,15 @@ class QuizRepository(
             completedAtEpochMs = null,
             isReview = false
         )
-        val questions = drafts.mapIndexed { index, draft ->
+        val persistedQuestions = questions.mapIndexed { index, question ->
             QuestionEntity(
                 id = UUID.randomUUID().toString(),
                 quizId = quizId,
-                prompt = draft.prompt,
-                optionA = draft.optionA,
-                optionB = draft.optionB,
-                correctAnswer = draft.correctAnswer,
-                sourceSnippet = draft.sourceSnippet,
+                prompt = question.prompt,
+                optionA = question.optionA,
+                optionB = question.optionB,
+                correctAnswer = question.correctAnswer,
+                sourceSnippet = question.sourceSnippet,
                 userAnswer = null,
                 isCorrect = null,
                 createdFromChunkIndex = index,
@@ -152,7 +162,7 @@ class QuizRepository(
         }
 
         database.quizDao().upsertQuiz(quiz)
-        database.quizDao().upsertQuestions(questions)
+        database.quizDao().upsertQuestions(persistedQuestions)
 
         val persisted = database.quizDao().getQuizWithQuestions(quizId)
             ?: return@withContext QuizGenerationResult.Failure("Generated quiz could not be loaded.")
@@ -163,7 +173,7 @@ class QuizRepository(
                     documentTitle = document.title,
                     isPremiumUnlocked = isPremiumUnlocked
                 ),
-                usedFallbackGenerator = true
+                usedFallbackGenerator = providerQuestions.usedLocalFallback
             )
         )
     }
@@ -219,7 +229,7 @@ class QuizRepository(
         questionId: String,
         selectedAnswer: String
     ): QuizAnswerResult? = withContext(ioDispatcher) {
-        val normalizedAnswer = selectedAnswer.uppercase(Locale.US)
+        val normalizedAnswer = selectedAnswer.uppercase()
         if (normalizedAnswer != "A" && normalizedAnswer != "B") {
             return@withContext null
         }
@@ -288,131 +298,3 @@ class QuizRepository(
         )
     }
 }
-
-private data class GeneratedQuestionDraft(
-    val prompt: String,
-    val optionA: String,
-    val optionB: String,
-    val correctAnswer: String,
-    val sourceSnippet: String?
-)
-
-private fun buildQuestionDrafts(
-    sourceText: String,
-    questionCount: Int,
-    difficulty: QuizDifficulty,
-    includeSnippet: Boolean
-): List<GeneratedQuestionDraft> {
-    val normalized = sourceText
-        .replace(Regex("\\s+"), " ")
-        .trim()
-    if (normalized.isBlank()) return emptyList()
-
-    val sentences = normalized
-        .split(Regex("(?<=[.!?])\\s+"))
-        .map { it.trim() }
-        .filter { it.length >= 32 }
-        .ifEmpty {
-            normalized
-                .split("\n")
-                .map { it.trim() }
-                .filter { it.length >= 20 }
-        }
-        .take(120)
-
-    if (sentences.isEmpty()) return emptyList()
-
-    val keywordPool = sentences
-        .flatMap { extractCandidateWords(it, QuizDifficulty.EASY) }
-        .distinct()
-        .ifEmpty { listOf("concept", "principle", "strategy") }
-
-    val random = Random(System.currentTimeMillis())
-    return List(questionCount) { index ->
-        val sentence = sentences[index % sentences.size]
-        val keyword = pickKeyword(sentence, difficulty)
-            ?: keywordPool[(index + random.nextInt(keywordPool.size)) % keywordPool.size]
-        val distractor = keywordPool
-            .firstOrNull { !it.equals(keyword, ignoreCase = true) && it.length >= keyword.length / 2 }
-            ?: "uncertain outcome"
-
-        val clozeSentence = sentence.replaceFirst(
-            Regex("\\b${Regex.escape(keyword)}\\b", RegexOption.IGNORE_CASE),
-            "_____"
-        )
-
-        val prompt = if (clozeSentence == sentence) {
-            "Which statement best matches this source detail?\n$sentence"
-        } else {
-            "Which option best completes this statement?\n$clozeSentence"
-        }
-
-        val answerAsA = random.nextBoolean()
-        val optionA = if (answerAsA) keyword else distractor
-        val optionB = if (answerAsA) distractor else keyword
-
-        GeneratedQuestionDraft(
-            prompt = prompt,
-            optionA = optionA.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() },
-            optionB = optionB.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() },
-            correctAnswer = if (answerAsA) "A" else "B",
-            sourceSnippet = if (includeSnippet) sentence else null
-        )
-    }
-}
-
-private fun pickKeyword(
-    sentence: String,
-    difficulty: QuizDifficulty
-): String? {
-    val candidates = extractCandidateWords(sentence, difficulty)
-    if (candidates.isEmpty()) return null
-    return candidates.maxByOrNull { it.length }
-}
-
-private fun extractCandidateWords(
-    sentence: String,
-    difficulty: QuizDifficulty
-): List<String> {
-    val minLength = when (difficulty) {
-        QuizDifficulty.EASY -> 4
-        QuizDifficulty.MEDIUM -> 6
-        QuizDifficulty.HARD -> 8
-    }
-
-    return sentence
-        .split(Regex("[^A-Za-z0-9]+"))
-        .map { it.trim() }
-        .filter { token ->
-            token.length >= minLength &&
-                token.none { it.isDigit() } &&
-                token.lowercase(Locale.US) !in COMMON_STOP_WORDS
-        }
-}
-
-private val COMMON_STOP_WORDS = setOf(
-    "about",
-    "after",
-    "also",
-    "because",
-    "between",
-    "could",
-    "different",
-    "during",
-    "first",
-    "from",
-    "have",
-    "into",
-    "other",
-    "their",
-    "there",
-    "these",
-    "those",
-    "through",
-    "under",
-    "using",
-    "which",
-    "while",
-    "with",
-    "without"
-)

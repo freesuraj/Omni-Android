@@ -7,6 +7,8 @@ import com.suraj.apps.omni.core.data.importing.SharedPrefsPremiumAccessChecker
 import com.suraj.apps.omni.core.data.local.OmniDatabase
 import com.suraj.apps.omni.core.data.local.OmniDatabaseFactory
 import com.suraj.apps.omni.core.data.local.entity.QaMessageEntity
+import com.suraj.apps.omni.core.data.provider.ProviderGatewayResult
+import com.suraj.apps.omni.core.data.provider.StudyGenerationGateway
 import java.util.UUID
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -32,6 +34,7 @@ class QaRepository(
     context: Context,
     private val database: OmniDatabase = OmniDatabaseFactory.create(context),
     private val premiumAccessChecker: PremiumAccessChecker = SharedPrefsPremiumAccessChecker(context),
+    private val generationGateway: StudyGenerationGateway = StudyGenerationGateway(context),
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     private val importRepository = DocumentImportRepository(
@@ -87,13 +90,17 @@ class QaRepository(
                 createdAtEpochMs = now + 1
             )
         } else {
-            val generated = runCatching {
-                buildAnswer(
+            val generated = when (
+                val providerResult = generationGateway.answerQuestion(
                     question = normalizedQuestion,
-                    fullText = fullText
+                    sourceText = fullText
                 )
-            }.getOrElse {
-                "I ran into an error while generating an answer. Please try again."
+            ) {
+                is ProviderGatewayResult.Failure -> {
+                    "I ran into an error while generating an answer. ${providerResult.message}"
+                }
+
+                is ProviderGatewayResult.Success -> providerResult.execution.value
             }
 
             createAssistantMessage(
@@ -132,70 +139,4 @@ private fun normalizeQuestion(input: String): String {
         .take(MAX_QUESTION_LENGTH)
 }
 
-private fun buildAnswer(
-    question: String,
-    fullText: String
-): String {
-    val sentences = fullText
-        .replace(Regex("\\s+"), " ")
-        .split(Regex("(?<=[.!?])\\s+"))
-        .map { it.trim() }
-        .filter { it.length >= 24 }
-
-    if (sentences.isEmpty()) {
-        return "I couldn't find enough readable content in this document to answer that yet."
-    }
-
-    val questionTerms = tokenize(question)
-    val ranked = if (questionTerms.isEmpty()) {
-        sentences.take(3)
-    } else {
-        sentences
-            .map { sentence ->
-                val sentenceTerms = tokenize(sentence)
-                val overlap = questionTerms.count { term -> term in sentenceTerms }
-                sentence to overlap
-            }
-            .sortedWith(
-                compareByDescending<Pair<String, Int>> { it.second }
-                    .thenByDescending { it.first.length }
-            )
-            .take(3)
-            .map { it.first }
-    }
-
-    val selected = if (ranked.all { sentence -> sentence.isBlank() }) {
-        sentences.take(2)
-    } else {
-        ranked.filter { it.isNotBlank() }
-    }.ifEmpty { sentences.take(2) }
-
-    val answer = selected.joinToString(" ")
-    return answer.limitWordCount(MAX_ANSWER_WORDS)
-}
-
-private fun tokenize(text: String): Set<String> {
-    return text
-        .lowercase()
-        .split(Regex("[^a-z0-9]+"))
-        .asSequence()
-        .map { it.trim() }
-        .filter { it.length >= 3 && it !in STOP_WORDS }
-        .toSet()
-}
-
-private fun String.limitWordCount(maxWords: Int): String {
-    val words = trim().split(Regex("\\s+"))
-    if (words.size <= maxWords) return this
-    return words.take(maxWords).joinToString(" ").trimEnd('.', '!', '?') + "."
-}
-
 private const val MAX_QUESTION_LENGTH = 280
-private const val MAX_ANSWER_WORDS = 90
-
-private val STOP_WORDS = setOf(
-    "the", "and", "for", "with", "that", "this", "from", "into", "what", "which", "when",
-    "where", "does", "have", "about", "using", "there", "their", "they", "them", "your",
-    "you", "are", "was", "were", "been", "being", "will", "would", "could", "should", "not",
-    "but", "all", "any", "can", "how", "why", "who", "whose", "our", "out", "has", "had"
-)
