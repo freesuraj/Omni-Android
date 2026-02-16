@@ -63,11 +63,13 @@ interface StudyGenerationProvider {
 
 class StudyGenerationGateway(
     private val providerSettingsRepository: ProviderSettingsRepository,
-    private val localProvider: StudyGenerationProvider = LocalHeuristicStudyGenerationProvider()
+    private val localProvider: StudyGenerationProvider = LocalHeuristicStudyGenerationProvider(),
+    private val appContext: Context? = null
 ) {
     constructor(context: Context) : this(
         providerSettingsRepository = ProviderSettingsRepository(context),
-        localProvider = LocalHeuristicStudyGenerationProvider()
+        localProvider = LocalHeuristicStudyGenerationProvider(),
+        appContext = context.applicationContext
     )
 
     suspend fun generateQuizQuestions(
@@ -127,7 +129,10 @@ class StudyGenerationGateway(
 
         if (providerId.requiresApiKey && resolution.apiKey.isNullOrBlank()) {
             return@withContext ProviderGatewayResult.Failure(
-                message = "${providerId.displayName} needs a valid API key. Open Settings to configure it.",
+                message = appContext?.getString(
+                    com.suraj.apps.omni.core.data.R.string.provider_generation_missing_api_key,
+                    providerId.displayName
+                ) ?: "${providerId.displayName} needs a valid API key. Open Settings to configure it.",
                 providerId = providerId
             )
         }
@@ -150,7 +155,12 @@ class StudyGenerationGateway(
             },
             onFailure = { throwable ->
                 ProviderGatewayResult.Failure(
-                    message = throwable.message ?: "Generation failed for ${providerId.displayName}.",
+                    message = throwable.message ?: (
+                        appContext?.getString(
+                            com.suraj.apps.omni.core.data.R.string.provider_generation_failed,
+                            providerId.displayName
+                        ) ?: "Generation failed for ${providerId.displayName}."
+                        ),
                     providerId = providerId
                 )
             }

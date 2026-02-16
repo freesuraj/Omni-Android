@@ -1,0 +1,58 @@
+<resources>
+    <string name="dashboard_title_fallback">Painel</string>
+    <string name="dashboard_document_id">ID do documento: %1$s</string>
+
+    <string name="dashboard_onboarding_in_progress_title">Onboarding em andamento</string>
+    <string name="dashboard_onboarding_in_progress_subtitle">Você pode continuar em segundo plano enquanto o processamento termina.</string>
+    <string name="dashboard_status_preparing_onboarding">Preparando onboarding</string>
+    <string name="dashboard_status_transcribing_audio">Transcrevendo áudio (%1$d%%)</string>
+    <string name="dashboard_status_transcription_complete">Transcrição concluída</string>
+    <string name="dashboard_status_transcription_failed">Falha na transcrição</string>
+    <string name="dashboard_status_generating_outputs">Gerando materiais de estudo (%1$d%%)</string>
+    <string name="dashboard_status_ready_to_study">Pronto para estudar</string>
+
+    <string name="dashboard_source_details_title">Detalhes da fonte</string>
+    <string name="dashboard_source_details_preparing">Preparando detalhes da fonte...</string>
+    <string name="dashboard_action_open_original">Abrir original</string>
+    <string name="dashboard_action_open">Abrir</string>
+    <string name="dashboard_action_retry">Tentar novamente</string>
+
+    <string name="dashboard_feature_quiz_title">Quiz</string>
+    <string name="dashboard_feature_quiz_subtitle">Gere perguntas práticas deste documento.</string>
+    <string name="dashboard_feature_notes_title">Notas de estudo</string>
+    <string name="dashboard_feature_notes_subtitle">Crie e revise notas em formato de cartões.</string>
+    <string name="dashboard_feature_summary_title">Resumo</string>
+    <string name="dashboard_feature_summary_subtitle">Crie resumos concisos com compartilhamento e reprodução.</string>
+    <string name="dashboard_feature_qa_title">Perguntas e respostas</string>
+    <string name="dashboard_feature_qa_subtitle">Faça perguntas sobre o conteúdo importado (premium).</string>
+    <string name="dashboard_feature_analysis_title">Análise detalhada</string>
+    <string name="dashboard_feature_analysis_subtitle">Execute análises mais profundas de páginas e transcrições (premium).</string>
+    <string name="dashboard_upgrade_button">Fazer upgrade para fluxos premium</string>
+
+    <string name="dashboard_audio_preview_title">Player de áudio + transcrição</string>
+    <string name="dashboard_audio_preview_playing">Reproduzindo áudio importado.</string>
+    <string name="dashboard_audio_preview_idle">Visualize o áudio importado e a transcrição.</string>
+    <string name="dashboard_audio_action_play">Reproduzir</string>
+    <string name="dashboard_audio_action_pause">Pausar</string>
+    <string name="dashboard_audio_transcript_preparing">A transcrição está sendo preparada.</string>
+
+    <string name="dashboard_source_stats_pdf">Fonte PDF • %1$d palavras extraídas</string>
+    <string name="dashboard_source_stats_text">Fonte de texto • %1$d palavras</string>
+    <string name="dashboard_source_stats_web">Fonte web • %1$s • %2$d palavras</string>
+    <string name="dashboard_source_stats_audio">Fonte de áudio • %1$s • %2$d palavras transcritas</string>
+    <string name="dashboard_web_article_fallback_host">artigo web</string>
+    <string name="dashboard_duration_unavailable">duração indisponível</string>
+
+    <string name="dashboard_error_document_not_found">Documento não encontrado.</string>
+    <string name="dashboard_error_audio_transcription_failed_retry">Falha na transcrição do áudio. Tente novamente o onboarding.</string>
+    <string name="dashboard_error_premium_feature">%1$s é um recurso premium. Faça upgrade para continuar.</string>
+    <string name="dashboard_error_onboarding_failed">Falha no onboarding.</string>
+    <string name="dashboard_error_audio_preview_failed">Não foi possível reproduzir a prévia de áudio.</string>
+    <string name="dashboard_error_document_unavailable">Documento indisponível.</string>
+    <string name="dashboard_error_web_source_missing">A URL da fonte web está ausente.</string>
+    <string name="dashboard_error_file_reference_missing">A referência do arquivo original está ausente.</string>
+    <string name="dashboard_error_file_missing">O arquivo original não existe mais.</string>
+    <string name="dashboard_error_open_source_file_failed">Não foi possível abrir o arquivo da fonte.</string>
+    <string name="dashboard_error_no_app_available">Nenhum app disponível para abrir esta fonte.</string>
+    <string name="dashboard_error_open_source_failed">Não foi possível abrir a fonte.</string>
+</resources>

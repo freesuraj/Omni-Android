@@ -1,14 +1,18 @@
 package com.suraj.apps.omni.core.data.provider
 
 import android.content.Context
+import androidx.annotation.StringRes
+import com.suraj.apps.omni.core.data.R
 
 class ProviderSettingsRepository(
-    private val providerSettingsStore: ProviderSettingsStore
+    private val providerSettingsStore: ProviderSettingsStore,
+    private val appContext: Context? = null
 ) {
     constructor(
         context: Context
     ) : this(
-        providerSettingsStore = EncryptedPrefsProviderSettingsStore(context.applicationContext)
+        providerSettingsStore = EncryptedPrefsProviderSettingsStore(context.applicationContext),
+        appContext = context.applicationContext
     )
 
     fun loadSnapshot(): AiProviderSettingsSnapshot {
@@ -49,7 +53,10 @@ class ProviderSettingsRepository(
         if (!providerId.requiresApiKey) {
             return ApiKeyValidationResult(
                 isValid = false,
-                message = "${providerId.displayName} does not require a personal API key."
+                message = text(
+                    R.string.provider_message_no_personal_key_required,
+                    providerId.displayName
+                )
             )
         }
 
@@ -57,14 +64,14 @@ class ProviderSettingsRepository(
         if (!looksLikeApiKey(normalized)) {
             return ApiKeyValidationResult(
                 isValid = false,
-                message = "API key looks invalid. Paste the full key and try again."
+                message = text(R.string.provider_message_invalid_key)
             )
         }
 
         providerSettingsStore.setApiKey(providerId, normalized)
         return ApiKeyValidationResult(
             isValid = true,
-            message = "API key saved for ${providerId.displayName}."
+            message = text(R.string.provider_message_key_saved, providerId.displayName)
         )
     }
 
@@ -77,7 +84,7 @@ class ProviderSettingsRepository(
         if (!selectedProvider.requiresApiKey) {
             return ApiKeyValidationResult(
                 isValid = true,
-                message = "${selectedProvider.displayName} is ready."
+                message = text(R.string.provider_message_ready, selectedProvider.displayName)
             )
         }
 
@@ -85,13 +92,19 @@ class ProviderSettingsRepository(
         if (looksLikeApiKey(key.orEmpty())) {
             return ApiKeyValidationResult(
                 isValid = true,
-                message = "${selectedProvider.displayName} is configured."
+                message = text(
+                    R.string.provider_message_configured,
+                    selectedProvider.displayName
+                )
             )
         }
 
         return ApiKeyValidationResult(
             isValid = false,
-            message = "Add a valid API key for ${selectedProvider.displayName} in Settings."
+            message = text(
+                R.string.provider_message_add_valid_key,
+                selectedProvider.displayName
+            )
         )
     }
 
@@ -112,5 +125,38 @@ class ProviderSettingsRepository(
 
     companion object {
         private val API_KEY_ALLOWED_PATTERN = Regex("^[A-Za-z0-9._\\-]+$")
+    }
+
+    private fun text(
+        @StringRes resId: Int,
+        vararg args: Any
+    ): String {
+        val context = appContext
+        if (context != null) {
+            return context.getString(resId, *args)
+        }
+        return fallbackText(resId, args)
+    }
+
+    private fun fallbackText(
+        @StringRes resId: Int,
+        args: Array<out Any>
+    ): String {
+        val firstArg = args.firstOrNull()?.toString().orEmpty()
+        return when (resId) {
+            R.string.provider_message_no_personal_key_required ->
+                "$firstArg does not require a personal API key."
+            R.string.provider_message_invalid_key ->
+                "API key looks invalid. Paste the full key and try again."
+            R.string.provider_message_key_saved ->
+                "API key saved for $firstArg."
+            R.string.provider_message_ready ->
+                "$firstArg is ready."
+            R.string.provider_message_configured ->
+                "$firstArg is configured."
+            R.string.provider_message_add_valid_key ->
+                "Add a valid API key for $firstArg in Settings."
+            else -> ""
+        }
     }
 }

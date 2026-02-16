@@ -1,0 +1,34 @@
+<resources>
+    <string name="analysis_cd_back">رجوع</string>
+    <string name="analysis_title_default">تحليل مفصل</string>
+    <string name="analysis_title_configure">إعداد التحليل</string>
+    <string name="analysis_title_generating">جارٍ إنشاء التحليل</string>
+
+    <string name="analysis_scope_title">نطاق التحليل المفصل</string>
+    <string name="analysis_segments_not_ready">مقاطع التحليل ليست جاهزة بعد.</string>
+    <string name="analysis_segments_progress">تم تحليل %1$d/%2$d مقطع</string>
+    <string name="analysis_scope_pdf_description">ينفذ تحليلاً صفحة بصفحة ويحفظ النتائج للمراجعة.</string>
+    <string name="analysis_scope_non_pdf_description">ينفذ تحليلاً على مستوى الأقسام لمصادر النص/النسخ.</string>
+    <string name="analysis_premium_notice">التحليل المفصل سير عمل مميز.</string>
+
+    <string name="analysis_action_retry">إعادة المحاولة</string>
+    <string name="analysis_action_resume">استئناف التحليل</string>
+    <string name="analysis_action_regenerate">إعادة إنشاء التحليل</string>
+    <string name="analysis_action_generate">إنشاء التحليل</string>
+    <string name="analysis_action_retry_from_scratch">إعادة من البداية</string>
+    <string name="analysis_view_action_resume">استئناف</string>
+    <string name="analysis_view_action_regenerate">إعادة إنشاء</string>
+
+    <string name="analysis_generating_title">جارٍ إنشاء التحليل المفصل...</string>
+    <string name="analysis_saved_count">تم حفظ %1$d/%2$d</string>
+    <string name="analysis_progress_preparing">جارٍ تحضير التحليل...</string>
+    <string name="analysis_progress_restarting">جارٍ إعادة تشغيل التحليل...</string>
+    <string name="analysis_progress_available_after_processing">سيكون التحليل متاحًا عند اكتمال المعالجة</string>
+    <string name="analysis_progress_ready_to_analyze">جاهز للتحليل</string>
+
+    <string name="analysis_section_title_page">الصفحة %1$d</string>
+    <string name="analysis_section_title_section">القسم %1$d</string>
+
+    <string name="analysis_error_requires_premium">التحليل المفصل ميزة مميزة. قم بالترقية للمتابعة.</string>
+    <string name="analysis_error_document_not_found">المستند غير موجود.</string>
+</resources>

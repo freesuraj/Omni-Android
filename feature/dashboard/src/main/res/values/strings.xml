@@ -1,0 +1,58 @@
+<resources>
+    <string name="dashboard_title_fallback">Dashboard</string>
+    <string name="dashboard_document_id">Document ID: %1$s</string>
+
+    <string name="dashboard_onboarding_in_progress_title">Onboarding in progress</string>
+    <string name="dashboard_onboarding_in_progress_subtitle">You can continue in background while processing completes.</string>
+    <string name="dashboard_status_preparing_onboarding">Preparing onboarding</string>
+    <string name="dashboard_status_transcribing_audio">Transcribing audio (%1$d%%)</string>
+    <string name="dashboard_status_transcription_complete">Transcription complete</string>
+    <string name="dashboard_status_transcription_failed">Transcription failed</string>
+    <string name="dashboard_status_generating_outputs">Generating study outputs (%1$d%%)</string>
+    <string name="dashboard_status_ready_to_study">Ready to study</string>
+
+    <string name="dashboard_source_details_title">Source details</string>
+    <string name="dashboard_source_details_preparing">Preparing source details...</string>
+    <string name="dashboard_action_open_original">Open original</string>
+    <string name="dashboard_action_open">Open</string>
+    <string name="dashboard_action_retry">Retry</string>
+
+    <string name="dashboard_feature_quiz_title">Quiz</string>
+    <string name="dashboard_feature_quiz_subtitle">Generate practice questions from this document.</string>
+    <string name="dashboard_feature_notes_title">Study Notes</string>
+    <string name="dashboard_feature_notes_subtitle">Create and review card-based study notes.</string>
+    <string name="dashboard_feature_summary_title">Summary</string>
+    <string name="dashboard_feature_summary_subtitle">Create concise summaries with share and playback support.</string>
+    <string name="dashboard_feature_qa_title">Q&amp;A</string>
+    <string name="dashboard_feature_qa_subtitle">Ask questions against imported content (premium).</string>
+    <string name="dashboard_feature_analysis_title">Detailed Analysis</string>
+    <string name="dashboard_feature_analysis_subtitle">Run deeper analysis for pages and transcripts (premium).</string>
+    <string name="dashboard_upgrade_button">Upgrade for premium workflows</string>
+
+    <string name="dashboard_audio_preview_title">Audio player + transcript</string>
+    <string name="dashboard_audio_preview_playing">Playing imported audio.</string>
+    <string name="dashboard_audio_preview_idle">Preview imported audio and transcript.</string>
+    <string name="dashboard_audio_action_play">Play</string>
+    <string name="dashboard_audio_action_pause">Pause</string>
+    <string name="dashboard_audio_transcript_preparing">Transcript is being prepared.</string>
+
+    <string name="dashboard_source_stats_pdf">PDF source • %1$d words extracted</string>
+    <string name="dashboard_source_stats_text">Text source • %1$d words</string>
+    <string name="dashboard_source_stats_web">Web source • %1$s • %2$d words</string>
+    <string name="dashboard_source_stats_audio">Audio source • %1$s • %2$d transcript words</string>
+    <string name="dashboard_web_article_fallback_host">web article</string>
+    <string name="dashboard_duration_unavailable">duration unavailable</string>
+
+    <string name="dashboard_error_document_not_found">Document not found.</string>
+    <string name="dashboard_error_audio_transcription_failed_retry">Audio transcription failed. Retry onboarding.</string>
+    <string name="dashboard_error_premium_feature">%1$s is a premium feature. Upgrade to continue.</string>
+    <string name="dashboard_error_onboarding_failed">Onboarding failed.</string>
+    <string name="dashboard_error_audio_preview_failed">Unable to play audio preview.</string>
+    <string name="dashboard_error_document_unavailable">Document is unavailable.</string>
+    <string name="dashboard_error_web_source_missing">Web source URL is missing.</string>
+    <string name="dashboard_error_file_reference_missing">Original file reference is missing.</string>
+    <string name="dashboard_error_file_missing">Original file no longer exists.</string>
+    <string name="dashboard_error_open_source_file_failed">Unable to open source file.</string>
+    <string name="dashboard_error_no_app_available">No app available to open this source.</string>
+    <string name="dashboard_error_open_source_failed">Unable to open source.</string>
+</resources>

@@ -1,0 +1,28 @@
+<resources>
+    <string name="notes_cd_back">رجوع</string>
+    <string name="notes_title_new_flashcards">بطاقات تعليمية جديدة</string>
+    <string name="notes_cd_regenerate">إعادة الإنشاء</string>
+    <string name="notes_action_done">تم</string>
+
+    <string name="notes_config_heading">إنشاء بطاقات دراسة (ملاحظات)</string>
+    <string name="notes_action_create_flashcards">إنشاء بطاقات</string>
+
+    <string name="notes_generating_title">جارٍ إنشاء البطاقات...</string>
+    <string name="notes_generating_subtitle">جارٍ تقسيم المحتوى وتحضير بطاقات الدراسة.</string>
+
+    <string name="notes_filter_bookmarked_only">المحفوظة فقط</string>
+    <string name="notes_filter_auto_read">قراءة تلقائية</string>
+    <string name="notes_empty_filter_title">لا توجد بطاقات في هذا الفلتر</string>
+    <string name="notes_empty_filter_subtitle">أوقف فلتر الإشارات المرجعية أو أنشئ مجموعة جديدة.</string>
+    <string name="notes_page_indicator_empty">0 من 0 بطاقة</string>
+    <string name="notes_page_indicator">%1$d من %2$d بطاقة</string>
+
+    <string name="notes_card_cd_speak">نطق</string>
+    <string name="notes_card_label_question">سؤال</string>
+    <string name="notes_card_label_answer">إجابة</string>
+    <string name="notes_card_cd_bookmark">إشارة مرجعية</string>
+    <string name="notes_card_hint_reveal_answer">اضغط لإظهار الإجابة</string>
+    <string name="notes_card_hint_back_to_question">اضغط للعودة إلى السؤال</string>
+
+    <string name="notes_error_document_not_found">المستند غير موجود.</string>
+</resources>

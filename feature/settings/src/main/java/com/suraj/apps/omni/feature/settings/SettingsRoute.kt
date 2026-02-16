@@ -34,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.suraj.apps.omni.core.designsystem.theme.OmniSpacing
@@ -60,7 +61,7 @@ fun SettingsRoute() {
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Settings") })
+            TopAppBar(title = { Text(stringResource(R.string.settings_title)) })
         },
         snackbarHost = { SnackbarHost(hostState = snackbars) }
     ) { paddingValues: PaddingValues ->
@@ -73,7 +74,7 @@ fun SettingsRoute() {
             verticalArrangement = Arrangement.spacedBy(OmniSpacing.large)
         ) {
             Text(
-                text = "LLM Provider",
+                text = stringResource(R.string.settings_section_llm_provider),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -86,7 +87,7 @@ fun SettingsRoute() {
             ) {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        text = "Choose the AI to use",
+                        text = stringResource(R.string.settings_choose_ai),
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.padding(horizontal = OmniSpacing.large, vertical = OmniSpacing.medium)
                     )
@@ -104,7 +105,7 @@ fun SettingsRoute() {
 
             if (uiState.selectedProvider.requiresApiKey) {
                 Text(
-                    text = "${uiState.selectedProvider.displayName} Configuration",
+                    text = stringResource(R.string.settings_provider_configuration, uiState.selectedProvider.displayName),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -126,19 +127,19 @@ fun SettingsRoute() {
                             onValueChange = viewModel::updateApiKeyInput,
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            label = { Text("API Key") }
+                            label = { Text(stringResource(R.string.settings_api_key_label)) }
                         )
 
                         Button(
                             onClick = viewModel::saveApiKey,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Validate & Save Key")
+                            Text(stringResource(R.string.settings_validate_save_key))
                         }
 
                         if (uiState.hasSavedApiKeyForSelectedProvider) {
                             Text(
-                                text = "A key is already saved on this device.",
+                                text = stringResource(R.string.settings_saved_key_notice),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -151,14 +152,14 @@ fun SettingsRoute() {
                         ) {
                             if (uiState.hasSavedApiKeyForSelectedProvider) {
                                 TextButton(onClick = viewModel::clearApiKey) {
-                                    Text("Clear key")
+                                    Text(stringResource(R.string.settings_clear_key))
                                 }
                             }
 
                             val keyHelpUrl = uiState.selectedProvider.keyHelpUrl
                             if (!keyHelpUrl.isNullOrBlank()) {
                                 TextButton(onClick = { uriHandler.openUri(keyHelpUrl) }) {
-                                    Text("Get API Key")
+                                    Text(stringResource(R.string.settings_get_api_key))
                                 }
                             }
                         }
@@ -167,7 +168,7 @@ fun SettingsRoute() {
             }
 
             Text(
-                text = "About",
+                text = stringResource(R.string.settings_section_about),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -186,7 +187,7 @@ fun SettingsRoute() {
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(text = "Omni app version")
+                        Text(text = stringResource(R.string.settings_app_version_label))
                         Text(
                             text = uiState.appVersion,
                             style = MaterialTheme.typography.bodyMedium,
@@ -200,7 +201,7 @@ fun SettingsRoute() {
                             .fillMaxWidth()
                             .padding(horizontal = OmniSpacing.medium)
                     ) {
-                        Text("Terms of Use")
+                        Text(stringResource(R.string.settings_terms_of_use))
                     }
                 }
             }
@@ -228,7 +229,7 @@ private fun ProviderOptionRow(
             )
             if (option.providerId.requiresApiKey && option.hasSavedApiKey) {
                 Text(
-                    text = "API key configured",
+                    text = stringResource(R.string.settings_api_key_configured),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -238,7 +239,7 @@ private fun ProviderOptionRow(
         if (option.isSelected) {
             Icon(
                 imageVector = Icons.Rounded.Check,
-                contentDescription = "Selected",
+                contentDescription = stringResource(R.string.settings_selected_content_description),
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(20.dp)
             )

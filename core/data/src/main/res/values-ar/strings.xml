@@ -1,0 +1,21 @@
+<resources>
+    <string name="provider_message_no_personal_key_required">لا يتطلب %1$s مفتاح API شخصيًا.</string>
+    <string name="provider_message_invalid_key">يبدو أن مفتاح API غير صالح. الصق المفتاح الكامل وحاول مرة أخرى.</string>
+    <string name="provider_message_key_saved">تم حفظ مفتاح API لـ %1$s.</string>
+    <string name="provider_message_ready">%1$s جاهز.</string>
+    <string name="provider_message_configured">تم إعداد %1$s.</string>
+    <string name="provider_message_add_valid_key">أضف مفتاح API صالحًا لـ %1$s في الإعدادات.</string>
+    <string name="provider_generation_missing_api_key">يحتاج %1$s إلى مفتاح API صالح. افتح الإعدادات للتهيئة.</string>
+    <string name="provider_generation_failed">فشل الإنشاء لـ %1$s.</string>
+    <string name="billing_error_selected_plan_unavailable">الخطة المحددة غير متاحة.</string>
+    <string name="billing_error_no_restorable_purchase">لم يتم العثور على مشتريات قابلة للاستعادة لهذا الحساب.</string>
+    <string name="billing_plan_monthly_title">شهري</string>
+    <string name="billing_plan_monthly_subtitle">وصول شهري مرن</string>
+    <string name="billing_plan_monthly_price">$4.99/شهر</string>
+    <string name="billing_plan_yearly_title">سنوي</string>
+    <string name="billing_plan_yearly_subtitle">تجربة مجانية 7 أيام ثم فوترة سنوية</string>
+    <string name="billing_plan_yearly_price">$29.99/سنة</string>
+    <string name="billing_plan_lifetime_title">مدى الحياة</string>
+    <string name="billing_plan_lifetime_subtitle">شراء مرة واحدة دون رسوم متكررة</string>
+    <string name="billing_plan_lifetime_price">$79.99 لمرة واحدة</string>
+</resources>

@@ -1,0 +1,17 @@
+<resources>
+    <string name="paywall_title">Desbloquear Omni Pro</string>
+    <string name="paywall_back_content_description">Voltar</string>
+    <string name="paywall_loading_plans">Carregando planos...</string>
+    <string name="paywall_heading">Tenha acesso total aos fluxos premium</string>
+    <string name="paywall_subheading">Opções mensal, anual com teste e vitalícia disponíveis.</string>
+    <string name="paywall_active_title">Omni Pro ativo</string>
+    <string name="paywall_active_subtitle">Os recursos premium estão desbloqueados neste dispositivo.</string>
+    <string name="paywall_unlock_button">Desbloquear Omni Pro</string>
+    <string name="paywall_restore_button">Restaurar compras</string>
+    <string name="paywall_renewal_note">As assinaturas renovam automaticamente, a menos que sejam canceladas 24 horas antes da renovação.</string>
+    <string name="paywall_message_unlocked">Omni Pro desbloqueado.</string>
+    <string name="paywall_message_restored">Compras restauradas.</string>
+    <string name="paywall_badge_best_value_trial">Melhor valor • teste de 7 dias</string>
+    <string name="paywall_badge_best_value">Melhor valor</string>
+    <string name="paywall_badge_one_time">Pagamento único</string>
+</resources>

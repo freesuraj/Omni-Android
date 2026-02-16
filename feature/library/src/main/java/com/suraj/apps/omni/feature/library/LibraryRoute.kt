@@ -41,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.suraj.apps.omni.core.data.local.entity.DocumentEntity
 import com.suraj.apps.omni.core.designsystem.component.OmniFeatureCard
@@ -98,20 +99,20 @@ fun LibraryRoute(
             onDismissRequest = viewModel::dismissWebDialog,
             confirmButton = {
                 TextButton(onClick = viewModel::onImportWebArticle) {
-                    Text("Import")
+                    Text(stringResource(R.string.library_action_import))
                 }
             },
             dismissButton = {
                 TextButton(onClick = viewModel::dismissWebDialog) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.library_action_cancel))
                 }
             },
-            title = { Text("Import web article") },
+            title = { Text(stringResource(R.string.library_import_web_article_title)) },
             text = {
                 OutlinedTextField(
                     value = uiState.webUrlInput,
                     onValueChange = viewModel::updateWebUrlInput,
-                    label = { Text("Article URL") },
+                    label = { Text(stringResource(R.string.library_article_url_label)) },
                     singleLine = true
                 )
             }
@@ -123,20 +124,20 @@ fun LibraryRoute(
             onDismissRequest = viewModel::dismissRenameDialog,
             confirmButton = {
                 TextButton(onClick = viewModel::confirmRename) {
-                    Text("Save")
+                    Text(stringResource(R.string.library_action_save))
                 }
             },
             dismissButton = {
                 TextButton(onClick = viewModel::dismissRenameDialog) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.library_action_cancel))
                 }
             },
-            title = { Text("Rename document") },
+            title = { Text(stringResource(R.string.library_rename_document_title)) },
             text = {
                 OutlinedTextField(
                     value = uiState.renameInput,
                     onValueChange = viewModel::updateRenameInput,
-                    label = { Text("Document title") },
+                    label = { Text(stringResource(R.string.library_document_title_label)) },
                     singleLine = true
                 )
             }
@@ -149,56 +150,83 @@ fun LibraryRoute(
             onDismissRequest = viewModel::dismissDeleteDialog,
             confirmButton = {
                 TextButton(onClick = viewModel::confirmDelete) {
-                    Text("Delete")
+                    Text(stringResource(R.string.library_action_delete))
                 }
             },
             dismissButton = {
                 TextButton(onClick = viewModel::dismissDeleteDialog) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.library_action_cancel))
                 }
             },
-            title = { Text("Delete document") },
+            title = { Text(stringResource(R.string.library_delete_document_title)) },
             text = {
-                Text("Delete \"${target?.title ?: "this document"}\"? This cannot be undone.")
+                Text(
+                    stringResource(
+                        R.string.library_delete_document_message,
+                        target?.title ?: stringResource(R.string.library_document_fallback_title)
+                    )
+                )
             }
         )
     }
 
-    val featureChips = listOf("Quiz", "Flashcards", "Summary", "Q&A", "Analysis", "Audio")
+    val featureChips = listOf(
+        stringResource(R.string.library_chip_quiz),
+        stringResource(R.string.library_chip_flashcards),
+        stringResource(R.string.library_chip_summary),
+        stringResource(R.string.library_chip_qa),
+        stringResource(R.string.library_chip_analysis),
+        stringResource(R.string.library_chip_audio)
+    )
     val steps = listOf(
-        StepContent(1, "Import source", "Use + to add document, audio note, or web article."),
-        StepContent(2, "Generate study set", "Omni builds quiz, notes, summary, and Q&A context."),
-        StepContent(3, "Study and review", "Use dashboard outputs and keep learning in one place.")
+        StepContent(
+            1,
+            stringResource(R.string.library_step_import_title),
+            stringResource(R.string.library_step_import_subtitle)
+        ),
+        StepContent(
+            2,
+            stringResource(R.string.library_step_generate_title),
+            stringResource(R.string.library_step_generate_subtitle)
+        ),
+        StepContent(
+            3,
+            stringResource(R.string.library_step_study_title),
+            stringResource(R.string.library_step_study_subtitle)
+        )
     )
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Library") },
+                title = { Text(stringResource(R.string.library_title)) },
                 actions = {
                     IconButton(onClick = { importMenuExpanded = true }) {
-                        Icon(imageVector = Icons.Rounded.Add, contentDescription = "Import")
+                        Icon(
+                            imageVector = Icons.Rounded.Add,
+                            contentDescription = stringResource(R.string.library_content_desc_import)
+                        )
                     }
                     DropdownMenu(
                         expanded = importMenuExpanded,
                         onDismissRequest = { importMenuExpanded = false }
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Document") },
+                            text = { Text(stringResource(R.string.library_import_document_option)) },
                             onClick = {
                                 importMenuExpanded = false
                                 documentPicker.launch(arrayOf("application/pdf", "text/plain", "text/*"))
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text("Web article") },
+                            text = { Text(stringResource(R.string.library_import_web_article_option)) },
                             onClick = {
                                 importMenuExpanded = false
                                 viewModel.openWebDialog()
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text("Audio file") },
+                            text = { Text(stringResource(R.string.library_import_audio_option)) },
                             onClick = {
                                 importMenuExpanded = false
                                 audioPicker.launch(arrayOf("audio/*"))
@@ -206,7 +234,10 @@ fun LibraryRoute(
                         )
                     }
                     IconButton(onClick = onOpenSettings) {
-                        Icon(imageVector = Icons.Rounded.Settings, contentDescription = "Settings")
+                        Icon(
+                            imageVector = Icons.Rounded.Settings,
+                            contentDescription = stringResource(R.string.library_content_desc_settings)
+                        )
                     }
                 }
             )
@@ -222,8 +253,8 @@ fun LibraryRoute(
             verticalArrangement = Arrangement.spacedBy(OmniSpacing.large)
         ) {
             OmniSectionHeader(
-                title = "Start with document, audio note or article",
-                subtitle = "Import with +, then open the dashboard to generate study outputs."
+                title = stringResource(R.string.library_header_title),
+                subtitle = stringResource(R.string.library_header_subtitle)
             )
 
             if (uiState.documents.isEmpty()) {
@@ -235,7 +266,7 @@ fun LibraryRoute(
                     )
                 }
 
-                Text(text = "What you get", style = MaterialTheme.typography.titleMedium)
+                Text(text = stringResource(R.string.library_what_you_get), style = MaterialTheme.typography.titleMedium)
                 featureChips.chunked(3).forEach { rowChips ->
                     Row(horizontalArrangement = Arrangement.spacedBy(OmniSpacing.small)) {
                         rowChips.forEach { chip ->
@@ -245,10 +276,10 @@ fun LibraryRoute(
                 }
             } else {
                 OmniFeatureCard(
-                    title = "Plan guardrails",
-                    subtitle = "Free plan allows one stored document. Upgrade for unlimited storage."
+                    title = stringResource(R.string.library_plan_guardrails_title),
+                    subtitle = stringResource(R.string.library_plan_guardrails_subtitle)
                 )
-                Text(text = "Your imports", style = MaterialTheme.typography.titleMedium)
+                Text(text = stringResource(R.string.library_your_imports), style = MaterialTheme.typography.titleMedium)
 
                 uiState.documents.forEach { document ->
                     DocumentItemCard(
@@ -269,7 +300,10 @@ fun LibraryRoute(
                 }
             }
 
-            OmniPrimaryButton(text = "Record live audio", onClick = onOpenAudio)
+            OmniPrimaryButton(
+                text = stringResource(R.string.library_record_live_audio),
+                onClick = onOpenAudio
+            )
         }
     }
 
@@ -295,14 +329,19 @@ private fun DocumentItemCard(
     ) {
         OmniFeatureCard(
             title = document.title,
-            subtitle = document.extractedTextPreview ?: "Open dashboard for onboarding outputs.",
+            subtitle = document.extractedTextPreview
+                ?: stringResource(R.string.library_document_preview_fallback),
             trailing = {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(OmniSpacing.small)
                 ) {
                     OmniStatusPill(
-                        text = if (document.isOnboarding) "Onboarding" else "Ready",
+                        text = if (document.isOnboarding) {
+                            stringResource(R.string.library_status_onboarding)
+                        } else {
+                            stringResource(R.string.library_status_ready)
+                        },
                         color = if (document.isOnboarding) {
                             MaterialTheme.colorScheme.primary
                         } else {
@@ -313,7 +352,7 @@ private fun DocumentItemCard(
                         IconButton(onClick = onOpenMenu) {
                             Icon(
                                 imageVector = Icons.Rounded.MoreVert,
-                                contentDescription = "Document actions"
+                                contentDescription = stringResource(R.string.library_content_desc_document_actions)
                             )
                         }
                         DropdownMenu(
@@ -321,7 +360,7 @@ private fun DocumentItemCard(
                             onDismissRequest = onDismissMenu
                         ) {
                             DropdownMenuItem(
-                                text = { Text("Rename") },
+                                text = { Text(stringResource(R.string.library_action_rename)) },
                                 leadingIcon = {
                                     Icon(
                                         imageVector = Icons.Rounded.Edit,
@@ -331,7 +370,7 @@ private fun DocumentItemCard(
                                 onClick = onRename
                             )
                             DropdownMenuItem(
-                                text = { Text("Delete") },
+                                text = { Text(stringResource(R.string.library_action_delete)) },
                                 leadingIcon = {
                                     Icon(
                                         imageVector = Icons.Rounded.Delete,
@@ -346,7 +385,7 @@ private fun DocumentItemCard(
             }
         )
         OmniPrimaryButton(
-            text = "Open dashboard",
+            text = stringResource(R.string.library_open_dashboard),
             onClick = onOpenDashboard
         )
     }

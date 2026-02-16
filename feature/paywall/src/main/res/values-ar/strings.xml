@@ -1,0 +1,17 @@
+<resources>
+    <string name="paywall_title">فتح Omni Pro</string>
+    <string name="paywall_back_content_description">رجوع</string>
+    <string name="paywall_loading_plans">جارٍ تحميل الخطط...</string>
+    <string name="paywall_heading">احصل على وصول كامل لسير العمل المميز</string>
+    <string name="paywall_subheading">تتوفر خيارات شهرية وسنوية مع تجربة ومدى الحياة.</string>
+    <string name="paywall_active_title">Omni Pro مفعل</string>
+    <string name="paywall_active_subtitle">الميزات المميزة مفتوحة حاليًا على هذا الجهاز.</string>
+    <string name="paywall_unlock_button">فتح Omni Pro</string>
+    <string name="paywall_restore_button">استعادة المشتريات</string>
+    <string name="paywall_renewal_note">تتجدد الاشتراكات تلقائيًا ما لم يتم إلغاؤها قبل 24 ساعة من التجديد.</string>
+    <string name="paywall_message_unlocked">تم فتح Omni Pro.</string>
+    <string name="paywall_message_restored">تمت استعادة المشتريات.</string>
+    <string name="paywall_badge_best_value_trial">أفضل قيمة • تجربة 7 أيام</string>
+    <string name="paywall_badge_best_value">أفضل قيمة</string>
+    <string name="paywall_badge_one_time">مرة واحدة</string>
+</resources>

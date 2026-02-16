@@ -70,7 +70,12 @@ class SettingsViewModel(
         repository.clearApiKey(selected)
         refresh(clearInput = true)
         _uiState.update {
-            it.copy(infoMessage = "Cleared saved key for ${selected.displayName}.")
+            it.copy(
+                infoMessage = getApplication<Application>().getString(
+                    R.string.settings_message_cleared_key,
+                    selected.displayName
+                )
+            )
         }
     }
 

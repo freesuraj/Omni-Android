@@ -24,7 +24,8 @@ import kotlinx.coroutines.launch
 data class DashboardUiState(
     val document: DocumentEntity? = null,
     val isOnboarding: Boolean = false,
-    val onboardingLabel: String = "Preparing onboarding",
+    val showRetryAction: Boolean = false,
+    val onboardingLabel: String = "",
     val onboardingProgress: Float = 0f,
     val sourceStats: String = "",
     val sourceUrl: String? = null,
@@ -38,8 +39,13 @@ class DashboardViewModel(
     application: Application,
     private val documentId: String
 ) : AndroidViewModel(application) {
+    private val app = application
     private val repository = DocumentImportRepository(application.applicationContext)
-    private val _uiState = MutableStateFlow(DashboardUiState())
+    private val _uiState = MutableStateFlow(
+        DashboardUiState(
+            onboardingLabel = app.getString(R.string.dashboard_status_preparing_onboarding)
+        )
+    )
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
     private var onboardingJob: Job? = null
@@ -52,7 +58,7 @@ class DashboardViewModel(
                     _uiState.update {
                         it.copy(
                             document = null,
-                            errorMessage = "Document not found."
+                            errorMessage = app.getString(R.string.dashboard_error_document_not_found)
                         )
                     }
                     return@collect
@@ -70,6 +76,7 @@ class DashboardViewModel(
                     it.copy(
                         document = document,
                         isOnboarding = document.isOnboarding,
+                        showRetryAction = document.onboardingStatus == "transcription_failed",
                         onboardingLabel = statusView.label,
                         onboardingProgress = statusView.progress,
                         sourceStats = sourceStats,
@@ -86,7 +93,7 @@ class DashboardViewModel(
                         },
                         isPremiumUnlocked = repository.isPremiumUnlocked(),
                         errorMessage = if (document.onboardingStatus == "transcription_failed") {
-                            "Audio transcription failed. Retry onboarding."
+                            app.getString(R.string.dashboard_error_audio_transcription_failed_retry)
                         } else {
                             it.errorMessage
                         }
@@ -118,7 +125,7 @@ class DashboardViewModel(
         }
         if (latestPremiumState) return true
         _uiState.update {
-            it.copy(errorMessage = "$featureName is a premium feature. Upgrade to continue.")
+            it.copy(errorMessage = app.getString(R.string.dashboard_error_premium_feature, featureName))
         }
         return false
     }
@@ -146,7 +153,7 @@ class DashboardViewModel(
             }.onFailure { error ->
                 _uiState.update {
                     it.copy(
-                        errorMessage = error.message ?: "Onboarding failed.",
+                        errorMessage = error.message ?: app.getString(R.string.dashboard_error_onboarding_failed),
                         isOnboarding = true
                     )
                 }
@@ -161,10 +168,11 @@ class DashboardViewModel(
             val overallProgress = progress.progress * 0.6f
             _uiState.update {
                 it.copy(
-                    isOnboarding = true,
-                    onboardingLabel = "Transcribing audio ($percent%)",
-                    onboardingProgress = overallProgress,
-                    errorMessage = null
+                        isOnboarding = true,
+                        showRetryAction = false,
+                        onboardingLabel = app.getString(R.string.dashboard_status_transcribing_audio, percent),
+                        onboardingProgress = overallProgress,
+                        errorMessage = null
                 )
             }
             viewModelScope.launch {
@@ -186,7 +194,8 @@ class DashboardViewModel(
                 _uiState.update {
                     it.copy(
                         isOnboarding = true,
-                        onboardingLabel = "Transcription failed",
+                        showRetryAction = true,
+                        onboardingLabel = app.getString(R.string.dashboard_status_transcription_failed),
                         errorMessage = transcriptionResult.message
                     )
                 }
@@ -211,7 +220,8 @@ class DashboardViewModel(
             _uiState.update {
                 it.copy(
                     isOnboarding = true,
-                    onboardingLabel = "Generating study outputs ($percent%)",
+                    showRetryAction = false,
+                    onboardingLabel = app.getString(R.string.dashboard_status_generating_outputs, percent),
                     onboardingProgress = overallProgress,
                     errorMessage = null
                 )
@@ -232,7 +242,8 @@ class DashboardViewModel(
         _uiState.update {
             it.copy(
                 isOnboarding = false,
-                onboardingLabel = "Ready to study",
+                showRetryAction = false,
+                onboardingLabel = app.getString(R.string.dashboard_status_ready_to_study),
                 onboardingProgress = 1f,
                 errorMessage = null
             )
@@ -242,29 +253,29 @@ class DashboardViewModel(
     private fun statusView(document: DocumentEntity): StatusView {
         val status = document.onboardingStatus.orEmpty()
         if (!document.isOnboarding || status == "ready") {
-            return StatusView(label = "Ready to study", progress = 1f)
+            return StatusView(label = app.getString(R.string.dashboard_status_ready_to_study), progress = 1f)
         }
         if (status == "transcribed") {
-            return StatusView(label = "Transcription complete", progress = 0.6f)
+            return StatusView(label = app.getString(R.string.dashboard_status_transcription_complete), progress = 0.6f)
         }
         if (status == "transcription_failed") {
-            return StatusView(label = "Transcription failed", progress = 0f)
+            return StatusView(label = app.getString(R.string.dashboard_status_transcription_failed), progress = 0f)
         }
         if (status.startsWith("transcribing:")) {
             val percent = status.substringAfter("transcribing:").toIntOrNull()?.coerceIn(0, 100) ?: 0
             return StatusView(
-                label = "Transcribing audio ($percent%)",
+                label = app.getString(R.string.dashboard_status_transcribing_audio, percent),
                 progress = (percent / 100f) * 0.6f
             )
         }
         if (status.startsWith("processing:")) {
             val percent = status.substringAfter("processing:").toIntOrNull()?.coerceIn(0, 100) ?: 0
             return StatusView(
-                label = "Generating study outputs ($percent%)",
+                label = app.getString(R.string.dashboard_status_generating_outputs, percent),
                 progress = percent / 100f
             )
         }
-        return StatusView(label = "Preparing onboarding", progress = 0.05f)
+        return StatusView(label = app.getString(R.string.dashboard_status_preparing_onboarding), progress = 0.05f)
     }
 
     private fun resolveLocalSourcePath(document: DocumentEntity): String? {
@@ -283,22 +294,39 @@ class DashboardViewModel(
             .filter { it.isNotBlank() }
             .size
         return when (document.fileType) {
-            DocumentFileType.PDF -> "PDF source • ${wordCount.coerceAtLeast(1)} words extracted"
-            DocumentFileType.TXT -> "Text source • ${wordCount.coerceAtLeast(1)} words"
+            DocumentFileType.PDF -> app.getString(
+                R.string.dashboard_source_stats_pdf,
+                wordCount.coerceAtLeast(1)
+            )
+            DocumentFileType.TXT -> app.getString(
+                R.string.dashboard_source_stats_text,
+                wordCount.coerceAtLeast(1)
+            )
             DocumentFileType.WEB -> {
-                val host = document.sourceUrl?.let { Uri.parse(it).host }.orEmpty().ifBlank { "web article" }
-                "Web source • $host • ${wordCount.coerceAtLeast(1)} words"
+                val host = document.sourceUrl
+                    ?.let { Uri.parse(it).host }
+                    .orEmpty()
+                    .ifBlank { app.getString(R.string.dashboard_web_article_fallback_host) }
+                app.getString(
+                    R.string.dashboard_source_stats_web,
+                    host,
+                    wordCount.coerceAtLeast(1)
+                )
             }
 
             DocumentFileType.AUDIO -> {
                 val durationLabel = resolveAudioDurationLabel(audioPath)
-                "Audio source • $durationLabel • ${wordCount.coerceAtLeast(1)} transcript words"
+                app.getString(
+                    R.string.dashboard_source_stats_audio,
+                    durationLabel,
+                    wordCount.coerceAtLeast(1)
+                )
             }
         }
     }
 
     private fun resolveAudioDurationLabel(audioPath: String?): String {
-        if (audioPath.isNullOrBlank()) return "duration unavailable"
+        if (audioPath.isNullOrBlank()) return app.getString(R.string.dashboard_duration_unavailable)
         val durationMs = runCatching {
             val retriever = MediaMetadataRetriever()
             try {
@@ -308,7 +336,9 @@ class DashboardViewModel(
                 runCatching { retriever.release() }
             }
         }.getOrNull()
-        if (durationMs == null || durationMs <= 0L) return "duration unavailable"
+        if (durationMs == null || durationMs <= 0L) {
+            return app.getString(R.string.dashboard_duration_unavailable)
+        }
         val totalSeconds = (durationMs / 1000.0).roundToInt()
         val minutes = totalSeconds / 60
         val seconds = totalSeconds % 60

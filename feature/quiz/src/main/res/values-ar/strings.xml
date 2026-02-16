@@ -1,0 +1,58 @@
+<resources>
+    <string name="quiz_title_configure">إعداد الاختبار</string>
+    <string name="quiz_title_generating">جارٍ إنشاء الاختبار</string>
+    <string name="quiz_title_document_quiz">اختبار %1$s</string>
+    <string name="quiz_title_complete">اكتمل الاختبار</string>
+
+    <string name="quiz_cd_back">رجوع</string>
+    <string name="quiz_cd_replay">إعادة</string>
+
+    <string name="quiz_config_title">إعدادات الاختبار</string>
+    <string name="quiz_question_count_label">عدد الأسئلة: %1$s</string>
+    <string name="quiz_difficulty_easy">سهل</string>
+    <string name="quiz_difficulty_medium">متوسط</string>
+    <string name="quiz_difficulty_hard">صعب</string>
+    <string name="quiz_toggle_show_source_snippet">إظهار مقتطف المصدر</string>
+    <string name="quiz_toggle_play_sounds">تشغيل الأصوات</string>
+    <string name="quiz_free_limit_notice">الحد المجاني: حتى %1$d سؤال لكل اختبار. قم بالترقية لمجموعات أطول.</string>
+
+    <string name="quiz_history_latest_result">أحدث نتيجة اختبار</string>
+    <string name="quiz_history_resume_latest">استئناف آخر اختبار</string>
+    <string name="quiz_history_score">النتيجة %1$d/%2$d</string>
+    <string name="quiz_history_progress">التقدم %1$d/%2$d</string>
+
+    <string name="quiz_action_review">مراجعة</string>
+    <string name="quiz_action_resume">استئناف</string>
+    <string name="quiz_action_replay">إعادة</string>
+    <string name="quiz_action_generate">إنشاء اختبار</string>
+    <string name="quiz_action_exit">خروج</string>
+    <string name="quiz_action_choose_b">اختر B</string>
+    <string name="quiz_action_choose_a">اختر A</string>
+    <string name="quiz_action_retry_quiz">إعادة الاختبار</string>
+    <string name="quiz_action_new_setup">إعداد جديد</string>
+
+    <string name="quiz_generating_title">جارٍ إنشاء اختبارك...</string>
+    <string name="quiz_generating_subtitle">تحضير مجموعة الأسئلة والخيارات وملخص المراجعة.</string>
+    <string name="quiz_streak_label">السلسلة %1$d  |  الأفضل %2$d</string>
+    <string name="quiz_question_progress_empty">السؤال 0/0</string>
+    <string name="quiz_question_progress">السؤال %1$d/%2$d</string>
+    <string name="quiz_correct_count_label">الصحيحة: %1$d</string>
+    <string name="quiz_no_active_question">لا يوجد سؤال نشط. عد إلى الإعداد وأنشئ اختبارًا جديدًا.</string>
+    <string name="quiz_option_b_label">الخيار B</string>
+    <string name="quiz_option_a_label">الخيار A</string>
+    <string name="quiz_swipe_hint">اسحب يمينًا لـ A ويسارًا لـ B</string>
+
+    <string name="quiz_result_title">اكتمل الاختبار!</string>
+    <string name="quiz_result_correct_answers">الإجابات الصحيحة</string>
+    <string name="quiz_result_review_title">مراجعة</string>
+    <string name="quiz_result_cd_correct">صحيح</string>
+    <string name="quiz_result_cd_incorrect">غير صحيح</string>
+    <string name="quiz_result_answer_line">إجابتك: %1$s • الصحيح: %2$s</string>
+
+    <string name="quiz_error_free_limit">تدعم الخطة المجانية حتى %1$d سؤالاً لكل مجموعة.</string>
+    <string name="quiz_provider_notice_fallback">يتم استخدام الإنشاء المحلي حتى يتم إعداد تكاملات المزودين.</string>
+    <string name="quiz_error_requires_premium_configuration">يتطلب هذا الإعداد وصولًا مميزًا.</string>
+    <string name="quiz_error_load_history_failed">تعذر تحميل سجل الاختبار.</string>
+    <string name="quiz_error_document_not_found">المستند غير موجود.</string>
+    <string name="quiz_error_requires_premium_replay">يتطلب إعادة هذا الاختبار وصولًا مميزًا.</string>
+</resources>

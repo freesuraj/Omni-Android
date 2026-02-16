@@ -1,0 +1,34 @@
+<resources>
+    <string name="analysis_cd_back">Back</string>
+    <string name="analysis_title_default">Detailed Analysis</string>
+    <string name="analysis_title_configure">Configure Analysis</string>
+    <string name="analysis_title_generating">Generating Analysis</string>
+
+    <string name="analysis_scope_title">Detailed analysis scope</string>
+    <string name="analysis_segments_not_ready">Analysis segments are not ready yet.</string>
+    <string name="analysis_segments_progress">%1$d/%2$d segments analyzed</string>
+    <string name="analysis_scope_pdf_description">Runs page-by-page analysis and saves results for review.</string>
+    <string name="analysis_scope_non_pdf_description">Runs section-level analysis for transcript/content sources.</string>
+    <string name="analysis_premium_notice">Detailed Analysis is a premium workflow.</string>
+
+    <string name="analysis_action_retry">Retry</string>
+    <string name="analysis_action_resume">Resume Analysis</string>
+    <string name="analysis_action_regenerate">Regenerate Analysis</string>
+    <string name="analysis_action_generate">Generate Analysis</string>
+    <string name="analysis_action_retry_from_scratch">Retry from scratch</string>
+    <string name="analysis_view_action_resume">Resume</string>
+    <string name="analysis_view_action_regenerate">Regenerate</string>
+
+    <string name="analysis_generating_title">Generating detailed analysis...</string>
+    <string name="analysis_saved_count">%1$d/%2$d saved</string>
+    <string name="analysis_progress_preparing">Preparing analysis...</string>
+    <string name="analysis_progress_restarting">Restarting analysis...</string>
+    <string name="analysis_progress_available_after_processing">Analysis will be available when processing completes</string>
+    <string name="analysis_progress_ready_to_analyze">Ready to analyze</string>
+
+    <string name="analysis_section_title_page">Page %1$d</string>
+    <string name="analysis_section_title_section">Section %1$d</string>
+
+    <string name="analysis_error_requires_premium">Detailed Analysis is a premium feature. Upgrade to continue.</string>
+    <string name="analysis_error_document_not_found">Document not found.</string>
+</resources>

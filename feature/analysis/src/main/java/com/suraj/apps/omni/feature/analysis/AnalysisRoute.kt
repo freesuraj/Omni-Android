@@ -34,6 +34,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -71,14 +72,14 @@ fun AnalysisRoute(
             TopAppBar(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.analysis_cd_back))
                     }
                 },
                 title = {
                     Text(
                         text = when (uiState.mode) {
-                            AnalysisScreenMode.CONFIG -> "Configure Analysis"
-                            AnalysisScreenMode.GENERATING -> "Generating Analysis"
+                            AnalysisScreenMode.CONFIG -> stringResource(R.string.analysis_title_configure)
+                            AnalysisScreenMode.GENERATING -> stringResource(R.string.analysis_title_generating)
                             AnalysisScreenMode.VIEW -> uiState.documentTitle
                         }
                     )
@@ -86,7 +87,7 @@ fun AnalysisRoute(
                 actions = {
                     if (uiState.mode == AnalysisScreenMode.VIEW) {
                         TextButton(onClick = viewModel::retryAnalysisFromScratch) {
-                            Text("Retry")
+                            Text(stringResource(R.string.analysis_action_retry))
                         }
                     }
                 }
@@ -135,7 +136,7 @@ private fun AnalysisConfigScreen(
         verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
         Text(
-            text = "Detailed analysis scope",
+            text = stringResource(R.string.analysis_scope_title),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -150,18 +151,18 @@ private fun AnalysisConfigScreen(
             ) {
                 Text(
                     text = if (uiState.expectedAnalysisCount == 0) {
-                        "Analysis segments are not ready yet."
+                        stringResource(R.string.analysis_segments_not_ready)
                     } else {
-                        "${uiState.completedCount}/${uiState.expectedAnalysisCount} segments analyzed"
+                        stringResource(R.string.analysis_segments_progress, uiState.completedCount, uiState.expectedAnalysisCount)
                     },
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
                     text = if (uiState.fileType.name == "PDF") {
-                        "Runs page-by-page analysis and saves results for review."
+                        stringResource(R.string.analysis_scope_pdf_description)
                     } else {
-                        "Runs section-level analysis for transcript/content sources."
+                        stringResource(R.string.analysis_scope_non_pdf_description)
                     },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -175,7 +176,7 @@ private fun AnalysisConfigScreen(
                 color = MaterialTheme.colorScheme.secondaryContainer
             ) {
                 Text(
-                    text = "Detailed Analysis is a premium workflow.",
+                    text = stringResource(R.string.analysis_premium_notice),
                     modifier = Modifier.padding(12.dp),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSecondaryContainer
@@ -196,9 +197,9 @@ private fun AnalysisConfigScreen(
         ) {
             Text(
                 text = when {
-                    uiState.hasPartialAnalyses -> "Resume Analysis"
-                    uiState.hasPersistedAnalyses -> "Regenerate Analysis"
-                    else -> "Generate Analysis"
+                    uiState.hasPartialAnalyses -> stringResource(R.string.analysis_action_resume)
+                    uiState.hasPersistedAnalyses -> stringResource(R.string.analysis_action_regenerate)
+                    else -> stringResource(R.string.analysis_action_generate)
                 }
             )
         }
@@ -208,7 +209,7 @@ private fun AnalysisConfigScreen(
                 onClick = onRetry,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Retry from scratch")
+                Text(stringResource(R.string.analysis_action_retry_from_scratch))
             }
         }
     }
@@ -231,7 +232,7 @@ private fun AnalysisGeneratingScreen(
             }
         )
         Text(
-            text = "Generating detailed analysis...",
+            text = stringResource(R.string.analysis_generating_title),
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(top = 16.dp)
         )
@@ -267,18 +268,18 @@ private fun AnalysisViewScreen(
                 },
                 modifier = Modifier.weight(1f)
             ) {
-                Text(if (uiState.hasPartialAnalyses) "Resume" else "Regenerate")
+                Text(if (uiState.hasPartialAnalyses) stringResource(R.string.analysis_view_action_resume) else stringResource(R.string.analysis_view_action_regenerate))
             }
             Button(
                 onClick = onRetry,
                 modifier = Modifier.weight(1f)
             ) {
-                Text("Retry")
+                Text(stringResource(R.string.analysis_action_retry))
             }
         }
 
         Text(
-            text = "${uiState.completedCount}/${uiState.expectedAnalysisCount} saved",
+            text = stringResource(R.string.analysis_saved_count, uiState.completedCount, uiState.expectedAnalysisCount),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )

@@ -48,6 +48,7 @@ data class AudioUiState(
 class AudioViewModel(
     application: Application
 ) : AndroidViewModel(application) {
+    private val app = application
     private val appContext = application.applicationContext
     private val repository = DocumentImportRepository(appContext)
 
@@ -85,7 +86,9 @@ class AudioViewModel(
 
         val pauseResult = runCatching { activeRecorder.pause() }
         if (pauseResult.isFailure) {
-            _uiState.update { state -> state.copy(errorMessage = "Unable to pause recording.") }
+            _uiState.update { state ->
+                state.copy(errorMessage = app.getString(R.string.audio_error_pause_failed))
+            }
             return
         }
         elapsedBeforeCurrentRunMs += SystemClock.elapsedRealtime() - recordingStartElapsedRealtime
@@ -105,7 +108,7 @@ class AudioViewModel(
         pendingStartAfterPermission = false
         if (!granted) {
             _uiState.update {
-                it.copy(errorMessage = "Microphone permission is required for live recording.")
+                it.copy(errorMessage = app.getString(R.string.audio_error_microphone_permission_required))
             }
             return
         }
@@ -149,7 +152,7 @@ class AudioViewModel(
             _uiState.update {
                 it.copy(
                     shouldOpenPaywall = true,
-                    errorMessage = "Free plan includes 2 lifetime live recordings."
+                    errorMessage = app.getString(R.string.audio_error_free_recording_limit)
                 )
             }
             return
@@ -181,7 +184,7 @@ class AudioViewModel(
             }
         }.getOrElse {
             _uiState.update {
-                it.copy(errorMessage = "Unable to start recording. Please try again.")
+                it.copy(errorMessage = app.getString(R.string.audio_error_start_failed))
             }
             return
         }
@@ -213,7 +216,7 @@ class AudioViewModel(
             recordingStartElapsedRealtime = SystemClock.elapsedRealtime()
         }.onFailure {
             _uiState.update { state ->
-                state.copy(errorMessage = "Unable to resume recording.")
+                state.copy(errorMessage = app.getString(R.string.audio_error_resume_failed))
             }
             return
         }
@@ -237,7 +240,7 @@ class AudioViewModel(
             recorderFile = null
             stopRecorder()
             if (finalFile == null || !finalFile.exists()) {
-                resetToIdle(errorMessage = "Recording file was not created.")
+                resetToIdle(errorMessage = app.getString(R.string.audio_error_recording_file_missing))
                 return@launch
             }
 
@@ -259,7 +262,7 @@ class AudioViewModel(
 
                 DocumentImportResult.RequiresPremium -> {
                     finalFile.delete()
-                    resetToIdle(errorMessage = "Free plan includes 2 lifetime live recordings.")
+                    resetToIdle(errorMessage = app.getString(R.string.audio_error_free_recording_limit))
                     _uiState.update { it.copy(shouldOpenPaywall = true) }
                 }
 

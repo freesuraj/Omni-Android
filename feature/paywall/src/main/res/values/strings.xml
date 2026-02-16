@@ -1,0 +1,17 @@
+<resources>
+    <string name="paywall_title">Unlock Omni Pro</string>
+    <string name="paywall_back_content_description">Back</string>
+    <string name="paywall_loading_plans">Loading plans...</string>
+    <string name="paywall_heading">Get full access to premium workflows</string>
+    <string name="paywall_subheading">Monthly, annual trial, and lifetime options are available.</string>
+    <string name="paywall_active_title">Omni Pro active</string>
+    <string name="paywall_active_subtitle">Premium features are currently unlocked on this device.</string>
+    <string name="paywall_unlock_button">Unlock Omni Pro</string>
+    <string name="paywall_restore_button">Restore Purchases</string>
+    <string name="paywall_renewal_note">Subscriptions renew automatically unless cancelled 24 hours before renewal.</string>
+    <string name="paywall_message_unlocked">Omni Pro unlocked.</string>
+    <string name="paywall_message_restored">Purchases restored.</string>
+    <string name="paywall_badge_best_value_trial">Best value • 7-day trial</string>
+    <string name="paywall_badge_best_value">Best value</string>
+    <string name="paywall_badge_one_time">One-time</string>
+</resources>

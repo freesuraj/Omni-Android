@@ -1,0 +1,13 @@
+<resources>
+    <string name="qa_title_default">سؤال وجواب</string>
+    <string name="qa_cd_back">رجوع</string>
+    <string name="qa_empty_title">اسأل أي شيء عن هذا المستند</string>
+    <string name="qa_empty_subtitle">يتم حفظ الأسئلة والإجابات لكل مستند.</string>
+    <string name="qa_thinking">جارٍ التفكير...</string>
+    <string name="qa_input_label">اطرح سؤالاً</string>
+    <string name="qa_send_button">إرسال</string>
+
+    <string name="qa_error_enter_question">أدخل سؤالاً أولاً.</string>
+    <string name="qa_error_requires_premium">ميزة السؤال والجواب مدفوعة. قم بالترقية للمتابعة.</string>
+    <string name="qa_error_document_not_found">المستند غير موجود.</string>
+</resources>

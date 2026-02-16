@@ -31,7 +31,7 @@ data class StudyNoteCardUi(
 )
 
 data class NotesUiState(
-    val documentTitle: String = "New Flashcards",
+    val documentTitle: String = "",
     val mode: NotesScreenMode = NotesScreenMode.CONFIG,
     val notes: List<StudyNoteCardUi> = emptyList(),
     val currentPage: Int = 0,
@@ -42,23 +42,20 @@ data class NotesUiState(
 ) {
     val visibleNotes: List<StudyNoteCardUi>
         get() = if (showBookmarkedOnly) notes.filter { it.isBookmarked } else notes
-
-    val pageIndicator: String
-        get() {
-            val total = visibleNotes.size
-            if (total == 0) return "0 of 0 cards"
-            val safeIndex = currentPage.coerceIn(0, total - 1)
-            return "${safeIndex + 1} of $total cards"
-        }
 }
 
 class NotesViewModel(
     application: Application,
     private val documentId: String
 ) : AndroidViewModel(application) {
+    private val app = application
     private val repository = StudyNotesRepository(application.applicationContext)
 
-    private val _uiState = MutableStateFlow(NotesUiState())
+    private val _uiState = MutableStateFlow(
+        NotesUiState(
+            documentTitle = app.getString(R.string.notes_title_new_flashcards)
+        )
+    )
     val uiState: StateFlow<NotesUiState> = _uiState.asStateFlow()
 
     init {
@@ -181,7 +178,7 @@ class NotesViewModel(
     private suspend fun loadBootstrap() {
         val bootstrap = repository.loadBootstrap(documentId)
         if (bootstrap == null) {
-            _uiState.update { it.copy(errorMessage = "Document not found.") }
+            _uiState.update { it.copy(errorMessage = app.getString(R.string.notes_error_document_not_found)) }
             return
         }
 

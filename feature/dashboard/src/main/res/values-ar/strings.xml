@@ -1,0 +1,58 @@
+<resources>
+    <string name="dashboard_title_fallback">لوحة التحكم</string>
+    <string name="dashboard_document_id">معرف المستند: %1$s</string>
+
+    <string name="dashboard_onboarding_in_progress_title">الإعداد قيد التنفيذ</string>
+    <string name="dashboard_onboarding_in_progress_subtitle">يمكنك المتابعة في الخلفية حتى يكتمل المعالجة.</string>
+    <string name="dashboard_status_preparing_onboarding">جارٍ تحضير الإعداد</string>
+    <string name="dashboard_status_transcribing_audio">جارٍ نسخ الصوت (%1$d%%)</string>
+    <string name="dashboard_status_transcription_complete">اكتمل النسخ</string>
+    <string name="dashboard_status_transcription_failed">فشل النسخ</string>
+    <string name="dashboard_status_generating_outputs">جارٍ إنشاء مخرجات الدراسة (%1$d%%)</string>
+    <string name="dashboard_status_ready_to_study">جاهز للدراسة</string>
+
+    <string name="dashboard_source_details_title">تفاصيل المصدر</string>
+    <string name="dashboard_source_details_preparing">جارٍ إعداد تفاصيل المصدر...</string>
+    <string name="dashboard_action_open_original">فتح الأصل</string>
+    <string name="dashboard_action_open">فتح</string>
+    <string name="dashboard_action_retry">إعادة المحاولة</string>
+
+    <string name="dashboard_feature_quiz_title">اختبار</string>
+    <string name="dashboard_feature_quiz_subtitle">أنشئ أسئلة تدريبية من هذا المستند.</string>
+    <string name="dashboard_feature_notes_title">ملاحظات الدراسة</string>
+    <string name="dashboard_feature_notes_subtitle">أنشئ وراجع ملاحظات دراسية على شكل بطاقات.</string>
+    <string name="dashboard_feature_summary_title">ملخص</string>
+    <string name="dashboard_feature_summary_subtitle">أنشئ ملخصات موجزة مع المشاركة ودعم التشغيل.</string>
+    <string name="dashboard_feature_qa_title">سؤال وجواب</string>
+    <string name="dashboard_feature_qa_subtitle">اطرح أسئلة على المحتوى المستورد (مميز).</string>
+    <string name="dashboard_feature_analysis_title">تحليل مفصل</string>
+    <string name="dashboard_feature_analysis_subtitle">شغّل تحليلاً أعمق للصفحات والنصوص (مميز).</string>
+    <string name="dashboard_upgrade_button">الترقية إلى سير عمل مميز</string>
+
+    <string name="dashboard_audio_preview_title">مشغل صوت + نص</string>
+    <string name="dashboard_audio_preview_playing">جارٍ تشغيل الصوت المستورد.</string>
+    <string name="dashboard_audio_preview_idle">اعرض الصوت المستورد والنص.</string>
+    <string name="dashboard_audio_action_play">تشغيل</string>
+    <string name="dashboard_audio_action_pause">إيقاف مؤقت</string>
+    <string name="dashboard_audio_transcript_preparing">جارٍ إعداد النص.</string>
+
+    <string name="dashboard_source_stats_pdf">مصدر PDF • تم استخراج %1$d كلمة</string>
+    <string name="dashboard_source_stats_text">مصدر نصي • %1$d كلمة</string>
+    <string name="dashboard_source_stats_web">مصدر ويب • %1$s • %2$d كلمة</string>
+    <string name="dashboard_source_stats_audio">مصدر صوتي • %1$s • %2$d كلمة منسوخة</string>
+    <string name="dashboard_web_article_fallback_host">مقال ويب</string>
+    <string name="dashboard_duration_unavailable">المدة غير متاحة</string>
+
+    <string name="dashboard_error_document_not_found">المستند غير موجود.</string>
+    <string name="dashboard_error_audio_transcription_failed_retry">فشل نسخ الصوت. أعد محاولة الإعداد.</string>
+    <string name="dashboard_error_premium_feature">%1$s ميزة مميزة. قم بالترقية للمتابعة.</string>
+    <string name="dashboard_error_onboarding_failed">فشل الإعداد.</string>
+    <string name="dashboard_error_audio_preview_failed">تعذر تشغيل معاينة الصوت.</string>
+    <string name="dashboard_error_document_unavailable">المستند غير متاح.</string>
+    <string name="dashboard_error_web_source_missing">عنوان URL لمصدر الويب مفقود.</string>
+    <string name="dashboard_error_file_reference_missing">مرجع الملف الأصلي مفقود.</string>
+    <string name="dashboard_error_file_missing">الملف الأصلي لم يعد موجودًا.</string>
+    <string name="dashboard_error_open_source_file_failed">تعذر فتح ملف المصدر.</string>
+    <string name="dashboard_error_no_app_available">لا يوجد تطبيق متاح لفتح هذا المصدر.</string>
+    <string name="dashboard_error_open_source_failed">تعذر فتح المصدر.</string>
+</resources>

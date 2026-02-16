@@ -39,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -106,8 +107,8 @@ fun AudioRoute(
             verticalArrangement = Arrangement.spacedBy(OmniSpacing.large)
         ) {
             OmniSectionHeader(
-                title = "Live audio",
-                subtitle = "Record, pause, resume, and transcribe in real time."
+                title = stringResource(R.string.audio_title),
+                subtitle = stringResource(R.string.audio_subtitle)
             )
 
             Surface(
@@ -130,7 +131,7 @@ fun AudioRoute(
                     )
 
                     Text(
-                        text = "Elapsed ${formatElapsed(uiState.elapsedMs)}",
+                        text = stringResource(R.string.audio_elapsed_time, formatElapsed(uiState.elapsedMs)),
                         style = MaterialTheme.typography.titleMedium
                     )
 
@@ -155,7 +156,7 @@ fun AudioRoute(
                                     RecordingStatus.PAUSED -> Icons.Default.PlayArrow
                                     else -> Icons.Default.Mic
                                 },
-                                contentDescription = "Record or resume"
+                                contentDescription = stringResource(R.string.audio_cd_record_or_resume)
                             )
                         }
                         IconButton(
@@ -164,7 +165,7 @@ fun AudioRoute(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Pause,
-                                contentDescription = "Pause"
+                                contentDescription = stringResource(R.string.audio_cd_pause)
                             )
                         }
                         IconButton(
@@ -174,20 +175,20 @@ fun AudioRoute(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Stop,
-                                contentDescription = "Finish recording"
+                                contentDescription = stringResource(R.string.audio_cd_finish_recording)
                             )
                         }
                     }
 
                     when (val remaining = uiState.remainingFreeRecordings) {
                         null -> Text(
-                            text = "Premium unlocked: unlimited live recordings",
+                            text = stringResource(R.string.audio_premium_unlocked_recordings),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
                         else -> Text(
-                            text = "Free recordings remaining: $remaining of 2",
+                            text = stringResource(R.string.audio_free_recordings_remaining, remaining),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -205,7 +206,7 @@ fun AudioRoute(
                     verticalArrangement = Arrangement.spacedBy(OmniSpacing.small)
                 ) {
                     Text(
-                        text = "Live transcript",
+                        text = stringResource(R.string.audio_live_transcript_title),
                         style = MaterialTheme.typography.titleMedium
                     )
                     Box(
@@ -221,7 +222,7 @@ fun AudioRoute(
                     ) {
                         if (uiState.transcript.isBlank()) {
                             Text(
-                                text = "Your speech transcript appears here while recording.",
+                                text = stringResource(R.string.audio_transcript_placeholder),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -262,11 +263,12 @@ private fun LiveWaveform(
     }
 }
 
+@Composable
 private fun statusText(status: RecordingStatus): String = when (status) {
-    RecordingStatus.IDLE -> "Idle"
-    RecordingStatus.RECORDING -> "Recording"
-    RecordingStatus.PAUSED -> "Paused"
-    RecordingStatus.FINALIZING -> "Saving"
+    RecordingStatus.IDLE -> stringResource(R.string.audio_status_idle)
+    RecordingStatus.RECORDING -> stringResource(R.string.audio_status_recording)
+    RecordingStatus.PAUSED -> stringResource(R.string.audio_status_paused)
+    RecordingStatus.FINALIZING -> stringResource(R.string.audio_status_saving)
 }
 
 private fun formatElapsed(elapsedMs: Long): String {

@@ -1,0 +1,24 @@
+<resources>
+    <string name="audio_title">Áudio ao vivo</string>
+    <string name="audio_subtitle">Grave, pause, retome e transcreva em tempo real.</string>
+    <string name="audio_elapsed_time">Decorrido %1$s</string>
+    <string name="audio_cd_record_or_resume">Gravar ou retomar</string>
+    <string name="audio_cd_pause">Pausar</string>
+    <string name="audio_cd_finish_recording">Finalizar gravação</string>
+    <string name="audio_premium_unlocked_recordings">Premium desbloqueado: gravações ao vivo ilimitadas</string>
+    <string name="audio_free_recordings_remaining">Gravações gratuitas restantes: %1$d de 2</string>
+    <string name="audio_live_transcript_title">Transcrição ao vivo</string>
+    <string name="audio_transcript_placeholder">A transcrição da sua fala aparece aqui durante a gravação.</string>
+
+    <string name="audio_status_idle">Inativo</string>
+    <string name="audio_status_recording">Gravando</string>
+    <string name="audio_status_paused">Pausado</string>
+    <string name="audio_status_saving">Salvando</string>
+
+    <string name="audio_error_pause_failed">Não foi possível pausar a gravação.</string>
+    <string name="audio_error_microphone_permission_required">A permissão de microfone é necessária para gravação ao vivo.</string>
+    <string name="audio_error_free_recording_limit">O plano gratuito inclui 2 gravações ao vivo por toda a vida.</string>
+    <string name="audio_error_start_failed">Não foi possível iniciar a gravação. Tente novamente.</string>
+    <string name="audio_error_resume_failed">Não foi possível retomar a gravação.</string>
+    <string name="audio_error_recording_file_missing">O arquivo de gravação não foi criado.</string>
+</resources>

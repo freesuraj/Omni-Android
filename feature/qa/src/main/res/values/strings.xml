@@ -1,0 +1,13 @@
+<resources>
+    <string name="qa_title_default">Q&amp;A</string>
+    <string name="qa_cd_back">Back</string>
+    <string name="qa_empty_title">Ask anything about this document</string>
+    <string name="qa_empty_subtitle">Questions and answers are saved per document.</string>
+    <string name="qa_thinking">Thinking...</string>
+    <string name="qa_input_label">Ask a question</string>
+    <string name="qa_send_button">Send</string>
+
+    <string name="qa_error_enter_question">Enter a question first.</string>
+    <string name="qa_error_requires_premium">Q&amp;A is a premium feature. Upgrade to continue.</string>
+    <string name="qa_error_document_not_found">Document not found.</string>
+</resources>

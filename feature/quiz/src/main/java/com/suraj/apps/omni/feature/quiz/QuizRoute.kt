@@ -56,6 +56,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
@@ -120,16 +121,16 @@ fun QuizRoute(
                 title = {
                     Text(
                         text = when (uiState.mode) {
-                            QuizScreenMode.CONFIG -> "Configure Quiz"
-                            QuizScreenMode.GENERATING -> "Generating Quiz"
-                            QuizScreenMode.PLAYING -> "${uiState.documentTitle} Quiz"
-                            QuizScreenMode.RESULT -> "Quiz Complete"
+                            QuizScreenMode.CONFIG -> stringResource(R.string.quiz_title_configure)
+                            QuizScreenMode.GENERATING -> stringResource(R.string.quiz_title_generating)
+                            QuizScreenMode.PLAYING -> stringResource(R.string.quiz_title_document_quiz, uiState.documentTitle)
+                            QuizScreenMode.RESULT -> stringResource(R.string.quiz_title_complete)
                         }
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.quiz_cd_back))
                     }
                 },
                 actions = {
@@ -138,7 +139,7 @@ fun QuizRoute(
                             onClick = viewModel::replayActiveQuiz,
                             enabled = uiState.activeQuizId != null
                         ) {
-                            Icon(Icons.Default.Refresh, contentDescription = "Replay")
+                            Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.quiz_cd_replay))
                         }
                     }
                 }
@@ -208,7 +209,7 @@ private fun QuizConfigScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            text = "Quiz Configuration",
+            text = stringResource(R.string.quiz_config_title),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -222,7 +223,7 @@ private fun QuizConfigScreen(
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 Text(
-                    text = "Number of Questions: ${uiState.questionCountLabel}",
+                    text = stringResource(R.string.quiz_question_count_label, uiState.questionCountLabel),
                     style = MaterialTheme.typography.titleMedium
                 )
                 Slider(
@@ -237,19 +238,19 @@ private fun QuizConfigScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     DifficultyChip(
-                        title = "Easy",
+                        title = stringResource(R.string.quiz_difficulty_easy),
                         selected = uiState.settings.difficulty == QuizDifficulty.EASY,
                         onClick = { onDifficultyChanged(QuizDifficulty.EASY) },
                         modifier = Modifier.weight(1f)
                     )
                     DifficultyChip(
-                        title = "Medium",
+                        title = stringResource(R.string.quiz_difficulty_medium),
                         selected = uiState.settings.difficulty == QuizDifficulty.MEDIUM,
                         onClick = { onDifficultyChanged(QuizDifficulty.MEDIUM) },
                         modifier = Modifier.weight(1f)
                     )
                     DifficultyChip(
-                        title = "Hard",
+                        title = stringResource(R.string.quiz_difficulty_hard),
                         selected = uiState.settings.difficulty == QuizDifficulty.HARD,
                         onClick = { onDifficultyChanged(QuizDifficulty.HARD) },
                         modifier = Modifier.weight(1f)
@@ -257,12 +258,12 @@ private fun QuizConfigScreen(
                 }
 
                 ToggleRow(
-                    label = "Show Source Snippet",
+                    label = stringResource(R.string.quiz_toggle_show_source_snippet),
                     checked = uiState.settings.showSourceSnippet,
                     onCheckedChange = onShowSourceSnippetChanged
                 )
                 ToggleRow(
-                    label = "Play Sounds",
+                    label = stringResource(R.string.quiz_toggle_play_sounds),
                     checked = uiState.settings.soundsEnabled,
                     onCheckedChange = onSoundsEnabledChanged
                 )
@@ -275,7 +276,7 @@ private fun QuizConfigScreen(
                 color = MaterialTheme.colorScheme.secondaryContainer
             ) {
                 Text(
-                    text = "Free limit: up to $FREE_MAX_QUIZ_QUESTIONS questions per quiz. Upgrade for longer sets.",
+                    text = stringResource(R.string.quiz_free_limit_notice, FREE_MAX_QUIZ_QUESTIONS),
                     modifier = Modifier.padding(12.dp),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSecondaryContainer
@@ -307,22 +308,22 @@ private fun QuizConfigScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Text(
-                        text = if (history.completed) "Latest quiz result" else "Resume latest quiz",
+                        text = if (history.completed) stringResource(R.string.quiz_history_latest_result) else stringResource(R.string.quiz_history_resume_latest),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
                         text = if (history.completed) {
-                            "Score ${history.correctCount}/${history.questionCount}"
+                            stringResource(R.string.quiz_history_score, history.correctCount, history.questionCount)
                         } else {
-                            "Progress ${history.answeredCount}/${history.questionCount}"
+                            stringResource(R.string.quiz_history_progress, history.answeredCount, history.questionCount)
                         },
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Button(onClick = onOpenHistoryReview, modifier = Modifier.weight(1f)) {
-                            Text(if (history.completed) "Review" else "Resume")
+                            Text(if (history.completed) stringResource(R.string.quiz_action_review) else stringResource(R.string.quiz_action_resume))
                         }
                         Button(
                             onClick = onReplayHistory,
@@ -332,7 +333,7 @@ private fun QuizConfigScreen(
                                 contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                             )
                         ) {
-                            Text("Replay")
+                            Text(stringResource(R.string.quiz_action_replay))
                         }
                     }
                 }
@@ -349,7 +350,7 @@ private fun QuizConfigScreen(
             )
         ) {
             Text(
-                text = "Generate Quiz",
+                text = stringResource(R.string.quiz_action_generate),
                 modifier = Modifier.padding(vertical = 4.dp),
                 fontWeight = FontWeight.Bold
             )
@@ -399,12 +400,12 @@ private fun QuizGeneratingScreen(
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "Generating your quiz...",
+            text = stringResource(R.string.quiz_generating_title),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.SemiBold
         )
         Text(
-            text = "Preparing question set, options, and review summary.",
+            text = stringResource(R.string.quiz_generating_subtitle),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 8.dp)
@@ -444,10 +445,10 @@ private fun QuizPlayingScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Button(onClick = onBackToConfig) {
-                Text("Exit")
+                Text(stringResource(R.string.quiz_action_exit))
             }
             Text(
-                text = "Streak ${uiState.streak}  |  Best ${uiState.bestStreak}",
+                text = stringResource(R.string.quiz_streak_label, uiState.streak, uiState.bestStreak),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -466,8 +467,17 @@ private fun QuizPlayingScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(uiState.questionProgressLabel, style = MaterialTheme.typography.labelLarge)
-            Text("Correct: ${uiState.correctCount}", style = MaterialTheme.typography.labelLarge)
+            val questionProgress = if (uiState.questions.isEmpty()) {
+                stringResource(R.string.quiz_question_progress_empty)
+            } else {
+                stringResource(
+                    R.string.quiz_question_progress,
+                    uiState.currentQuestionIndex + 1,
+                    uiState.questions.size
+                )
+            }
+            Text(questionProgress, style = MaterialTheme.typography.labelLarge)
+            Text(stringResource(R.string.quiz_correct_count_label, uiState.correctCount), style = MaterialTheme.typography.labelLarge)
         }
 
         if (question == null) {
@@ -477,7 +487,7 @@ private fun QuizPlayingScreen(
                 color = MaterialTheme.colorScheme.surfaceVariant
             ) {
                 Text(
-                    text = "No active question. Return to config and generate a new quiz.",
+                    text = stringResource(R.string.quiz_no_active_question),
                     modifier = Modifier.padding(16.dp)
                 )
             }
@@ -500,13 +510,13 @@ private fun QuizPlayingScreen(
                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             ) {
-                Text("Choose B")
+                Text(stringResource(R.string.quiz_action_choose_b))
             }
             Button(
                 onClick = { onAnswer("A") },
                 modifier = Modifier.weight(1f)
             ) {
-                Text("Choose A")
+                Text(stringResource(R.string.quiz_action_choose_a))
             }
         }
     }
@@ -566,13 +576,13 @@ private fun SwipeQuestionCard(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 OptionBox(
-                    label = "Option B",
+                    label = stringResource(R.string.quiz_option_b_label),
                     text = question.optionB,
                     modifier = Modifier.weight(1f),
                     color = MaterialTheme.colorScheme.errorContainer
                 )
                 OptionBox(
-                    label = "Option A",
+                    label = stringResource(R.string.quiz_option_a_label),
                     text = question.optionA,
                     modifier = Modifier.weight(1f),
                     color = MaterialTheme.colorScheme.primaryContainer
@@ -594,7 +604,7 @@ private fun SwipeQuestionCard(
             }
 
             Text(
-                text = "Swipe right for A, left for B",
+                text = stringResource(R.string.quiz_swipe_hint),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -648,7 +658,7 @@ private fun QuizResultScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                Text("Quiz Complete!", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.quiz_result_title), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
                 Text(
                     text = "${uiState.correctCount} / $total",
                     style = MaterialTheme.typography.displaySmall,
@@ -656,7 +666,7 @@ private fun QuizResultScreen(
                     fontWeight = FontWeight.ExtraBold
                 )
                 Text(
-                    text = "Correct Answers",
+                    text = stringResource(R.string.quiz_result_correct_answers),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -669,7 +679,7 @@ private fun QuizResultScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Button(onClick = onReplay, modifier = Modifier.weight(1f)) {
-                    Text("Retry Quiz")
+                    Text(stringResource(R.string.quiz_action_retry_quiz))
                 }
                 Button(
                     onClick = onBackToConfig,
@@ -679,14 +689,14 @@ private fun QuizResultScreen(
                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 ) {
-                    Text("New Setup")
+                    Text(stringResource(R.string.quiz_action_new_setup))
                 }
             }
         }
 
         item {
             Text(
-                text = "Review",
+                text = stringResource(R.string.quiz_result_review_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.padding(top = 6.dp)
@@ -704,14 +714,14 @@ private fun QuizResultScreen(
                 val isCorrect = question.isCorrect == true
                 Icon(
                     imageVector = if (isCorrect) Icons.Default.CheckCircle else Icons.Default.Close,
-                    contentDescription = if (isCorrect) "Correct" else "Incorrect",
+                    contentDescription = if (isCorrect) stringResource(R.string.quiz_result_cd_correct) else stringResource(R.string.quiz_result_cd_incorrect),
                     tint = if (isCorrect) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
                     modifier = Modifier.size(20.dp)
                 )
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp), modifier = Modifier.weight(1f)) {
                     Text(question.prompt, style = MaterialTheme.typography.bodyMedium)
                     Text(
-                        text = "Your answer: ${question.userAnswer ?: "-"} • Correct: ${question.correctAnswer}",
+                        text = stringResource(R.string.quiz_result_answer_line, question.userAnswer ?: "-", question.correctAnswer),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

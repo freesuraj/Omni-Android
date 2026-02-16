@@ -31,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.suraj.apps.omni.core.data.local.entity.DocumentEntity
@@ -75,6 +76,8 @@ fun DashboardRoute(
             documentId = documentId
         )
     )
+    val qaFeatureName = stringResource(R.string.dashboard_feature_qa_title)
+    val analysisFeatureName = stringResource(R.string.dashboard_feature_analysis_title)
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -96,8 +99,8 @@ fun DashboardRoute(
             verticalArrangement = Arrangement.spacedBy(OmniSpacing.medium)
         ) {
             OmniSectionHeader(
-                title = uiState.document?.title ?: "Dashboard",
-                subtitle = "Document ID: $documentId"
+                title = uiState.document?.title ?: stringResource(R.string.dashboard_title_fallback),
+                subtitle = stringResource(R.string.dashboard_document_id, documentId)
             )
             OmniStatusPill(
                 text = uiState.onboardingLabel,
@@ -114,12 +117,12 @@ fun DashboardRoute(
 
             if (uiState.isOnboarding) {
                 OmniFeatureCard(
-                    title = "Onboarding in progress",
-                    subtitle = "You can continue in background while processing completes.",
+                    title = stringResource(R.string.dashboard_onboarding_in_progress_title),
+                    subtitle = stringResource(R.string.dashboard_onboarding_in_progress_subtitle),
                     trailing = {
-                        if (uiState.onboardingLabel.contains("failed", ignoreCase = true)) {
+                        if (uiState.showRetryAction) {
                             Button(onClick = viewModel::retryOnboarding) {
-                                Text("Retry")
+                                Text(stringResource(R.string.dashboard_action_retry))
                             }
                         }
                     }
@@ -127,12 +130,12 @@ fun DashboardRoute(
             }
 
             OmniFeatureCard(
-                title = "Source details",
-                subtitle = uiState.sourceStats.ifBlank { "Preparing source details..." },
+                title = stringResource(R.string.dashboard_source_details_title),
+                subtitle = uiState.sourceStats.ifBlank { stringResource(R.string.dashboard_source_details_preparing) },
                 trailing = {
                     featureAction(
                         enabled = uiState.document != null,
-                        text = "Open original",
+                        text = stringResource(R.string.dashboard_action_open_original),
                         onClick = {
                             openOriginalSource(
                                 context = context,
@@ -153,47 +156,47 @@ fun DashboardRoute(
             }
 
             OmniFeatureCard(
-                title = "Quiz",
-                subtitle = "Generate practice questions from this document.",
+                title = stringResource(R.string.dashboard_feature_quiz_title),
+                subtitle = stringResource(R.string.dashboard_feature_quiz_subtitle),
                 trailing = {
                     featureAction(
                         enabled = !uiState.isOnboarding,
-                        text = "Open",
+                        text = stringResource(R.string.dashboard_action_open),
                         onClick = { onOpenQuiz(documentId) }
                     )
                 }
             )
             OmniFeatureCard(
-                title = "Study Notes",
-                subtitle = "Create and review card-based study notes.",
+                title = stringResource(R.string.dashboard_feature_notes_title),
+                subtitle = stringResource(R.string.dashboard_feature_notes_subtitle),
                 trailing = {
                     featureAction(
                         enabled = !uiState.isOnboarding,
-                        text = "Open",
+                        text = stringResource(R.string.dashboard_action_open),
                         onClick = { onOpenNotes(documentId) }
                     )
                 }
             )
             OmniFeatureCard(
-                title = "Summary",
-                subtitle = "Create concise summaries with share and playback support.",
+                title = stringResource(R.string.dashboard_feature_summary_title),
+                subtitle = stringResource(R.string.dashboard_feature_summary_subtitle),
                 trailing = {
                     featureAction(
                         enabled = !uiState.isOnboarding,
-                        text = "Open",
+                        text = stringResource(R.string.dashboard_action_open),
                         onClick = { onOpenSummary(documentId) }
                     )
                 }
             )
             OmniFeatureCard(
-                title = "Q&A",
-                subtitle = "Ask questions against imported content (premium).",
+                title = stringResource(R.string.dashboard_feature_qa_title),
+                subtitle = stringResource(R.string.dashboard_feature_qa_subtitle),
                 trailing = {
                     featureAction(
                         enabled = !uiState.isOnboarding,
-                        text = "Open",
+                        text = stringResource(R.string.dashboard_action_open),
                         onClick = {
-                            if (viewModel.requestPremiumFeatureAccess("Q&A")) {
+                            if (viewModel.requestPremiumFeatureAccess(qaFeatureName)) {
                                 onOpenQa(documentId)
                             } else {
                                 onOpenPaywall()
@@ -203,15 +206,15 @@ fun DashboardRoute(
                 }
             )
             OmniFeatureCard(
-                title = "Detailed Analysis",
-                subtitle = "Run deeper analysis for pages and transcripts (premium).",
+                title = stringResource(R.string.dashboard_feature_analysis_title),
+                subtitle = stringResource(R.string.dashboard_feature_analysis_subtitle),
                 trailing = {
                     Row(horizontalArrangement = Arrangement.spacedBy(OmniSpacing.small)) {
                         featureAction(
                             enabled = !uiState.isOnboarding,
-                            text = "Open",
+                            text = stringResource(R.string.dashboard_action_open),
                             onClick = {
-                                if (viewModel.requestPremiumFeatureAccess("Detailed analysis")) {
+                                if (viewModel.requestPremiumFeatureAccess(analysisFeatureName)) {
                                     onOpenAnalysis(documentId)
                                 } else {
                                     onOpenPaywall()
@@ -222,7 +225,7 @@ fun DashboardRoute(
                 }
             )
             OmniPrimaryButton(
-                text = "Upgrade for premium workflows",
+                text = stringResource(R.string.dashboard_upgrade_button),
                 onClick = onOpenPaywall
             )
         }
@@ -239,6 +242,7 @@ private fun AudioPreviewCard(
 
     var mediaPlayer by remember(audioPath) { mutableStateOf<MediaPlayer?>(null) }
     var isPlaying by remember(audioPath) { mutableStateOf(false) }
+    val audioPreviewError = stringResource(R.string.dashboard_error_audio_preview_failed)
 
     DisposableEffect(audioPath) {
         onDispose {
@@ -248,16 +252,16 @@ private fun AudioPreviewCard(
     }
 
     OmniFeatureCard(
-        title = "Audio player + transcript",
+        title = stringResource(R.string.dashboard_audio_preview_title),
         subtitle = if (isPlaying) {
-            "Playing imported audio."
+            stringResource(R.string.dashboard_audio_preview_playing)
         } else {
-            "Preview imported audio and transcript."
+            stringResource(R.string.dashboard_audio_preview_idle)
         },
         trailing = {
             featureAction(
                 enabled = true,
-                text = if (isPlaying) "Pause" else "Play",
+                text = if (isPlaying) stringResource(R.string.dashboard_audio_action_pause) else stringResource(R.string.dashboard_audio_action_play),
                 onClick = {
                     if (mediaPlayer == null) {
                         val newPlayer = runCatching {
@@ -267,7 +271,7 @@ private fun AudioPreviewCard(
                                 setOnCompletionListener { isPlaying = false }
                             }
                         }.getOrElse {
-                            onError("Unable to play audio preview.")
+                            onError(audioPreviewError)
                             return@featureAction
                         }
                         mediaPlayer = newPlayer
@@ -286,7 +290,7 @@ private fun AudioPreviewCard(
     )
     Text(
         text = if (transcript.isBlank()) {
-            "Transcript is being prepared."
+            stringResource(R.string.dashboard_audio_transcript_preparing)
         } else {
             transcript
         },
@@ -301,7 +305,7 @@ private fun openOriginalSource(
     onError: (String) -> Unit
 ) {
     if (document == null) {
-        onError("Document is unavailable.")
+        onError(context.getString(R.string.dashboard_error_document_unavailable))
         return
     }
 
@@ -309,7 +313,7 @@ private fun openOriginalSource(
         DocumentFileType.WEB -> {
             val source = document.sourceUrl.orEmpty()
             if (source.isBlank()) {
-                onError("Web source URL is missing.")
+                onError(context.getString(R.string.dashboard_error_web_source_missing))
                 return
             }
             Uri.parse(source)
@@ -320,12 +324,12 @@ private fun openOriginalSource(
         DocumentFileType.AUDIO -> {
             val path = document.fileBookmarkData?.toString(Charsets.UTF_8).orEmpty()
             if (path.isBlank()) {
-                onError("Original file reference is missing.")
+                onError(context.getString(R.string.dashboard_error_file_reference_missing))
                 return
             }
             val file = File(path)
             if (!file.exists()) {
-                onError("Original file no longer exists.")
+                onError(context.getString(R.string.dashboard_error_file_missing))
                 return
             }
             runCatching {
@@ -335,7 +339,7 @@ private fun openOriginalSource(
                     file
                 )
             }.getOrElse {
-                onError("Unable to open source file.")
+                onError(context.getString(R.string.dashboard_error_open_source_file_failed))
                 return
             }
         }
@@ -358,8 +362,8 @@ private fun openOriginalSource(
         context.startActivity(intent)
     }.onFailure { error ->
         when (error) {
-            is ActivityNotFoundException -> onError("No app available to open this source.")
-            else -> onError("Unable to open source.")
+            is ActivityNotFoundException -> onError(context.getString(R.string.dashboard_error_no_app_available))
+            else -> onError(context.getString(R.string.dashboard_error_open_source_failed))
         }
     }
 }

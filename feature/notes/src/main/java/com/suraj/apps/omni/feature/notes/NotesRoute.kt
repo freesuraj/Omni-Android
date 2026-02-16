@@ -57,6 +57,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -130,13 +131,13 @@ fun NotesRoute(
             TopAppBar(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.notes_cd_back))
                     }
                 },
                 title = {
                     Text(
                         text = if (uiState.mode == NotesScreenMode.CONFIG) {
-                            "New Flashcards"
+                            stringResource(R.string.notes_title_new_flashcards)
                         } else {
                             uiState.documentTitle
                         }
@@ -145,10 +146,10 @@ fun NotesRoute(
                 actions = {
                     if (uiState.mode == NotesScreenMode.CARDS) {
                         IconButton(onClick = viewModel::generateNotes) {
-                            Icon(Icons.Default.Refresh, contentDescription = "Regenerate")
+                            Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.notes_cd_regenerate))
                         }
                         TextButton(onClick = onBack) {
-                            Text("Done")
+                            Text(stringResource(R.string.notes_action_done))
                         }
                     }
                 }
@@ -216,7 +217,7 @@ private fun NotesConfigScreen(
                     modifier = Modifier.size(56.dp)
                 )
                 Text(
-                    text = "Generate Study Flashcards (Notes)",
+                    text = stringResource(R.string.notes_config_heading),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -227,7 +228,7 @@ private fun NotesConfigScreen(
                 )
 
                 Button(onClick = onGenerate, modifier = Modifier.fillMaxWidth()) {
-                    Text("Create Flashcards")
+                    Text(stringResource(R.string.notes_action_create_flashcards))
                 }
             }
         }
@@ -245,12 +246,12 @@ private fun NotesGeneratingScreen(
     ) {
         CircularProgressIndicator()
         Text(
-            text = "Generating flashcards...",
+            text = stringResource(R.string.notes_generating_title),
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(top = 16.dp)
         )
         Text(
-            text = "Chunking source content and preparing study cards.",
+            text = stringResource(R.string.notes_generating_subtitle),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 8.dp)
@@ -282,12 +283,12 @@ private fun NotesCardsScreen(
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Icon(Icons.Default.FilterAlt, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text("Bookmarked only", style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.notes_filter_bookmarked_only), style = MaterialTheme.typography.bodyMedium)
                 Switch(checked = uiState.showBookmarkedOnly, onCheckedChange = onBookmarkedFilterChanged)
             }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text("Auto-read", style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.notes_filter_auto_read), style = MaterialTheme.typography.bodyMedium)
                 Switch(checked = uiState.autoReadEnabled, onCheckedChange = onAutoReadChanged)
             }
         }
@@ -305,9 +306,9 @@ private fun NotesCardsScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Text("No cards in this filter", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.notes_empty_filter_title), style = MaterialTheme.typography.titleMedium)
                     Text(
-                        "Toggle bookmark filter off or generate a new set.",
+                        stringResource(R.string.notes_empty_filter_subtitle),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 6.dp)
@@ -360,8 +361,15 @@ private fun NotesCardsScreen(
                 .align(Alignment.CenterHorizontally)
                 .padding(bottom = 10.dp)
         ) {
+            val totalCards = visibleNotes.size
+            val pageLabel = if (totalCards == 0) {
+                stringResource(R.string.notes_page_indicator_empty)
+            } else {
+                val current = uiState.currentPage.coerceIn(0, totalCards - 1) + 1
+                stringResource(R.string.notes_page_indicator, current, totalCards)
+            }
             Text(
-                text = uiState.pageIndicator,
+                text = pageLabel,
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
@@ -420,17 +428,17 @@ private fun NoteCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onSpeak) {
-                        Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = "Speak")
+                        Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = stringResource(R.string.notes_card_cd_speak))
                     }
                     Text(
-                        text = if (showingBack) "ANSWER" else "QUESTION",
+                        text = if (showingBack) stringResource(R.string.notes_card_label_answer) else stringResource(R.string.notes_card_label_question),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     IconButton(onClick = onToggleBookmark) {
                         Icon(
                             imageVector = if (note.isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                            contentDescription = "Bookmark"
+                            contentDescription = stringResource(R.string.notes_card_cd_bookmark)
                         )
                     }
                 }
@@ -445,7 +453,7 @@ private fun NoteCard(
                 )
 
                 Text(
-                    text = if (showingBack) "Tap to go back to question" else "Tap to reveal answer",
+                    text = if (showingBack) stringResource(R.string.notes_card_hint_back_to_question) else stringResource(R.string.notes_card_hint_reveal_answer),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.align(Alignment.CenterHorizontally)

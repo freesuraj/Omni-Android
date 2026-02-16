@@ -8,6 +8,7 @@ import com.android.billingclient.api.ProductDetails
 import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.QueryProductDetailsParams
 import com.android.billingclient.api.QueryPurchasesParams
+import com.suraj.apps.omni.core.data.R
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -63,6 +64,8 @@ class BillingRepository(
     private val billingCatalogClient: BillingCatalogClient = GooglePlayBillingCatalogClient(context),
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
+    private val appContext = context.applicationContext
+
     fun entitlement(): BillingEntitlement {
         return BillingEntitlement(
             isPremiumUnlocked = premiumAccessStore.isPremiumUnlocked(),
@@ -93,7 +96,9 @@ class BillingRepository(
 
     suspend fun purchasePlan(planId: String): BillingPurchaseResult = withContext(ioDispatcher) {
         if (planId !in PLAN_PRODUCT_IDS) {
-            return@withContext BillingPurchaseResult.Failure("Selected plan is unavailable.")
+            return@withContext BillingPurchaseResult.Failure(
+                appContext.getString(R.string.billing_error_selected_plan_unavailable)
+            )
         }
 
         premiumAccessStore.setPremiumUnlocked(true)
@@ -116,7 +121,9 @@ class BillingRepository(
             billingCatalogClient.queryActivePurchases()
         }.getOrDefault(emptyList())
         val restoredPlan = purchases.firstOrNull { it in PLAN_PRODUCT_IDS }
-            ?: return@withContext BillingRestoreResult.Failure("No restorable purchases found for this account.")
+            ?: return@withContext BillingRestoreResult.Failure(
+                appContext.getString(R.string.billing_error_no_restorable_purchase)
+            )
 
         premiumAccessStore.setPremiumUnlocked(true)
         premiumAccessStore.setActivePlanId(restoredPlan)
@@ -127,9 +134,9 @@ class BillingRepository(
         return listOf(
             BillingPlan(
                 productId = PLAN_MONTHLY,
-                title = "Monthly",
-                subtitle = "Flexible monthly access",
-                priceLabel = "$4.99/month",
+                title = appContext.getString(R.string.billing_plan_monthly_title),
+                subtitle = appContext.getString(R.string.billing_plan_monthly_subtitle),
+                priceLabel = appContext.getString(R.string.billing_plan_monthly_price),
                 hasFreeTrial = false,
                 isBestValue = false,
                 isLifetime = false,
@@ -137,9 +144,9 @@ class BillingRepository(
             ),
             BillingPlan(
                 productId = PLAN_YEARLY_TRIAL,
-                title = "Yearly",
-                subtitle = "7-day free trial, then annual billing",
-                priceLabel = "$29.99/year",
+                title = appContext.getString(R.string.billing_plan_yearly_title),
+                subtitle = appContext.getString(R.string.billing_plan_yearly_subtitle),
+                priceLabel = appContext.getString(R.string.billing_plan_yearly_price),
                 hasFreeTrial = true,
                 isBestValue = true,
                 isLifetime = false,
@@ -147,9 +154,9 @@ class BillingRepository(
             ),
             BillingPlan(
                 productId = PLAN_LIFETIME,
-                title = "Lifetime",
-                subtitle = "One-time purchase, no recurring fees",
-                priceLabel = "$79.99 one-time",
+                title = appContext.getString(R.string.billing_plan_lifetime_title),
+                subtitle = appContext.getString(R.string.billing_plan_lifetime_subtitle),
+                priceLabel = appContext.getString(R.string.billing_plan_lifetime_price),
                 hasFreeTrial = false,
                 isBestValue = false,
                 isLifetime = true,

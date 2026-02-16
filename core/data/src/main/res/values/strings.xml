@@ -1,0 +1,21 @@
+<resources>
+    <string name="provider_message_no_personal_key_required">%1$s does not require a personal API key.</string>
+    <string name="provider_message_invalid_key">API key looks invalid. Paste the full key and try again.</string>
+    <string name="provider_message_key_saved">API key saved for %1$s.</string>
+    <string name="provider_message_ready">%1$s is ready.</string>
+    <string name="provider_message_configured">%1$s is configured.</string>
+    <string name="provider_message_add_valid_key">Add a valid API key for %1$s in Settings.</string>
+    <string name="provider_generation_missing_api_key">%1$s needs a valid API key. Open Settings to configure it.</string>
+    <string name="provider_generation_failed">Generation failed for %1$s.</string>
+    <string name="billing_error_selected_plan_unavailable">Selected plan is unavailable.</string>
+    <string name="billing_error_no_restorable_purchase">No restorable purchases found for this account.</string>
+    <string name="billing_plan_monthly_title">Monthly</string>
+    <string name="billing_plan_monthly_subtitle">Flexible monthly access</string>
+    <string name="billing_plan_monthly_price">$4.99/month</string>
+    <string name="billing_plan_yearly_title">Yearly</string>
+    <string name="billing_plan_yearly_subtitle">7-day free trial, then annual billing</string>
+    <string name="billing_plan_yearly_price">$29.99/year</string>
+    <string name="billing_plan_lifetime_title">Lifetime</string>
+    <string name="billing_plan_lifetime_subtitle">One-time purchase, no recurring fees</string>
+    <string name="billing_plan_lifetime_price">$79.99 one-time</string>
+</resources>

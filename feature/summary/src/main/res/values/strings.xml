@@ -1,0 +1,21 @@
+<resources>
+    <string name="summary_share_chooser_title">Share summary</string>
+    <string name="summary_cd_back">Back</string>
+    <string name="summary_title_configure">Configure Summary</string>
+    <string name="summary_title_generating">Generating Summary</string>
+    <string name="summary_action_new">New</string>
+    <string name="summary_length_title">Summary Length</string>
+    <string name="summary_target_word_count">Target Word Count: %1$d</string>
+    <string name="summary_free_limit">Free limit: up to %1$d words per summary.</string>
+    <string name="summary_action_generate">Generate Summary</string>
+    <string name="summary_generating_title">Generating summary...</string>
+    <string name="summary_generating_subtitle">Extracting key points from the document.</string>
+    <string name="summary_action_listen">Listen</string>
+    <string name="summary_action_share">Share</string>
+    <string name="summary_label_word_count">Summary • %1$d words</string>
+    <string name="summary_saved_summaries">Saved summaries</string>
+    <string name="summary_saved_item_label">%1$s • %2$d words</string>
+    <string name="summary_action_generate_another">Generate Another Summary</string>
+    <string name="summary_error_requires_premium_length">This summary length requires premium access.</string>
+    <string name="summary_error_document_not_found">Document not found.</string>
+</resources>

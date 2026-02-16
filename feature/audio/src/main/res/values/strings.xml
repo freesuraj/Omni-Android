@@ -1,0 +1,24 @@
+<resources>
+    <string name="audio_title">Live audio</string>
+    <string name="audio_subtitle">Record, pause, resume, and transcribe in real time.</string>
+    <string name="audio_elapsed_time">Elapsed %1$s</string>
+    <string name="audio_cd_record_or_resume">Record or resume</string>
+    <string name="audio_cd_pause">Pause</string>
+    <string name="audio_cd_finish_recording">Finish recording</string>
+    <string name="audio_premium_unlocked_recordings">Premium unlocked: unlimited live recordings</string>
+    <string name="audio_free_recordings_remaining">Free recordings remaining: %1$d of 2</string>
+    <string name="audio_live_transcript_title">Live transcript</string>
+    <string name="audio_transcript_placeholder">Your speech transcript appears here while recording.</string>
+
+    <string name="audio_status_idle">Idle</string>
+    <string name="audio_status_recording">Recording</string>
+    <string name="audio_status_paused">Paused</string>
+    <string name="audio_status_saving">Saving</string>
+
+    <string name="audio_error_pause_failed">Unable to pause recording.</string>
+    <string name="audio_error_microphone_permission_required">Microphone permission is required for live recording.</string>
+    <string name="audio_error_free_recording_limit">Free plan includes 2 lifetime live recordings.</string>
+    <string name="audio_error_start_failed">Unable to start recording. Please try again.</string>
+    <string name="audio_error_resume_failed">Unable to resume recording.</string>
+    <string name="audio_error_recording_file_missing">Recording file was not created.</string>
+</resources>

@@ -1,0 +1,17 @@
+<resources>
+    <string name="settings_title">الإعدادات</string>
+    <string name="settings_section_llm_provider">موفر نموذج اللغة</string>
+    <string name="settings_choose_ai">اختر الذكاء الاصطناعي للاستخدام</string>
+    <string name="settings_provider_configuration">إعدادات %1$s</string>
+    <string name="settings_api_key_label">مفتاح API</string>
+    <string name="settings_validate_save_key">تحقق واحفظ المفتاح</string>
+    <string name="settings_saved_key_notice">يوجد مفتاح محفوظ بالفعل على هذا الجهاز.</string>
+    <string name="settings_clear_key">مسح المفتاح</string>
+    <string name="settings_get_api_key">الحصول على مفتاح API</string>
+    <string name="settings_section_about">حول</string>
+    <string name="settings_app_version_label">إصدار تطبيق Omni</string>
+    <string name="settings_terms_of_use">شروط الاستخدام</string>
+    <string name="settings_api_key_configured">تم إعداد مفتاح API</string>
+    <string name="settings_selected_content_description">محدد</string>
+    <string name="settings_message_cleared_key">تمت إزالة المفتاح المحفوظ لـ %1$s.</string>
+</resources>
