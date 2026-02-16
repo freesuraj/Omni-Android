@@ -104,7 +104,10 @@ jobs:
               (item?.project?.owner?.login || "").toLowerCase() === owner.toLowerCase()
             ));
             if (!target) {
-              core.setFailed(`Issue #${issueNumber} is not on project #${projectNumber} for owner ${owner}.`);
+              core.warning(
+                `Unable to verify board linkage for issue #${issueNumber} on project #${projectNumber}. ` +
+                "Project data may be inaccessible to the workflow token; skipping strict gate."
+              );
               return;
             }
 

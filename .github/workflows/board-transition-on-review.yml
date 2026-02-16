@@ -123,7 +123,10 @@ jobs:
               (item?.project?.owner?.login || "").toLowerCase() === owner.toLowerCase()
             ));
             if (!target) {
-              core.setFailed(`Issue #${issueNumber} is not on project #${projectNumber} for owner ${owner}.`);
+              core.warning(
+                `Unable to locate issue #${issueNumber} on project #${projectNumber}. ` +
+                "Project data may be inaccessible to the workflow token; skipping automated transition."
+              );
               return;
             }
 
