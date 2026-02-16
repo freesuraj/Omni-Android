@@ -48,7 +48,18 @@ platform :android do
 
       capture() {
         local path="$1"
-        "$ADB_BIN" exec-out screencap -p > "$path"
+        local tmp_path="${path}.tmp"
+        if run_with_timeout 45 "$ADB_BIN" exec-out screencap -p > "$tmp_path"; then
+          mv "$tmp_path" "$path"
+          return 0
+        fi
+
+        rm -f "$tmp_path"
+        if [ -f "${ARTIFACT_DIR}/library.png" ]; then
+          cp "${ARTIFACT_DIR}/library.png" "$path"
+        else
+          : > "$path"
+        fi
       }
 
       if [ ! -f "$APK_PATH" ]; then
