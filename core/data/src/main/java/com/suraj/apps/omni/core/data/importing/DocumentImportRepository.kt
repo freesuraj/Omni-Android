@@ -59,6 +59,8 @@ class DocumentImportRepository(
     private val audioTranscriptionEngine: AudioTranscriptionEngine = OnDeviceAudioTranscriptionEngine(),
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
+    fun isPremiumUnlocked(): Boolean = premiumAccessChecker.isPremiumUnlocked()
+
     fun observeDocuments(): Flow<List<DocumentEntity>> = database.documentDao().observeAll()
     fun observeDocument(documentId: String): Flow<DocumentEntity?> =
         database.documentDao().observeById(documentId)
