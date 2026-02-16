@@ -266,6 +266,31 @@ class DocumentImportRepository(
         textFile.readText()
     }
 
+    suspend fun renameDocument(
+        documentId: String,
+        title: String
+    ): DocumentImportResult = withContext(ioDispatcher) {
+        val normalizedTitle = title
+            .replace(Regex("\\s+"), " ")
+            .trim()
+        if (normalizedTitle.isBlank()) {
+            return@withContext DocumentImportResult.Failure("Document title cannot be empty.")
+        }
+
+        val existing = database.documentDao().getById(documentId)
+            ?: return@withContext DocumentImportResult.Failure("Document not found.")
+        database.documentDao().rename(documentId = existing.id, title = normalizedTitle)
+        DocumentImportResult.Success(existing.id)
+    }
+
+    suspend fun deleteDocument(documentId: String): DocumentImportResult = withContext(ioDispatcher) {
+        val existing = database.documentDao().getById(documentId)
+            ?: return@withContext DocumentImportResult.Failure("Document not found.")
+        database.documentDao().deleteById(documentId)
+        deleteDocumentArtifacts(existing)
+        DocumentImportResult.Success(documentId)
+    }
+
     fun remainingFreeLiveRecordings(): Int {
         if (premiumAccessChecker.isPremiumUnlocked()) return Int.MAX_VALUE
         val remaining = FREE_LIVE_RECORDING_LIMIT - liveRecordingCreationCount()
@@ -415,6 +440,24 @@ class DocumentImportRepository(
         val output = textFileFor(documentId)
         output.parentFile?.mkdirs()
         output.writeText(fullText)
+    }
+
+    private fun deleteDocumentArtifacts(document: DocumentEntity) {
+        runCatching {
+            val textFile = textFileFor(document.id)
+            if (textFile.exists()) {
+                textFile.delete()
+            }
+        }
+        runCatching {
+            val path = document.fileBookmarkData?.toString(Charsets.UTF_8).orEmpty()
+            if (path.isBlank()) return@runCatching
+            val file = File(path)
+            if (!file.exists()) return@runCatching
+            if (file.absolutePath.startsWith(context.filesDir.absolutePath)) {
+                file.delete()
+            }
+        }
     }
 
     private fun textFileFor(documentId: String): File {

@@ -15,9 +15,14 @@ import kotlinx.coroutines.launch
 
 data class LibraryUiState(
     val documents: List<DocumentEntity> = emptyList(),
-    val isImporting: Boolean = false,
+    val busyMessage: String? = null,
     val showWebDialog: Boolean = false,
     val webUrlInput: String = "",
+    val showRenameDialog: Boolean = false,
+    val renameDocumentId: String? = null,
+    val renameInput: String = "",
+    val showDeleteDialog: Boolean = false,
+    val deleteDocumentId: String? = null,
     val pendingDashboardDocumentId: String? = null,
     val shouldOpenPaywall: Boolean = false,
     val errorMessage: String? = null
@@ -41,17 +46,26 @@ class LibraryViewModel(
 
     fun onImportDocument(uri: Uri?) {
         if (uri == null) return
-        runImport { repository.importDocument(uri) }
+        runDocumentMutation(
+            busyMessage = "Importing source...",
+            navigateToDashboardOnSuccess = true
+        ) { repository.importDocument(uri) }
     }
 
     fun onImportAudio(uri: Uri?) {
         if (uri == null) return
-        runImport { repository.importAudio(uri) }
+        runDocumentMutation(
+            busyMessage = "Importing source...",
+            navigateToDashboardOnSuccess = true
+        ) { repository.importAudio(uri) }
     }
 
     fun onImportWebArticle() {
         val url = _uiState.value.webUrlInput
-        runImport { repository.importWebArticle(url) }
+        runDocumentMutation(
+            busyMessage = "Importing source...",
+            navigateToDashboardOnSuccess = true
+        ) { repository.importWebArticle(url) }
     }
 
     fun openWebDialog() {
@@ -66,6 +80,65 @@ class LibraryViewModel(
         _uiState.update { it.copy(webUrlInput = value) }
     }
 
+    fun openRenameDialog(document: DocumentEntity) {
+        _uiState.update {
+            it.copy(
+                showRenameDialog = true,
+                renameDocumentId = document.id,
+                renameInput = document.title,
+                errorMessage = null
+            )
+        }
+    }
+
+    fun dismissRenameDialog() {
+        _uiState.update {
+            it.copy(
+                showRenameDialog = false,
+                renameDocumentId = null,
+                renameInput = ""
+            )
+        }
+    }
+
+    fun updateRenameInput(value: String) {
+        _uiState.update { it.copy(renameInput = value) }
+    }
+
+    fun confirmRename() {
+        val targetDocumentId = _uiState.value.renameDocumentId ?: return
+        val newTitle = _uiState.value.renameInput
+        runDocumentMutation(
+            busyMessage = "Renaming document..."
+        ) { repository.renameDocument(targetDocumentId, newTitle) }
+    }
+
+    fun openDeleteDialog(document: DocumentEntity) {
+        _uiState.update {
+            it.copy(
+                showDeleteDialog = true,
+                deleteDocumentId = document.id,
+                errorMessage = null
+            )
+        }
+    }
+
+    fun dismissDeleteDialog() {
+        _uiState.update {
+            it.copy(
+                showDeleteDialog = false,
+                deleteDocumentId = null
+            )
+        }
+    }
+
+    fun confirmDelete() {
+        val targetDocumentId = _uiState.value.deleteDocumentId ?: return
+        runDocumentMutation(
+            busyMessage = "Deleting document..."
+        ) { repository.deleteDocument(targetDocumentId) }
+    }
+
     fun consumeDashboardNavigation() {
         _uiState.update { it.copy(pendingDashboardDocumentId = null) }
     }
@@ -78,17 +151,35 @@ class LibraryViewModel(
         _uiState.update { it.copy(errorMessage = null) }
     }
 
-    private fun runImport(action: suspend () -> DocumentImportResult) {
+    private fun runDocumentMutation(
+        busyMessage: String,
+        navigateToDashboardOnSuccess: Boolean = false,
+        action: suspend () -> DocumentImportResult
+    ) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isImporting = true, errorMessage = null) }
+            _uiState.update {
+                it.copy(
+                    busyMessage = busyMessage,
+                    errorMessage = null
+                )
+            }
             when (val result = action()) {
                 is DocumentImportResult.Success -> {
                     _uiState.update {
                         it.copy(
-                            isImporting = false,
+                            busyMessage = null,
                             showWebDialog = false,
                             webUrlInput = "",
-                            pendingDashboardDocumentId = result.documentId
+                            showRenameDialog = false,
+                            renameDocumentId = null,
+                            renameInput = "",
+                            showDeleteDialog = false,
+                            deleteDocumentId = null,
+                            pendingDashboardDocumentId = if (navigateToDashboardOnSuccess) {
+                                result.documentId
+                            } else {
+                                it.pendingDashboardDocumentId
+                            }
                         )
                     }
                 }
@@ -96,7 +187,7 @@ class LibraryViewModel(
                 DocumentImportResult.RequiresPremium -> {
                     _uiState.update {
                         it.copy(
-                            isImporting = false,
+                            busyMessage = null,
                             shouldOpenPaywall = true
                         )
                     }
@@ -105,7 +196,7 @@ class LibraryViewModel(
                 is DocumentImportResult.Failure -> {
                     _uiState.update {
                         it.copy(
-                            isImporting = false,
+                            busyMessage = null,
                             errorMessage = result.message
                         )
                     }
