@@ -65,7 +65,9 @@ fun OmniAppNavHost() {
                 onOpenQa = { qaDocumentId ->
                     navController.navigate(AppRoutes.qa(qaDocumentId))
                 },
-                onOpenAnalysis = { navController.navigate(AppRoutes.ANALYSIS) },
+                onOpenAnalysis = { analysisDocumentId ->
+                    navController.navigate(AppRoutes.analysis(analysisDocumentId))
+                },
                 onOpenPaywall = { navController.navigate(AppRoutes.PAYWALL) }
             )
         }
@@ -120,7 +122,19 @@ fun OmniAppNavHost() {
                 onOpenPaywall = { navController.navigate(AppRoutes.PAYWALL) }
             )
         }
-        composable(AppRoutes.ANALYSIS) { AnalysisRoute() }
+        composable(
+            route = AppRoutes.ANALYSIS,
+            arguments = listOf(navArgument(AppRoutes.ANALYSIS_ARG_DOCUMENT_ID) { type = NavType.StringType })
+        ) { backStackEntry ->
+            val analysisDocumentId = backStackEntry.arguments
+                ?.getString(AppRoutes.ANALYSIS_ARG_DOCUMENT_ID)
+                .orEmpty()
+            AnalysisRoute(
+                documentId = analysisDocumentId,
+                onBack = { navController.popBackStack() },
+                onOpenPaywall = { navController.navigate(AppRoutes.PAYWALL) }
+            )
+        }
         composable(AppRoutes.PAYWALL) {
             PaywallRoute(onBack = { navController.popBackStack() })
         }

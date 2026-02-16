@@ -63,7 +63,7 @@ fun DashboardRoute(
     onOpenNotes: (String) -> Unit,
     onOpenSummary: (String) -> Unit,
     onOpenQa: (String) -> Unit,
-    onOpenAnalysis: () -> Unit,
+    onOpenAnalysis: (String) -> Unit,
     onOpenPaywall: () -> Unit
 ) {
     val context = LocalContext.current
@@ -212,7 +212,7 @@ fun DashboardRoute(
                             text = "Open",
                             onClick = {
                                 if (viewModel.requestPremiumFeatureAccess("Detailed analysis")) {
-                                    onOpenAnalysis()
+                                    onOpenAnalysis(documentId)
                                 } else {
                                     onOpenPaywall()
                                 }

@@ -14,7 +14,8 @@ object AppRoutes {
     const val SUMMARY_ARG_DOCUMENT_ID = "documentId"
     const val QA = "qa/{documentId}"
     const val QA_ARG_DOCUMENT_ID = "documentId"
-    const val ANALYSIS = "analysis"
+    const val ANALYSIS = "analysis/{documentId}"
+    const val ANALYSIS_ARG_DOCUMENT_ID = "documentId"
     const val PAYWALL = "paywall"
 
     fun dashboard(documentId: String): String = "dashboard/$documentId"
@@ -22,4 +23,5 @@ object AppRoutes {
     fun notes(documentId: String): String = "notes/$documentId"
     fun summary(documentId: String): String = "summary/$documentId"
     fun qa(documentId: String): String = "qa/$documentId"
+    fun analysis(documentId: String): String = "analysis/$documentId"
 }
