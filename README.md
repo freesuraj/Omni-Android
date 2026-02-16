@@ -21,3 +21,12 @@ Native Android build of Omni using Jetpack Compose.
 ```bash
 ./gradlew :app:lintDebug :app:assembleDebug :app:testDebugUnitTest
 ```
+
+## PR screenshot evidence (local emulator)
+- CI no longer generates PR screenshots.
+- For each PR, capture screenshots from your local emulator for the affected flow(s).
+- Recommended command:
+```bash
+bundle exec fastlane android screenshots_pr pr:<PR_NUMBER>
+```
+- Upload images from `artifacts/pr/<PR_NUMBER>/screenshots` to the PR body or a PR comment.
