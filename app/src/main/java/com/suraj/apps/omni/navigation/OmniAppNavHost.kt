@@ -53,7 +53,9 @@ fun OmniAppNavHost() {
                 .orEmpty()
             DashboardRoute(
                 documentId = documentId,
-                onOpenQuiz = { navController.navigate(AppRoutes.QUIZ) },
+                onOpenQuiz = { quizDocumentId ->
+                    navController.navigate(AppRoutes.quiz(quizDocumentId))
+                },
                 onOpenNotes = { navController.navigate(AppRoutes.NOTES) },
                 onOpenSummary = { navController.navigate(AppRoutes.SUMMARY) },
                 onOpenQa = { navController.navigate(AppRoutes.QA) },
@@ -61,7 +63,19 @@ fun OmniAppNavHost() {
                 onOpenPaywall = { navController.navigate(AppRoutes.PAYWALL) }
             )
         }
-        composable(AppRoutes.QUIZ) { QuizRoute() }
+        composable(
+            route = AppRoutes.QUIZ,
+            arguments = listOf(navArgument(AppRoutes.QUIZ_ARG_DOCUMENT_ID) { type = NavType.StringType })
+        ) { backStackEntry ->
+            val quizDocumentId = backStackEntry.arguments
+                ?.getString(AppRoutes.QUIZ_ARG_DOCUMENT_ID)
+                .orEmpty()
+            QuizRoute(
+                documentId = quizDocumentId,
+                onBack = { navController.popBackStack() },
+                onOpenPaywall = { navController.navigate(AppRoutes.PAYWALL) }
+            )
+        }
         composable(AppRoutes.NOTES) { NotesRoute() }
         composable(AppRoutes.SUMMARY) { SummaryRoute() }
         composable(AppRoutes.QA) { QaRoute() }

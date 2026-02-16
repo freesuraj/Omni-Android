@@ -6,7 +6,8 @@ object AppRoutes {
     const val SETTINGS = "settings"
     const val DASHBOARD = "dashboard/{documentId}"
     const val DASHBOARD_ARG_DOCUMENT_ID = "documentId"
-    const val QUIZ = "quiz"
+    const val QUIZ = "quiz/{documentId}"
+    const val QUIZ_ARG_DOCUMENT_ID = "documentId"
     const val NOTES = "notes"
     const val SUMMARY = "summary"
     const val QA = "qa"
@@ -14,4 +15,5 @@ object AppRoutes {
     const val PAYWALL = "paywall"
 
     fun dashboard(documentId: String): String = "dashboard/$documentId"
+    fun quiz(documentId: String): String = "quiz/$documentId"
 }

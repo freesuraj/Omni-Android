@@ -59,7 +59,7 @@ private fun featureAction(
 @Composable
 fun DashboardRoute(
     documentId: String,
-    onOpenQuiz: () -> Unit,
+    onOpenQuiz: (String) -> Unit,
     onOpenNotes: () -> Unit,
     onOpenSummary: () -> Unit,
     onOpenQa: () -> Unit,
@@ -159,7 +159,7 @@ fun DashboardRoute(
                     featureAction(
                         enabled = !uiState.isOnboarding,
                         text = "Open",
-                        onClick = onOpenQuiz
+                        onClick = { onOpenQuiz(documentId) }
                     )
                 }
             )

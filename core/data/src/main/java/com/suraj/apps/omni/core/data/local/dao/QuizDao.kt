@@ -26,6 +26,10 @@ interface QuizDao {
     @Query("SELECT * FROM quizzes WHERE id = :quizId LIMIT 1")
     suspend fun getQuizWithQuestions(quizId: String): QuizWithQuestions?
 
+    @Transaction
+    @Query("SELECT * FROM quizzes WHERE documentId = :documentId ORDER BY createdAtEpochMs DESC LIMIT 1")
+    suspend fun getLatestQuizWithQuestions(documentId: String): QuizWithQuestions?
+
     @Query("SELECT * FROM quizzes WHERE documentId = :documentId ORDER BY createdAtEpochMs DESC")
     suspend fun getForDocument(documentId: String): List<QuizEntity>
 
