@@ -154,6 +154,50 @@ class DocumentImportRepositoryTest {
     }
 
     @Test
+    fun renameDocumentUpdatesStoredTitle() = runBlocking {
+        val sourceText = File(appContext.cacheDir, "rename-source.txt").apply {
+            writeText("Rename me")
+        }
+        val repository = DocumentImportRepository(
+            context = appContext,
+            database = database,
+            premiumAccessChecker = FakePremiumAccessChecker(isPremium = true)
+        )
+        val importResult = repository.importDocument(Uri.fromFile(sourceText)) as DocumentImportResult.Success
+
+        val renameResult = repository.renameDocument(importResult.documentId, " Updated   Title ")
+
+        assertTrue(renameResult is DocumentImportResult.Success)
+        val updated = database.documentDao().getById(importResult.documentId)
+        assertEquals("Updated Title", updated?.title)
+    }
+
+    @Test
+    fun deleteDocumentRemovesDatabaseEntryAndArtifacts() = runBlocking {
+        val sourceText = File(appContext.cacheDir, "delete-source.txt").apply {
+            writeText("Delete me")
+        }
+        val repository = DocumentImportRepository(
+            context = appContext,
+            database = database,
+            premiumAccessChecker = FakePremiumAccessChecker(isPremium = true)
+        )
+        val importResult = repository.importDocument(Uri.fromFile(sourceText)) as DocumentImportResult.Success
+        val imported = database.documentDao().getById(importResult.documentId)
+        val importedFilePath = imported?.fileBookmarkData?.toString(Charsets.UTF_8).orEmpty()
+        val importedFile = File(importedFilePath)
+        assertTrue(importedFile.exists())
+        assertNotNull(repository.readFullText(importResult.documentId))
+
+        val deleteResult = repository.deleteDocument(importResult.documentId)
+
+        assertTrue(deleteResult is DocumentImportResult.Success)
+        assertEquals(null, database.documentDao().getById(importResult.documentId))
+        assertEquals(null, repository.readFullText(importResult.documentId))
+        assertTrue(!importedFile.exists())
+    }
+
+    @Test
     fun transcribeAudioDocumentPersistsTranscriptAndMarksDocumentReady() = runBlocking {
         val sourceAudio = File(appContext.cacheDir, "import-audio.m4a").apply {
             writeBytes(byteArrayOf(8, 7, 6, 5))
