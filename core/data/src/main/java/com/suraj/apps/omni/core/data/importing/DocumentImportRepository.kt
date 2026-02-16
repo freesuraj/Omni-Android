@@ -10,6 +10,10 @@ import android.webkit.URLUtil
 import com.suraj.apps.omni.core.data.local.OmniDatabase
 import com.suraj.apps.omni.core.data.local.OmniDatabaseFactory
 import com.suraj.apps.omni.core.data.local.entity.DocumentEntity
+import com.suraj.apps.omni.core.data.transcription.AudioTranscriptionEngine
+import com.suraj.apps.omni.core.data.transcription.AudioTranscriptionProgress
+import com.suraj.apps.omni.core.data.transcription.AudioTranscriptionResult
+import com.suraj.apps.omni.core.data.transcription.OnDeviceAudioTranscriptionEngine
 import com.suraj.apps.omni.core.model.DocumentFileType
 import java.io.File
 import java.net.HttpURLConnection
@@ -52,6 +56,7 @@ class DocumentImportRepository(
     private val context: Context,
     private val database: OmniDatabase = OmniDatabaseFactory.create(context),
     private val premiumAccessChecker: PremiumAccessChecker = SharedPrefsPremiumAccessChecker(context),
+    private val audioTranscriptionEngine: AudioTranscriptionEngine = OnDeviceAudioTranscriptionEngine(),
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     fun observeDocuments(): Flow<List<DocumentEntity>> = database.documentDao().observeAll()
@@ -96,12 +101,10 @@ class DocumentImportRepository(
             .replace(Regex("\\s+"), " ")
             .trim()
             .ifBlank { "Live recording captured. Transcript will appear after processing." }
-        val preview = normalizedTranscript
-            .split(" ")
-            .filter { it.isNotBlank() }
-            .take(36)
-            .joinToString(" ")
-            .ifBlank { "Live recording imported." }
+        val preview = previewFromText(
+            fullText = normalizedTranscript,
+            fallback = "Live recording imported."
+        )
 
         persistFullText(documentId, normalizedTranscript)
         database.documentDao().upsert(
@@ -139,12 +142,10 @@ class DocumentImportRepository(
             .getOrDefault("Web article")
             .ifBlank { "Web article" }
             .replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
-        val preview = articleText.lineSequence()
-            .flatMap { it.split(" ").asSequence() }
-            .filter { it.isNotBlank() }
-            .take(36)
-            .joinToString(" ")
-            .ifBlank { "Web article imported." }
+        val preview = previewFromText(
+            fullText = articleText,
+            fallback = "Web article imported."
+        )
 
         persistFullText(documentId, articleText)
         database.documentDao().upsert(
@@ -164,6 +165,79 @@ class DocumentImportRepository(
             )
         )
         DocumentImportResult.Success(documentId)
+    }
+
+    suspend fun transcribeAudioDocument(
+        documentId: String,
+        onProgress: (AudioTranscriptionProgress) -> Unit = {}
+    ): AudioTranscriptionResult = withContext(ioDispatcher) {
+        val document = database.documentDao().getById(documentId)
+            ?: return@withContext AudioTranscriptionResult.Failure("Document not found.")
+        if (document.fileType != DocumentFileType.AUDIO) {
+            return@withContext AudioTranscriptionResult.Failure("Document is not an audio source.")
+        }
+
+        val existingTranscript = readFullText(documentId).orEmpty().trim()
+        if (existingTranscript.isNotBlank() && !isPlaceholderAudioTranscript(existingTranscript)) {
+            onProgress(
+                AudioTranscriptionProgress(
+                    progress = 1f,
+                    processedDurationMs = 0L,
+                    totalDurationMs = 0L,
+                    chunkIndex = 1,
+                    chunkCount = 1
+                )
+            )
+            return@withContext AudioTranscriptionResult.Success(
+                transcript = existingTranscript,
+                durationMs = 0L,
+                chunkCount = 1
+            )
+        }
+
+        val audioPath = document.fileBookmarkData?.toString(Charsets.UTF_8).orEmpty()
+        if (audioPath.isBlank()) {
+            return@withContext AudioTranscriptionResult.Failure("Audio file reference is missing.")
+        }
+        val audioFile = File(audioPath)
+        if (!audioFile.exists()) {
+            return@withContext AudioTranscriptionResult.Failure("Audio file is missing.")
+        }
+
+        database.documentDao().upsert(
+            document.copy(isOnboarding = true, onboardingStatus = "transcribing")
+        )
+
+        when (val result = audioTranscriptionEngine.transcribe(audioFile, onProgress)) {
+            is AudioTranscriptionResult.Failure -> {
+                val current = database.documentDao().getById(documentId) ?: document
+                database.documentDao().upsert(
+                    current.copy(isOnboarding = true, onboardingStatus = "transcription_failed")
+                )
+                result
+            }
+
+            is AudioTranscriptionResult.Success -> {
+                val normalizedTranscript = result.transcript
+                    .replace(Regex("\\s+"), " ")
+                    .trim()
+                persistFullText(documentId, normalizedTranscript)
+                val current = database.documentDao().getById(documentId) ?: document
+                val preview = previewFromText(
+                    fullText = normalizedTranscript,
+                    fallback = fallbackPreview(DocumentFileType.AUDIO)
+                )
+                database.documentDao().upsert(
+                    current.copy(
+                        extractedTextHash = sha256(normalizedTranscript),
+                        extractedTextPreview = preview,
+                        isOnboarding = false,
+                        onboardingStatus = "transcribed"
+                    )
+                )
+                result.copy(transcript = normalizedTranscript)
+            }
+        }
     }
 
     suspend fun readFullText(documentId: String): String? = withContext(ioDispatcher) {
@@ -188,12 +262,10 @@ class DocumentImportRepository(
         val storedFile = copySourceFile(uri, documentId, extension)
             ?: return@withContext DocumentImportResult.Failure("Unable to import selected file.")
         val extractedText = extractText(uri, storedFile, fileType)
-        val preview = extractedText.lineSequence()
-            .flatMap { it.split(" ").asSequence() }
-            .filter { it.isNotBlank() }
-            .take(36)
-            .joinToString(" ")
-            .ifBlank { fallbackPreview(fileType) }
+        val preview = previewFromText(
+            fullText = extractedText,
+            fallback = fallbackPreview(fileType)
+        )
 
         persistFullText(documentId, extractedText)
         database.documentDao().upsert(
@@ -276,6 +348,21 @@ class DocumentImportRepository(
         DocumentFileType.TXT -> "Imported Text"
         DocumentFileType.AUDIO -> "Imported Audio"
         DocumentFileType.WEB -> "Imported Article"
+    }
+
+    private fun previewFromText(fullText: String, fallback: String): String {
+        return fullText.lineSequence()
+            .flatMap { it.split(" ").asSequence() }
+            .filter { it.isNotBlank() }
+            .take(36)
+            .joinToString(" ")
+            .ifBlank { fallback }
+    }
+
+    private fun isPlaceholderAudioTranscript(value: String): Boolean {
+        val normalized = value.replace(Regex("\\s+"), " ").trim()
+        return normalized.equals(PLACEHOLDER_IMPORTED_AUDIO_TEXT, ignoreCase = true) ||
+            normalized.equals(PLACEHOLDER_LIVE_AUDIO_TEXT, ignoreCase = true)
     }
 
     private fun normalizeUrl(rawUrl: String): String? {
@@ -381,6 +468,10 @@ class DocumentImportRepository(
         const val FREE_DOCUMENT_LIMIT = 1
         const val FREE_LIVE_RECORDING_LIMIT = 2
         private val TEXT_EXTENSIONS = setOf("txt", "md", "csv", "rtf")
+        private const val PLACEHOLDER_IMPORTED_AUDIO_TEXT =
+            "Audio imported. Transcription runs in onboarding."
+        private const val PLACEHOLDER_LIVE_AUDIO_TEXT =
+            "Live recording captured. Transcript will appear after processing."
     }
 
     private fun defaultLiveRecordingTitle(): String {

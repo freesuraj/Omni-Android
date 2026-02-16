@@ -5,11 +5,15 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.suraj.apps.omni.core.data.local.OmniDatabase
 import com.suraj.apps.omni.core.data.local.entity.DocumentEntity
+import com.suraj.apps.omni.core.data.transcription.AudioTranscriptionEngine
+import com.suraj.apps.omni.core.data.transcription.AudioTranscriptionProgress
+import com.suraj.apps.omni.core.data.transcription.AudioTranscriptionResult
 import com.suraj.apps.omni.core.model.DocumentFileType
 import java.io.File
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -149,9 +153,112 @@ class DocumentImportRepositoryTest {
         assertEquals(0, repository.remainingFreeLiveRecordings())
     }
 
+    @Test
+    fun transcribeAudioDocumentPersistsTranscriptAndMarksDocumentReady() = runBlocking {
+        val sourceAudio = File(appContext.cacheDir, "import-audio.m4a").apply {
+            writeBytes(byteArrayOf(8, 7, 6, 5))
+        }
+        val progressEvents = mutableListOf<AudioTranscriptionProgress>()
+        val repository = DocumentImportRepository(
+            context = appContext,
+            database = database,
+            premiumAccessChecker = FakePremiumAccessChecker(isPremium = true),
+            audioTranscriptionEngine = FakeAudioTranscriptionEngine(
+                result = AudioTranscriptionResult.Success(
+                    transcript = "Final on-device transcript from audio chunks.",
+                    durationMs = 1_200_000L,
+                    chunkCount = 4
+                ),
+                progressEvents = listOf(
+                    AudioTranscriptionProgress(0.25f, 300_000L, 1_200_000L, 1, 4),
+                    AudioTranscriptionProgress(1f, 1_200_000L, 1_200_000L, 4, 4)
+                )
+            )
+        )
+        val importResult = repository.importAudio(Uri.fromFile(sourceAudio)) as DocumentImportResult.Success
+
+        val result = repository.transcribeAudioDocument(importResult.documentId) {
+            progressEvents += it
+        }
+
+        assertTrue(result is AudioTranscriptionResult.Success)
+        assertEquals(2, progressEvents.size)
+        assertEquals("Final on-device transcript from audio chunks.", repository.readFullText(importResult.documentId))
+        val updated = database.documentDao().getById(importResult.documentId)
+        assertFalse(updated?.isOnboarding ?: true)
+        assertEquals("transcribed", updated?.onboardingStatus)
+        assertTrue((updated?.extractedTextPreview ?: "").contains("Final on-device transcript"))
+    }
+
+    @Test
+    fun transcribeAudioDocumentSkipsEngineWhenLiveTranscriptAlreadyPresent() = runBlocking {
+        val sourceAudio = File(appContext.cacheDir, "live-short-circuit.m4a").apply {
+            writeBytes(byteArrayOf(4, 4, 4))
+        }
+        var invocationCount = 0
+        val repository = DocumentImportRepository(
+            context = appContext,
+            database = database,
+            premiumAccessChecker = FakePremiumAccessChecker(isPremium = true),
+            audioTranscriptionEngine = FakeAudioTranscriptionEngine(
+                result = AudioTranscriptionResult.Success("unused", 10L, 1)
+            ) {
+                invocationCount += 1
+            }
+        )
+        val importResult = repository.importLiveRecording(
+            sourceAudioFile = sourceAudio,
+            transcript = "Live transcript captured from microphone."
+        ) as DocumentImportResult.Success
+
+        val result = repository.transcribeAudioDocument(importResult.documentId)
+
+        val success = result as AudioTranscriptionResult.Success
+        assertEquals("Live transcript captured from microphone.", success.transcript)
+        assertEquals(0, invocationCount)
+    }
+
+    @Test
+    fun transcribeAudioDocumentMarksFailureStateWhenEngineFails() = runBlocking {
+        val sourceAudio = File(appContext.cacheDir, "import-audio-failure.m4a").apply {
+            writeBytes(byteArrayOf(1, 3, 5, 7))
+        }
+        val repository = DocumentImportRepository(
+            context = appContext,
+            database = database,
+            premiumAccessChecker = FakePremiumAccessChecker(isPremium = true),
+            audioTranscriptionEngine = FakeAudioTranscriptionEngine(
+                result = AudioTranscriptionResult.Failure("Recognizer unavailable.")
+            )
+        )
+        val importResult = repository.importAudio(Uri.fromFile(sourceAudio)) as DocumentImportResult.Success
+
+        val result = repository.transcribeAudioDocument(importResult.documentId)
+
+        assertTrue(result is AudioTranscriptionResult.Failure)
+        val updated = database.documentDao().getById(importResult.documentId)
+        assertTrue(updated?.isOnboarding ?: false)
+        assertEquals("transcription_failed", updated?.onboardingStatus)
+    }
+
     private class FakePremiumAccessChecker(
         private val isPremium: Boolean
     ) : PremiumAccessChecker {
         override fun isPremiumUnlocked(): Boolean = isPremium
+    }
+
+    private class FakeAudioTranscriptionEngine(
+        private val result: AudioTranscriptionResult,
+        private val progressEvents: List<AudioTranscriptionProgress> = emptyList(),
+        private val onTranscribe: () -> Unit = {}
+    ) : AudioTranscriptionEngine {
+        override suspend fun transcribe(
+            audioFile: File,
+            onProgress: (AudioTranscriptionProgress) -> Unit
+        ): AudioTranscriptionResult {
+            onTranscribe()
+            progressEvents.forEach(onProgress)
+            return result
+        }
     }
 }
