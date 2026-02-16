@@ -13,9 +13,11 @@ class StudyGenerationGatewayTest {
         val repository = ProviderSettingsRepository(GatewayTestStore().apply {
             setSelectedProviderId(AiProviderId.OPENAI)
         })
+        val fakeProvider = FakeStudyGenerationProvider()
         val gateway = StudyGenerationGateway(
             providerSettingsRepository = repository,
-            localProvider = FakeStudyGenerationProvider()
+            localProvider = fakeProvider,
+            remoteProviderFactory = { _, _ -> fakeProvider }
         )
 
         val result = gateway.generateSummary("source text", 100)
@@ -24,15 +26,17 @@ class StudyGenerationGatewayTest {
     }
 
     @Test
-    fun gatewayRunsWithFallbackForExternalProviderWhenKeyExists() = runBlocking {
+    fun gatewayRunsWithConfiguredExternalProviderWhenKeyExists() = runBlocking {
         val store = GatewayTestStore().apply {
             setSelectedProviderId(AiProviderId.GEMINI)
             setApiKey(AiProviderId.GEMINI, "AIzaSyA_VALID_EXAMPLE_1234567890")
         }
         val repository = ProviderSettingsRepository(store)
+        val fakeProvider = FakeStudyGenerationProvider()
         val gateway = StudyGenerationGateway(
             providerSettingsRepository = repository,
-            localProvider = FakeStudyGenerationProvider()
+            localProvider = fakeProvider,
+            remoteProviderFactory = { _, _ -> fakeProvider }
         )
 
         val result = gateway.generateSummary("source text", 100)
@@ -40,15 +44,17 @@ class StudyGenerationGatewayTest {
         val success = result as ProviderGatewayResult.Success
         assertEquals("summary-output", success.execution.value)
         assertEquals(AiProviderId.GEMINI, success.execution.providerId)
-        assertTrue(success.execution.usedLocalFallback)
+        assertFalse(success.execution.usedLocalFallback)
     }
 
     @Test
     fun gatewayUsesPrimaryPathForOmniProvider() = runBlocking {
+        val fakeProvider = FakeStudyGenerationProvider()
         val repository = ProviderSettingsRepository(GatewayTestStore())
         val gateway = StudyGenerationGateway(
             providerSettingsRepository = repository,
-            localProvider = FakeStudyGenerationProvider()
+            localProvider = fakeProvider,
+            remoteProviderFactory = { _, _ -> fakeProvider }
         )
 
         val result = gateway.generateQuizQuestions(
@@ -63,9 +69,39 @@ class StudyGenerationGatewayTest {
         assertEquals(AiProviderId.OMNI, success.execution.providerId)
         assertEquals(1, success.execution.value.size)
     }
+
+    @Test
+    fun gatewayUsesGeminiBackedOmniProviderWhenInternalKeyExists() = runBlocking {
+        val localProvider = FakeStudyGenerationProvider(summaryOutput = "local-summary")
+        val remoteProvider = FakeStudyGenerationProvider(summaryOutput = "remote-summary")
+        var capturedProviderId: AiProviderId? = null
+        var capturedApiKey: String? = null
+
+        val repository = ProviderSettingsRepository(GatewayTestStore())
+        val gateway = StudyGenerationGateway(
+            providerSettingsRepository = repository,
+            localProvider = localProvider,
+            remoteProviderFactory = { providerId, apiKey ->
+                capturedProviderId = providerId
+                capturedApiKey = apiKey
+                remoteProvider
+            },
+            omniApiKeyProvider = { "omni-internal-key" }
+        )
+
+        val result = gateway.generateSummary("source text", 100)
+
+        val success = result as ProviderGatewayResult.Success
+        assertEquals("remote-summary", success.execution.value)
+        assertEquals(AiProviderId.OMNI, capturedProviderId)
+        assertEquals("omni-internal-key", capturedApiKey)
+        assertFalse(success.execution.usedLocalFallback)
+    }
 }
 
-private class FakeStudyGenerationProvider : StudyGenerationProvider {
+private class FakeStudyGenerationProvider(
+    private val summaryOutput: String = "summary-output"
+) : StudyGenerationProvider {
     override suspend fun generateQuizQuestions(
         sourceText: String,
         questionCount: Int,
@@ -84,7 +120,7 @@ private class FakeStudyGenerationProvider : StudyGenerationProvider {
     }
 
     override suspend fun generateSummary(sourceText: String, targetWordCount: Int): String {
-        return "summary-output"
+        return summaryOutput
     }
 
     override suspend fun generateNotes(sourceText: String, targetCount: Int): List<ProviderStudyNote> {

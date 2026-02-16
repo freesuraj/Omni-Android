@@ -64,7 +64,9 @@ interface StudyGenerationProvider {
 class StudyGenerationGateway(
     private val providerSettingsRepository: ProviderSettingsRepository,
     private val localProvider: StudyGenerationProvider = LocalHeuristicStudyGenerationProvider(),
-    private val appContext: Context? = null
+    private val appContext: Context? = null,
+    private val remoteProviderFactory: (AiProviderId, String) -> StudyGenerationProvider = ::defaultRemoteProvider,
+    private val omniApiKeyProvider: () -> String? = ::defaultOmniApiKey
 ) {
     constructor(context: Context) : this(
         providerSettingsRepository = ProviderSettingsRepository(context),
@@ -127,29 +129,20 @@ class StudyGenerationGateway(
         val resolution = providerSettingsRepository.resolveProviderForGeneration()
         val providerId = resolution.providerId
 
-        if (providerId.requiresApiKey && resolution.apiKey.isNullOrBlank()) {
-            return@withContext ProviderGatewayResult.Failure(
-                message = appContext?.getString(
-                    com.suraj.apps.omni.core.data.R.string.provider_generation_missing_api_key,
-                    providerId.displayName
-                ) ?: "${providerId.displayName} needs a valid API key. Open Settings to configure it.",
-                providerId = providerId
-            )
+        val selection = when (val selected = selectProvider(providerId, resolution.apiKey)) {
+            is ProviderSelection.Failure -> return@withContext selected.value
+            is ProviderSelection.Ready -> selected
         }
 
-        // External providers are currently routed through the local heuristic engine as a fallback,
-        // while provider selection and BYO key validation remain fully wired.
-        val fallbackUsed = providerId != AiProviderId.OMNI
-
         runCatching {
-            operation(localProvider)
+            operation(selection.provider)
         }.fold(
             onSuccess = { value ->
                 ProviderGatewayResult.Success(
                     execution = ProviderExecution(
                         value = value,
                         providerId = providerId,
-                        usedLocalFallback = fallbackUsed
+                        usedLocalFallback = selection.usedLocalFallback
                     )
                 )
             },
@@ -166,6 +159,90 @@ class StudyGenerationGateway(
             }
         )
     }
+
+    private fun selectProvider(
+        providerId: AiProviderId,
+        apiKey: String?
+    ): ProviderSelection {
+        if (providerId == AiProviderId.OMNI) {
+            val omniApiKey = omniApiKeyProvider.invoke().orEmpty().trim()
+            if (omniApiKey.isBlank()) {
+                return ProviderSelection.Ready(
+                    provider = localProvider,
+                    usedLocalFallback = false
+                )
+            }
+
+            return runCatching {
+                ProviderSelection.Ready(
+                    provider = remoteProviderFactory.invoke(AiProviderId.OMNI, omniApiKey),
+                    usedLocalFallback = false
+                )
+            }.getOrElse { throwable ->
+                ProviderSelection.Failure(generationFailure(providerId, throwable))
+            }
+        }
+
+        if (providerId.requiresApiKey && apiKey.isNullOrBlank()) {
+            return ProviderSelection.Failure(missingApiKeyFailure(providerId))
+        }
+
+        return runCatching {
+            ProviderSelection.Ready(
+                provider = remoteProviderFactory.invoke(providerId, apiKey.orEmpty()),
+                usedLocalFallback = false
+            )
+        }.getOrElse { throwable ->
+            ProviderSelection.Failure(generationFailure(providerId, throwable))
+        }
+    }
+
+    private fun missingApiKeyFailure(providerId: AiProviderId): ProviderGatewayResult.Failure {
+        return ProviderGatewayResult.Failure(
+            message = appContext?.getString(
+                com.suraj.apps.omni.core.data.R.string.provider_generation_missing_api_key,
+                providerId.displayName
+            ) ?: "${providerId.displayName} needs a valid API key. Open Settings to configure it.",
+            providerId = providerId
+        )
+    }
+
+    private fun generationFailure(
+        providerId: AiProviderId,
+        throwable: Throwable
+    ): ProviderGatewayResult.Failure {
+        return ProviderGatewayResult.Failure(
+            message = throwable.message ?: (
+                appContext?.getString(
+                    com.suraj.apps.omni.core.data.R.string.provider_generation_failed,
+                    providerId.displayName
+                ) ?: "Generation failed for ${providerId.displayName}."
+                ),
+            providerId = providerId
+        )
+    }
+}
+
+private sealed interface ProviderSelection {
+    data class Ready(
+        val provider: StudyGenerationProvider,
+        val usedLocalFallback: Boolean
+    ) : ProviderSelection
+
+    data class Failure(
+        val value: ProviderGatewayResult.Failure
+    ) : ProviderSelection
+}
+
+private const val OMNI_GEMINI_API_KEY_ENV = "OMNI_GEMINI_API_KEY"
+private const val OMNI_GEMINI_API_KEY_PROPERTY = "omni.gemini.api.key"
+
+private fun defaultOmniApiKey(): String? {
+    val envValue = System.getenv(OMNI_GEMINI_API_KEY_ENV)?.trim().orEmpty()
+    if (envValue.isNotBlank()) return envValue
+
+    val propertyValue = System.getProperty(OMNI_GEMINI_API_KEY_PROPERTY)?.trim().orEmpty()
+    return propertyValue.ifBlank { null }
 }
 
 class LocalHeuristicStudyGenerationProvider : StudyGenerationProvider {
