@@ -47,6 +47,7 @@
     <string name="library_step_generate_subtitle">O Omni cria quiz, notas, resumo e contexto de perguntas e respostas.</string>
     <string name="library_step_study_title">Estudar e revisar</string>
     <string name="library_step_study_subtitle">Use as saídas do painel e continue aprendendo em um só lugar.</string>
+    <string name="library_empty_hint">Toque em + no canto superior direito para importar sua primeira fonte.</string>
 
     <string name="library_busy_importing_source">Importando fonte...</string>
     <string name="library_busy_renaming_document">Renomeando documento...</string>
