@@ -40,12 +40,13 @@ jobs:
       - name: Capture screenshots
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 36
+          api-level: 34
           arch: x86_64
+          target: google_apis
           profile: pixel_6
           force-avd-creation: false
           disable-animations: true
-          emulator-options: -no-window -noaudio -no-boot-anim -gpu swiftshader_indirect
+          emulator-options: -no-window -noaudio -no-boot-anim -no-snapshot -no-metrics -gpu swiftshader_indirect
           script: bundle exec fastlane android screenshots_pr pr:${PR_NUMBER}
 
       - name: Upload screenshots artifact
