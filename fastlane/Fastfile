@@ -14,7 +14,6 @@ platform :android do
     UI.user_error!("Pass PR number: fastlane android screenshots_pr pr:<PR_NUMBER>") if pr_number.empty?
 
     gradle(task: "assembleDebug")
-    gradle(task: "installDebug")
 
     artifact_dir = "artifacts/pr/#{pr_number}/screenshots"
     sh("mkdir -p #{artifact_dir}")
@@ -24,6 +23,7 @@ platform :android do
     sh <<~BASH
       set -euo pipefail
       APP_ID="com.suraj.apps.Doc2Quiz"
+      APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
       ARTIFACT_DIR="#{artifact_dir}"
       ADB_BIN="$(command -v adb || true)"
 
@@ -40,14 +40,26 @@ platform :android do
         exit 1
       fi
 
+      run_with_timeout() {
+        local seconds="$1"
+        shift
+        timeout "$seconds" "$@"
+      }
+
       capture() {
         local path="$1"
         "$ADB_BIN" exec-out screencap -p > "$path"
       }
 
-      "$ADB_BIN" wait-for-device
+      if [ ! -f "$APK_PATH" ]; then
+        echo "Expected APK missing at $APK_PATH"
+        exit 1
+      fi
+
+      run_with_timeout 120 "$ADB_BIN" wait-for-device
+      run_with_timeout 180 "$ADB_BIN" install -r "$APK_PATH"
       "$ADB_BIN" shell am force-stop "$APP_ID" >/dev/null 2>&1 || true
-      "$ADB_BIN" shell monkey -p "$APP_ID" -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1
+      run_with_timeout 60 "$ADB_BIN" shell monkey -p "$APP_ID" -c android.intent.category.LAUNCHER 1 1 >/dev/null 2>&1
       sleep 3
 
       capture "$ARTIFACT_DIR/library.png"
