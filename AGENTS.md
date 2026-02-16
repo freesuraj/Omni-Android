@@ -50,6 +50,9 @@
 
 ## Board and ticket workflow (required)
 - Dedicated GitHub Project board is the source of truth.
+- Default intake rule:
+  - For every user-requested task, create a board ticket before implementation.
+  - Exception: skip ticket creation only when the user explicitly says not to create one.
 - Only three states are allowed:
   - `Todo`
   - `In Progress`
@@ -117,7 +120,7 @@ Note: branch protection should require `Android Verify` and `Board Status Gate` 
 
 ## Collaboration contract
 - Primary coordinator delegates tasks in this order:
-  1. Board manager moves selected ticket to `In Progress`.
+  1. Board manager creates a ticket for the requested task (unless explicitly skipped by user) and moves it to `In Progress`.
   2. Android implementer executes ticket and prepares PR.
   3. QA/Fastlane manager runs verification and captures local emulator screenshots, updates PR.
   4. PR reviewer approves/rejects and triggers board move to `Done` or `Todo`.
