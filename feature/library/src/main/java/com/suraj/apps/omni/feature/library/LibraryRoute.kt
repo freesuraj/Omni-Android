@@ -2,26 +2,36 @@ package com.suraj.apps.omni.feature.library
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts.OpenDocument
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material.icons.rounded.Edit
-import androidx.compose.material.icons.rounded.MoreVert
-import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.GraphicEq
+import androidx.compose.material.icons.rounded.StickyNote2
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -29,9 +39,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -42,24 +52,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.suraj.apps.omni.core.data.local.entity.DocumentEntity
-import com.suraj.apps.omni.core.designsystem.component.OmniFeatureCard
 import com.suraj.apps.omni.core.designsystem.component.OmniFeatureChip
-import com.suraj.apps.omni.core.designsystem.component.OmniPrimaryButton
 import com.suraj.apps.omni.core.designsystem.component.OmniProgressOverlay
-import com.suraj.apps.omni.core.designsystem.component.OmniSectionHeader
-import com.suraj.apps.omni.core.designsystem.component.OmniStatusPill
-import com.suraj.apps.omni.core.designsystem.component.OmniStepBadge
 import com.suraj.apps.omni.core.designsystem.theme.OmniSpacing
-
-private data class StepContent(val step: Int, val title: String, val subtitle: String)
+import com.suraj.apps.omni.core.model.DocumentFileType
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LibraryRoute(
-    onOpenAudio: () -> Unit,
-    onOpenSettings: () -> Unit,
     onOpenDashboard: (String) -> Unit,
     onOpenPaywall: () -> Unit
 ) {
@@ -178,27 +181,10 @@ fun LibraryRoute(
         stringResource(R.string.library_chip_analysis),
         stringResource(R.string.library_chip_audio)
     )
-    val steps = listOf(
-        StepContent(
-            1,
-            stringResource(R.string.library_step_import_title),
-            stringResource(R.string.library_step_import_subtitle)
-        ),
-        StepContent(
-            2,
-            stringResource(R.string.library_step_generate_title),
-            stringResource(R.string.library_step_generate_subtitle)
-        ),
-        StepContent(
-            3,
-            stringResource(R.string.library_step_study_title),
-            stringResource(R.string.library_step_study_subtitle)
-        )
-    )
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 title = { Text(stringResource(R.string.library_title)) },
                 actions = {
                     IconButton(onClick = { importMenuExpanded = true }) {
@@ -233,12 +219,6 @@ fun LibraryRoute(
                             }
                         )
                     }
-                    IconButton(onClick = onOpenSettings) {
-                        Icon(
-                            imageVector = Icons.Rounded.Settings,
-                            contentDescription = stringResource(R.string.library_content_desc_settings)
-                        )
-                    }
                 }
             )
         },
@@ -249,61 +229,29 @@ fun LibraryRoute(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(OmniSpacing.large),
+                .padding(horizontal = OmniSpacing.large, vertical = OmniSpacing.medium),
             verticalArrangement = Arrangement.spacedBy(OmniSpacing.large)
         ) {
-            OmniSectionHeader(
-                title = stringResource(R.string.library_header_title),
-                subtitle = stringResource(R.string.library_header_subtitle)
-            )
-
             if (uiState.documents.isEmpty()) {
-                steps.forEach { step ->
-                    OmniFeatureCard(
-                        title = step.title,
-                        subtitle = step.subtitle,
-                        trailing = { OmniStepBadge(step = step.step) }
-                    )
-                }
-
-                Text(text = stringResource(R.string.library_what_you_get), style = MaterialTheme.typography.titleMedium)
-                featureChips.chunked(3).forEach { rowChips ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(OmniSpacing.small)) {
-                        rowChips.forEach { chip ->
-                            OmniFeatureChip(text = chip)
-                        }
-                    }
-                }
+                EmptyLibraryContent(featureChips = featureChips)
             } else {
-                OmniFeatureCard(
-                    title = stringResource(R.string.library_plan_guardrails_title),
-                    subtitle = stringResource(R.string.library_plan_guardrails_subtitle)
+                LoadedLibraryContent(
+                    documents = uiState.documents,
+                    menuExpandedDocumentId = documentMenuDocumentId,
+                    onOpenDashboard = onOpenDashboard,
+                    onOpenDocumentMenu = { documentMenuDocumentId = it },
+                    onDismissDocumentMenu = { documentMenuDocumentId = null },
+                    onRename = { document ->
+                        documentMenuDocumentId = null
+                        viewModel.openRenameDialog(document)
+                    },
+                    onDelete = { document ->
+                        documentMenuDocumentId = null
+                        viewModel.openDeleteDialog(document)
+                    }
                 )
-                Text(text = stringResource(R.string.library_your_imports), style = MaterialTheme.typography.titleMedium)
-
-                uiState.documents.forEach { document ->
-                    DocumentItemCard(
-                        document = document,
-                        menuExpanded = documentMenuDocumentId == document.id,
-                        onOpenDashboard = { onOpenDashboard(document.id) },
-                        onOpenMenu = { documentMenuDocumentId = document.id },
-                        onDismissMenu = { documentMenuDocumentId = null },
-                        onRename = {
-                            documentMenuDocumentId = null
-                            viewModel.openRenameDialog(document)
-                        },
-                        onDelete = {
-                            documentMenuDocumentId = null
-                            viewModel.openDeleteDialog(document)
-                        }
-                    )
-                }
             }
-
-            OmniPrimaryButton(
-                text = stringResource(R.string.library_record_live_audio),
-                onClick = onOpenAudio
-            )
+            Spacer(modifier = Modifier.height(OmniSpacing.large))
         }
     }
 
@@ -314,7 +262,144 @@ fun LibraryRoute(
 }
 
 @Composable
-private fun DocumentItemCard(
+private fun EmptyLibraryContent(featureChips: List<String>) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(OmniSpacing.large),
+            verticalArrangement = Arrangement.spacedBy(OmniSpacing.small)
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.Description,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(38.dp)
+            )
+            Text(
+                text = stringResource(R.string.library_header_title),
+                style = MaterialTheme.typography.headlineSmall
+            )
+            Text(
+                text = stringResource(R.string.library_header_subtitle),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+
+    StepItem(
+        step = 1,
+        title = stringResource(R.string.library_step_import_title),
+        subtitle = stringResource(R.string.library_step_import_subtitle)
+    )
+    StepItem(
+        step = 2,
+        title = stringResource(R.string.library_step_generate_title),
+        subtitle = stringResource(R.string.library_step_generate_subtitle)
+    )
+    StepItem(
+        step = 3,
+        title = stringResource(R.string.library_step_study_title),
+        subtitle = stringResource(R.string.library_step_study_subtitle)
+    )
+
+    Text(text = stringResource(R.string.library_what_you_get), style = MaterialTheme.typography.titleLarge)
+
+    featureChips.chunked(2).forEach { rowChips ->
+        Row(horizontalArrangement = Arrangement.spacedBy(OmniSpacing.small), modifier = Modifier.fillMaxWidth()) {
+            rowChips.forEach { chip ->
+                OmniFeatureChip(text = chip, modifier = Modifier.weight(1f))
+            }
+            if (rowChips.size == 1) {
+                Spacer(modifier = Modifier.weight(1f))
+            }
+        }
+    }
+
+    Text(
+        text = stringResource(R.string.library_empty_hint),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+}
+
+@Composable
+private fun StepItem(step: Int, title: String, subtitle: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.Top,
+        horizontalArrangement = Arrangement.spacedBy(OmniSpacing.medium)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(26.dp)
+                .background(MaterialTheme.colorScheme.primary, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = step.toString(),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onPrimary
+            )
+        }
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            Text(text = title, style = MaterialTheme.typography.titleMedium)
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun LoadedLibraryContent(
+    documents: List<DocumentEntity>,
+    menuExpandedDocumentId: String?,
+    onOpenDashboard: (String) -> Unit,
+    onOpenDocumentMenu: (String) -> Unit,
+    onDismissDocumentMenu: () -> Unit,
+    onRename: (DocumentEntity) -> Unit,
+    onDelete: (DocumentEntity) -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surface
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            documents.forEachIndexed { index, document ->
+                if (index > 0) {
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.outlineVariant,
+                        modifier = Modifier.padding(start = 68.dp, end = OmniSpacing.large)
+                    )
+                }
+                DocumentRow(
+                    document = document,
+                    menuExpanded = menuExpandedDocumentId == document.id,
+                    onOpenDashboard = { onOpenDashboard(document.id) },
+                    onOpenMenu = { onOpenDocumentMenu(document.id) },
+                    onDismissMenu = onDismissDocumentMenu,
+                    onRename = { onRename(document) },
+                    onDelete = { onDelete(document) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DocumentRow(
     document: DocumentEntity,
     menuExpanded: Boolean,
     onOpenDashboard: () -> Unit,
@@ -323,70 +408,69 @@ private fun DocumentItemCard(
     onRename: () -> Unit,
     onDelete: () -> Unit
 ) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(OmniSpacing.small)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onOpenDashboard)
+            .padding(horizontal = OmniSpacing.large, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(OmniSpacing.medium)
     ) {
-        OmniFeatureCard(
-            title = document.title,
-            subtitle = document.extractedTextPreview
-                ?: stringResource(R.string.library_document_preview_fallback),
-            trailing = {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(OmniSpacing.small)
-                ) {
-                    OmniStatusPill(
-                        text = if (document.isOnboarding) {
-                            stringResource(R.string.library_status_onboarding)
-                        } else {
-                            stringResource(R.string.library_status_ready)
-                        },
-                        color = if (document.isOnboarding) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            MaterialTheme.colorScheme.tertiary
-                        }
-                    )
-                    Box {
-                        IconButton(onClick = onOpenMenu) {
-                            Icon(
-                                imageVector = Icons.Rounded.MoreVert,
-                                contentDescription = stringResource(R.string.library_content_desc_document_actions)
-                            )
-                        }
-                        DropdownMenu(
-                            expanded = menuExpanded,
-                            onDismissRequest = onDismissMenu
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.library_action_rename)) },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Rounded.Edit,
-                                        contentDescription = null
-                                    )
-                                },
-                                onClick = onRename
-                            )
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.library_action_delete)) },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Rounded.Delete,
-                                        contentDescription = null
-                                    )
-                                },
-                                onClick = onDelete
-                            )
-                        }
-                    }
-                }
+        Icon(
+            imageVector = when (document.fileType) {
+                DocumentFileType.AUDIO -> Icons.Rounded.GraphicEq
+                else -> Icons.Rounded.Description
+            },
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(24.dp)
+        )
+
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            Text(
+                text = document.title,
+                style = MaterialTheme.typography.titleLarge
+            )
+            Text(
+                text = document.fileType.name,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        Box {
+            IconButton(onClick = onOpenMenu) {
+                Icon(
+                    imageVector = Icons.Rounded.StickyNote2,
+                    contentDescription = stringResource(R.string.library_content_desc_document_actions),
+                    tint = MaterialTheme.colorScheme.tertiary
+                )
             }
-        )
-        OmniPrimaryButton(
-            text = stringResource(R.string.library_open_dashboard),
-            onClick = onOpenDashboard
-        )
+            DropdownMenu(
+                expanded = menuExpanded,
+                onDismissRequest = onDismissMenu
+            ) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.library_open_dashboard)) },
+                    onClick = {
+                        onDismissMenu()
+                        onOpenDashboard()
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.library_action_rename)) },
+                    leadingIcon = { Icon(imageVector = Icons.Rounded.Edit, contentDescription = null) },
+                    onClick = onRename
+                )
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.library_action_delete)) },
+                    leadingIcon = { Icon(imageVector = Icons.Rounded.Delete, contentDescription = null) },
+                    onClick = onDelete
+                )
+            }
+        }
     }
 }

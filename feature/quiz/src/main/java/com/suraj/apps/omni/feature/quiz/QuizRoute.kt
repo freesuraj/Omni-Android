@@ -3,6 +3,10 @@ package com.suraj.apps.omni.feature.quiz
 import android.app.Application
 import android.media.AudioManager
 import android.media.ToneGenerator
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -49,23 +53,28 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.suraj.apps.omni.core.data.quiz.FREE_MAX_QUIZ_QUESTIONS
 import com.suraj.apps.omni.core.data.quiz.MIN_QUIZ_QUESTIONS
 import com.suraj.apps.omni.core.model.QuizDifficulty
+import kotlin.math.abs
 import kotlin.math.roundToInt
+import kotlinx.coroutines.launch
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -530,26 +539,64 @@ private fun SwipeQuestionCard(
     onSwipeLeft: () -> Unit,
     onSwipeRight: () -> Unit
 ) {
-    var dragOffset by remember(question.id) { mutableFloatStateOf(0f) }
+    val scope = rememberCoroutineScope()
+    val dragOffset = remember(question.id) { Animatable(0f) }
+    var cardSize by remember(question.id) { mutableStateOf(IntSize.Zero) }
+    var isAnimatingSwipe by remember(question.id) { mutableStateOf(false) }
+    val swipeThreshold = 120f
 
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .offset { IntOffset(dragOffset.roundToInt(), 0) }
+            .graphicsLayer {
+                val width = cardSize.width.toFloat().coerceAtLeast(1f)
+                translationX = dragOffset.value
+                rotationZ = (dragOffset.value / width) * 8f
+                alpha = (1f - (abs(dragOffset.value) / (width * 1.5f))).coerceIn(0.72f, 1f)
+            }
+            .onSizeChanged { cardSize = it }
             .pointerInput(question.id) {
                 detectHorizontalDragGestures(
                     onHorizontalDrag = { change, amount ->
                         change.consume()
-                        dragOffset += amount
+                        if (isAnimatingSwipe) return@detectHorizontalDragGestures
+                        scope.launch {
+                            dragOffset.snapTo(dragOffset.value + amount)
+                        }
                     },
                     onDragEnd = {
-                        when {
-                            dragOffset > 120f -> onSwipeRight()
-                            dragOffset < -120f -> onSwipeLeft()
+                        if (isAnimatingSwipe) return@detectHorizontalDragGestures
+                        val target = when {
+                            dragOffset.value > swipeThreshold -> cardSize.width.toFloat().coerceAtLeast(500f)
+                            dragOffset.value < -swipeThreshold -> -cardSize.width.toFloat().coerceAtLeast(500f)
+                            else -> 0f
                         }
-                        dragOffset = 0f
+                        scope.launch {
+                            if (target == 0f) {
+                                dragOffset.animateTo(
+                                    0f,
+                                    animationSpec = spring(stiffness = Spring.StiffnessLow)
+                                )
+                            } else {
+                                isAnimatingSwipe = true
+                                dragOffset.animateTo(
+                                    target,
+                                    animationSpec = tween(durationMillis = 150)
+                                )
+                                if (target > 0f) onSwipeRight() else onSwipeLeft()
+                                dragOffset.snapTo(0f)
+                                isAnimatingSwipe = false
+                            }
+                        }
                     },
-                    onDragCancel = { dragOffset = 0f }
+                    onDragCancel = {
+                        scope.launch {
+                            dragOffset.animateTo(
+                                0f,
+                                animationSpec = spring(stiffness = Spring.StiffnessLow)
+                            )
+                        }
+                    }
                 )
             }
             .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(22.dp)),

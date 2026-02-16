@@ -1,5 +1,6 @@
 <resources>
     <string name="dashboard_title_fallback">Dashboard</string>
+    <string name="dashboard_back_content_description">Back</string>
     <string name="dashboard_document_id">Document ID: %1$s</string>
 
     <string name="dashboard_onboarding_in_progress_title">Onboarding in progress</string>
@@ -28,6 +29,12 @@
     <string name="dashboard_feature_analysis_title">Detailed Analysis</string>
     <string name="dashboard_feature_analysis_subtitle">Run deeper analysis for pages and transcripts (premium).</string>
     <string name="dashboard_upgrade_button">Upgrade for premium workflows</string>
+    <string name="dashboard_card_quiz_trailing">10 Questions</string>
+    <string name="dashboard_card_notes_trailing">17 cards</string>
+    <string name="dashboard_card_summary_trailing">Key insights</string>
+    <string name="dashboard_card_analysis_trailing">Page-by-page</string>
+    <string name="dashboard_card_qa_trailing">Learn with AI</string>
+    <string name="dashboard_onboarding_footer">This might take a moment...</string>
 
     <string name="dashboard_audio_preview_title">Audio player + transcript</string>
     <string name="dashboard_audio_preview_playing">Playing imported audio.</string>

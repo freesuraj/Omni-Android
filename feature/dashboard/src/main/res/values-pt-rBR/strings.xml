@@ -1,5 +1,6 @@
 <resources>
     <string name="dashboard_title_fallback">Painel</string>
+    <string name="dashboard_back_content_description">Voltar</string>
     <string name="dashboard_document_id">ID do documento: %1$s</string>
 
     <string name="dashboard_onboarding_in_progress_title">Onboarding em andamento</string>
@@ -28,6 +29,12 @@
     <string name="dashboard_feature_analysis_title">Análise detalhada</string>
     <string name="dashboard_feature_analysis_subtitle">Execute análises mais profundas de páginas e transcrições (premium).</string>
     <string name="dashboard_upgrade_button">Fazer upgrade para fluxos premium</string>
+    <string name="dashboard_card_quiz_trailing">10 perguntas</string>
+    <string name="dashboard_card_notes_trailing">17 cartões</string>
+    <string name="dashboard_card_summary_trailing">Principais insights</string>
+    <string name="dashboard_card_analysis_trailing">Página por página</string>
+    <string name="dashboard_card_qa_trailing">Aprenda com IA</string>
+    <string name="dashboard_onboarding_footer">Isso pode levar um momento...</string>
 
     <string name="dashboard_audio_preview_title">Player de áudio + transcrição</string>
     <string name="dashboard_audio_preview_playing">Reproduzindo áudio importado.</string>
