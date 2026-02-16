@@ -121,6 +121,8 @@ fun OmniAppNavHost() {
             )
         }
         composable(AppRoutes.ANALYSIS) { AnalysisRoute() }
-        composable(AppRoutes.PAYWALL) { PaywallRoute() }
+        composable(AppRoutes.PAYWALL) {
+            PaywallRoute(onBack = { navController.popBackStack() })
+        }
     }
 }

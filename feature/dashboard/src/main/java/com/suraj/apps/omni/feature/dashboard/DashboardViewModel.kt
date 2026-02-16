@@ -112,7 +112,11 @@ class DashboardViewModel(
     }
 
     fun requestPremiumFeatureAccess(featureName: String): Boolean {
-        if (_uiState.value.isPremiumUnlocked) return true
+        val latestPremiumState = repository.isPremiumUnlocked()
+        if (latestPremiumState != _uiState.value.isPremiumUnlocked) {
+            _uiState.update { it.copy(isPremiumUnlocked = latestPremiumState) }
+        }
+        if (latestPremiumState) return true
         _uiState.update {
             it.copy(errorMessage = "$featureName is a premium feature. Upgrade to continue.")
         }

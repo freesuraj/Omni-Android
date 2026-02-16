@@ -7,6 +7,8 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import android.text.Html
 import android.webkit.URLUtil
+import com.suraj.apps.omni.core.data.entitlement.PremiumAccessStore
+import com.suraj.apps.omni.core.data.entitlement.SharedPrefsPremiumAccessStore
 import com.suraj.apps.omni.core.data.local.OmniDatabase
 import com.suraj.apps.omni.core.data.local.OmniDatabaseFactory
 import com.suraj.apps.omni.core.data.local.entity.DocumentEntity
@@ -34,21 +36,17 @@ sealed interface DocumentImportResult {
     data class Failure(val message: String) : DocumentImportResult
 }
 
-private const val ACCESS_PREFS_NAME = "omni_access"
-private const val KEY_PREMIUM_UNLOCKED = "premium_unlocked"
-private const val KEY_LIVE_RECORDINGS_CREATED = "live_recordings_created"
-
 interface PremiumAccessChecker {
     fun isPremiumUnlocked(): Boolean
 }
 
 class SharedPrefsPremiumAccessChecker(
-    private val context: Context
+    private val premiumAccessStore: PremiumAccessStore
 ) : PremiumAccessChecker {
+    constructor(context: Context) : this(SharedPrefsPremiumAccessStore(context))
+
     override fun isPremiumUnlocked(): Boolean {
-        return context
-            .getSharedPreferences(ACCESS_PREFS_NAME, Context.MODE_PRIVATE)
-            .getBoolean(KEY_PREMIUM_UNLOCKED, false)
+        return premiumAccessStore.isPremiumUnlocked()
     }
 }
 
@@ -56,6 +54,7 @@ class DocumentImportRepository(
     private val context: Context,
     private val database: OmniDatabase = OmniDatabaseFactory.create(context),
     private val premiumAccessChecker: PremiumAccessChecker = SharedPrefsPremiumAccessChecker(context),
+    private val premiumAccessStore: PremiumAccessStore = SharedPrefsPremiumAccessStore(context),
     private val audioTranscriptionEngine: AudioTranscriptionEngine = OnDeviceAudioTranscriptionEngine(),
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
@@ -346,17 +345,12 @@ class DocumentImportRepository(
 
     private fun recordLiveRecordingCreation() {
         if (premiumAccessChecker.isPremiumUnlocked()) return
-        val prefs = accessPrefs()
-        prefs.edit()
-            .putInt(KEY_LIVE_RECORDINGS_CREATED, liveRecordingCreationCount() + 1)
-            .apply()
+        premiumAccessStore.setLiveRecordingsCreated(liveRecordingCreationCount() + 1)
     }
 
     private fun liveRecordingCreationCount(): Int {
-        return accessPrefs().getInt(KEY_LIVE_RECORDINGS_CREATED, 0)
+        return premiumAccessStore.getLiveRecordingsCreated()
     }
-
-    private fun accessPrefs() = context.getSharedPreferences(ACCESS_PREFS_NAME, Context.MODE_PRIVATE)
 
     private fun detectDocumentType(uri: Uri): DocumentFileType? {
         val mimeType = context.contentResolver.getType(uri).orEmpty().lowercase()
