@@ -25,6 +25,11 @@ class DocumentImportRepositoryTest {
     @Before
     fun setUp() {
         appContext = ApplicationProvider.getApplicationContext()
+        appContext
+            .getSharedPreferences("omni_access", android.content.Context.MODE_PRIVATE)
+            .edit()
+            .clear()
+            .commit()
         database = Room.inMemoryDatabaseBuilder(appContext, OmniDatabase::class.java)
             .allowMainThreadQueries()
             .build()
@@ -90,6 +95,58 @@ class DocumentImportRepositoryTest {
         val result = repository.importDocument(Uri.fromFile(sourceFile))
 
         assertTrue(result is DocumentImportResult.RequiresPremium)
+    }
+
+    @Test
+    fun importLiveRecordingPersistsTranscriptAndTracksFreeQuota() = runBlocking {
+        val sourceAudio = File(appContext.cacheDir, "live-source.m4a").apply {
+            writeBytes(byteArrayOf(1, 2, 3, 4, 5))
+        }
+        val transcript = "Live transcript from microphone session."
+        val repository = DocumentImportRepository(
+            context = appContext,
+            database = database,
+            premiumAccessChecker = FakePremiumAccessChecker(isPremium = false)
+        )
+
+        val result = repository.importLiveRecording(sourceAudioFile = sourceAudio, transcript = transcript)
+
+        val success = result as DocumentImportResult.Success
+        val imported = database.documentDao().getById(success.documentId)
+        assertNotNull(imported)
+        assertEquals(DocumentFileType.AUDIO, imported?.fileType)
+        assertTrue((imported?.extractedTextPreview ?: "").contains("Live transcript"))
+        assertEquals(transcript, repository.readFullText(success.documentId))
+        assertEquals(1, repository.remainingFreeLiveRecordings())
+    }
+
+    @Test
+    fun importLiveRecordingRequiresPremiumAfterTwoLifetimeSessions() = runBlocking {
+        val repository = DocumentImportRepository(
+            context = appContext,
+            database = database,
+            premiumAccessChecker = FakePremiumAccessChecker(isPremium = false)
+        )
+        repeat(2) { index ->
+            val sourceAudio = File(appContext.cacheDir, "live-source-$index.m4a").apply {
+                writeBytes(byteArrayOf(index.toByte()))
+            }
+            val result = repository.importLiveRecording(
+                sourceAudioFile = sourceAudio,
+                transcript = "Transcript $index"
+            )
+            assertTrue(result is DocumentImportResult.Success)
+        }
+
+        val blockedResult = repository.importLiveRecording(
+            sourceAudioFile = File(appContext.cacheDir, "live-source-blocked.m4a").apply {
+                writeBytes(byteArrayOf(9))
+            },
+            transcript = "Blocked transcript"
+        )
+
+        assertTrue(blockedResult is DocumentImportResult.RequiresPremium)
+        assertEquals(0, repository.remainingFreeLiveRecordings())
     }
 
     private class FakePremiumAccessChecker(

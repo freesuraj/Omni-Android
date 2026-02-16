@@ -15,6 +15,9 @@ import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 import java.security.MessageDigest
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.util.UUID
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -27,6 +30,10 @@ sealed interface DocumentImportResult {
     data class Failure(val message: String) : DocumentImportResult
 }
 
+private const val ACCESS_PREFS_NAME = "omni_access"
+private const val KEY_PREMIUM_UNLOCKED = "premium_unlocked"
+private const val KEY_LIVE_RECORDINGS_CREATED = "live_recordings_created"
+
 interface PremiumAccessChecker {
     fun isPremiumUnlocked(): Boolean
 }
@@ -36,13 +43,8 @@ class SharedPrefsPremiumAccessChecker(
 ) : PremiumAccessChecker {
     override fun isPremiumUnlocked(): Boolean {
         return context
-            .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getSharedPreferences(ACCESS_PREFS_NAME, Context.MODE_PRIVATE)
             .getBoolean(KEY_PREMIUM_UNLOCKED, false)
-    }
-
-    companion object {
-        private const val PREFS_NAME = "omni_access"
-        private const val KEY_PREMIUM_UNLOCKED = "premium_unlocked"
     }
 }
 
@@ -69,6 +71,57 @@ class DocumentImportRepository(
             return@withContext DocumentImportResult.RequiresPremium
         }
         importUri(uri = uri, fileType = DocumentFileType.AUDIO)
+    }
+
+    suspend fun importLiveRecording(
+        sourceAudioFile: File,
+        transcript: String
+    ): DocumentImportResult = withContext(ioDispatcher) {
+        if (!canCreateLiveRecording()) {
+            return@withContext DocumentImportResult.RequiresPremium
+        }
+        if (!sourceAudioFile.exists()) {
+            return@withContext DocumentImportResult.Failure("Recording file is missing.")
+        }
+
+        val documentId = UUID.randomUUID().toString()
+        val extension = sourceAudioFile.extension.ifBlank { "m4a" }
+        val storedAudio = copyLocalFile(
+            source = sourceAudioFile,
+            documentId = documentId,
+            extension = extension
+        ) ?: return@withContext DocumentImportResult.Failure("Unable to store recorded audio.")
+
+        val normalizedTranscript = transcript
+            .replace(Regex("\\s+"), " ")
+            .trim()
+            .ifBlank { "Live recording captured. Transcript will appear after processing." }
+        val preview = normalizedTranscript
+            .split(" ")
+            .filter { it.isNotBlank() }
+            .take(36)
+            .joinToString(" ")
+            .ifBlank { "Live recording imported." }
+
+        persistFullText(documentId, normalizedTranscript)
+        database.documentDao().upsert(
+            DocumentEntity(
+                id = documentId,
+                title = defaultLiveRecordingTitle(),
+                createdAtEpochMs = System.currentTimeMillis(),
+                fileBookmarkData = storedAudio.absolutePath.toByteArray(Charsets.UTF_8),
+                fileType = DocumentFileType.AUDIO,
+                sourceUrl = null,
+                extractedTextHash = sha256(normalizedTranscript),
+                extractedTextPreview = preview,
+                lastOpenedAtEpochMs = null,
+                isOnboarding = true,
+                onboardingStatus = "imported",
+                timeSpentSeconds = 0.0
+            )
+        )
+        recordLiveRecordingCreation()
+        DocumentImportResult.Success(documentId)
     }
 
     suspend fun importWebArticle(url: String): DocumentImportResult = withContext(ioDispatcher) {
@@ -119,6 +172,12 @@ class DocumentImportRepository(
         textFile.readText()
     }
 
+    fun remainingFreeLiveRecordings(): Int {
+        if (premiumAccessChecker.isPremiumUnlocked()) return Int.MAX_VALUE
+        val remaining = FREE_LIVE_RECORDING_LIMIT - liveRecordingCreationCount()
+        return remaining.coerceAtLeast(0)
+    }
+
     private suspend fun importUri(
         uri: Uri,
         fileType: DocumentFileType
@@ -160,6 +219,25 @@ class DocumentImportRepository(
         if (premiumAccessChecker.isPremiumUnlocked()) return true
         return database.documentDao().count() < FREE_DOCUMENT_LIMIT
     }
+
+    private fun canCreateLiveRecording(): Boolean {
+        if (premiumAccessChecker.isPremiumUnlocked()) return true
+        return liveRecordingCreationCount() < FREE_LIVE_RECORDING_LIMIT
+    }
+
+    private fun recordLiveRecordingCreation() {
+        if (premiumAccessChecker.isPremiumUnlocked()) return
+        val prefs = accessPrefs()
+        prefs.edit()
+            .putInt(KEY_LIVE_RECORDINGS_CREATED, liveRecordingCreationCount() + 1)
+            .apply()
+    }
+
+    private fun liveRecordingCreationCount(): Int {
+        return accessPrefs().getInt(KEY_LIVE_RECORDINGS_CREATED, 0)
+    }
+
+    private fun accessPrefs() = context.getSharedPreferences(ACCESS_PREFS_NAME, Context.MODE_PRIVATE)
 
     private fun detectDocumentType(uri: Uri): DocumentFileType? {
         val mimeType = context.contentResolver.getType(uri).orEmpty().lowercase()
@@ -273,6 +351,19 @@ class DocumentImportRepository(
         }.getOrNull()
     }
 
+    private fun copyLocalFile(source: File, documentId: String, extension: String): File? {
+        val destination = File(context.filesDir, "imports/$documentId.$extension")
+        destination.parentFile?.mkdirs()
+        return runCatching {
+            source.inputStream().use { input ->
+                destination.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
+            destination
+        }.getOrNull()
+    }
+
     private fun sha256(value: String): String {
         val digest = MessageDigest.getInstance("SHA-256")
         return digest.digest(value.toByteArray())
@@ -288,6 +379,12 @@ class DocumentImportRepository(
 
     companion object {
         const val FREE_DOCUMENT_LIMIT = 1
+        const val FREE_LIVE_RECORDING_LIMIT = 2
         private val TEXT_EXTENSIONS = setOf("txt", "md", "csv", "rtf")
+    }
+
+    private fun defaultLiveRecordingTitle(): String {
+        val formatter = SimpleDateFormat("MMM d, HH:mm", Locale.getDefault())
+        return "Live recording ${formatter.format(Date())}"
     }
 }

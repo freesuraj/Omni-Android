@@ -35,7 +35,14 @@ fun OmniAppNavHost() {
                 onOpenPaywall = { navController.navigate(AppRoutes.PAYWALL) }
             )
         }
-        composable(AppRoutes.AUDIO) { AudioRoute() }
+        composable(AppRoutes.AUDIO) {
+            AudioRoute(
+                onOpenDashboard = { documentId ->
+                    navController.navigate(AppRoutes.dashboard(documentId))
+                },
+                onOpenPaywall = { navController.navigate(AppRoutes.PAYWALL) }
+            )
+        }
         composable(AppRoutes.SETTINGS) { SettingsRoute() }
         composable(
             route = AppRoutes.DASHBOARD,

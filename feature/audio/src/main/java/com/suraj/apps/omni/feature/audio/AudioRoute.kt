@@ -1,7 +1,13 @@
 package com.suraj.apps.omni.feature.audio
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts.RequestPermission
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -13,27 +19,85 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.suraj.apps.omni.core.designsystem.component.OmniFeatureCard
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.suraj.apps.omni.core.designsystem.component.OmniSectionHeader
 import com.suraj.apps.omni.core.designsystem.component.OmniStatusPill
 import com.suraj.apps.omni.core.designsystem.theme.OmniRadius
 import com.suraj.apps.omni.core.designsystem.theme.OmniSpacing
 
 @Composable
-fun AudioRoute() {
-    Scaffold { paddingValues: PaddingValues ->
+fun AudioRoute(
+    onOpenDashboard: (String) -> Unit,
+    onOpenPaywall: () -> Unit
+) {
+    val viewModel: AudioViewModel = viewModel()
+    val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val snackbars = remember { SnackbarHostState() }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = RequestPermission(),
+        onResult = viewModel::onMicrophonePermissionResult
+    )
+
+    LaunchedEffect(uiState.shouldRequestMicrophonePermission) {
+        if (!uiState.shouldRequestMicrophonePermission) return@LaunchedEffect
+        viewModel.consumePermissionRequest()
+        permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+    }
+
+    LaunchedEffect(uiState.pendingDashboardDocumentId) {
+        val documentId = uiState.pendingDashboardDocumentId ?: return@LaunchedEffect
+        viewModel.consumeDashboardNavigation()
+        onOpenDashboard(documentId)
+    }
+
+    LaunchedEffect(uiState.shouldOpenPaywall) {
+        if (!uiState.shouldOpenPaywall) return@LaunchedEffect
+        viewModel.consumePaywallNavigation()
+        onOpenPaywall()
+    }
+
+    LaunchedEffect(uiState.errorMessage) {
+        val message = uiState.errorMessage ?: return@LaunchedEffect
+        snackbars.showSnackbar(message)
+        viewModel.consumeError()
+    }
+
+    val hasMicrophonePermission = remember(context) {
+        {
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.RECORD_AUDIO
+            ) == PackageManager.PERMISSION_GRANTED
+        }
+    }
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbars) }
+    ) { paddingValues: PaddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -43,7 +107,7 @@ fun AudioRoute() {
         ) {
             OmniSectionHeader(
                 title = "Live audio",
-                subtitle = "Record, pause, continue, and transcribe in real time."
+                subtitle = "Record, pause, resume, and transcribe in real time."
             )
 
             Surface(
@@ -55,51 +119,159 @@ fun AudioRoute() {
                     modifier = Modifier.padding(OmniSpacing.large),
                     verticalArrangement = Arrangement.spacedBy(OmniSpacing.medium)
                 ) {
-                    OmniStatusPill(text = "Idle", color = MaterialTheme.colorScheme.primary)
-                    WavePlaceholder(modifier = Modifier
-                        .fillMaxWidth()
-                        .height(120.dp))
+                    OmniStatusPill(
+                        text = statusText(uiState.status),
+                        color = when (uiState.status) {
+                            RecordingStatus.RECORDING -> MaterialTheme.colorScheme.primary
+                            RecordingStatus.PAUSED -> MaterialTheme.colorScheme.tertiary
+                            RecordingStatus.FINALIZING -> MaterialTheme.colorScheme.secondary
+                            RecordingStatus.IDLE -> MaterialTheme.colorScheme.outline
+                        }
+                    )
+
+                    Text(
+                        text = "Elapsed ${formatElapsed(uiState.elapsedMs)}",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    LiveWaveform(
+                        samples = uiState.waveform,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(128.dp)
+                    )
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        IconButton(onClick = { }) { Icon(Icons.Default.Mic, contentDescription = "Record") }
-                        IconButton(onClick = { }) { Icon(Icons.Default.Pause, contentDescription = "Pause") }
-                        IconButton(onClick = { }) { Icon(Icons.Default.Stop, contentDescription = "Stop") }
+                        IconButton(
+                            onClick = { viewModel.onRecordTapped(hasMicrophonePermission()) },
+                            enabled = uiState.status != RecordingStatus.FINALIZING
+                        ) {
+                            Icon(
+                                imageVector = when (uiState.status) {
+                                    RecordingStatus.PAUSED -> Icons.Default.PlayArrow
+                                    else -> Icons.Default.Mic
+                                },
+                                contentDescription = "Record or resume"
+                            )
+                        }
+                        IconButton(
+                            onClick = viewModel::onPauseTapped,
+                            enabled = uiState.status == RecordingStatus.RECORDING
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Pause,
+                                contentDescription = "Pause"
+                            )
+                        }
+                        IconButton(
+                            onClick = viewModel::onFinishTapped,
+                            enabled = uiState.status == RecordingStatus.RECORDING ||
+                                uiState.status == RecordingStatus.PAUSED
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Stop,
+                                contentDescription = "Finish recording"
+                            )
+                        }
+                    }
+
+                    when (val remaining = uiState.remainingFreeRecordings) {
+                        null -> Text(
+                            text = "Premium unlocked: unlimited live recordings",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        else -> Text(
+                            text = "Free recordings remaining: $remaining of 2",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }
 
-            OmniFeatureCard(
-                title = "Live transcript",
-                subtitle = "Your speech transcript appears here as you record."
-            )
+            Surface(
+                shape = RoundedCornerShape(OmniRadius.large),
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(OmniSpacing.large),
+                    verticalArrangement = Arrangement.spacedBy(OmniSpacing.small)
+                ) {
+                    Text(
+                        text = "Live transcript",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(168.dp)
+                            .background(
+                                color = MaterialTheme.colorScheme.surface,
+                                shape = RoundedCornerShape(OmniRadius.medium)
+                            )
+                            .padding(OmniSpacing.medium),
+                        contentAlignment = Alignment.TopStart
+                    ) {
+                        if (uiState.transcript.isBlank()) {
+                            Text(
+                                text = "Your speech transcript appears here while recording.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        } else {
+                            Text(
+                                text = uiState.transcript,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun WavePlaceholder(modifier: Modifier = Modifier) {
+private fun LiveWaveform(
+    samples: List<Float>,
+    modifier: Modifier = Modifier
+) {
     val barColor = MaterialTheme.colorScheme.primary
     Canvas(modifier = modifier) {
-        val barCount = 24
-        val spacing = size.width / barCount
-        repeat(barCount) { index ->
-            val x = index * spacing + spacing / 2
-            val amplitudeFactor = when {
-                index % 5 == 0 -> 0.9f
-                index % 3 == 0 -> 0.6f
-                else -> 0.4f
-            }
-            val barHeight = size.height * amplitudeFactor
+        if (samples.isEmpty()) return@Canvas
+        val spacing = size.width / samples.size
+        samples.forEachIndexed { index, amplitude ->
+            val x = index * spacing + spacing / 2f
+            val normalized = amplitude.coerceIn(0f, 1f)
+            val barHeight = size.height * normalized
             drawLine(
                 color = barColor,
-                start = androidx.compose.ui.geometry.Offset(x, (size.height - barHeight) / 2f),
-                end = androidx.compose.ui.geometry.Offset(x, (size.height + barHeight) / 2f),
-                strokeWidth = 6f,
+                start = Offset(x, (size.height - barHeight) / 2f),
+                end = Offset(x, (size.height + barHeight) / 2f),
+                strokeWidth = (spacing * 0.62f).coerceAtMost(10.dp.toPx()),
                 cap = StrokeCap.Round
             )
         }
     }
+}
+
+private fun statusText(status: RecordingStatus): String = when (status) {
+    RecordingStatus.IDLE -> "Idle"
+    RecordingStatus.RECORDING -> "Recording"
+    RecordingStatus.PAUSED -> "Paused"
+    RecordingStatus.FINALIZING -> "Saving"
+}
+
+private fun formatElapsed(elapsedMs: Long): String {
+    val totalSeconds = (elapsedMs / 1000).coerceAtLeast(0)
+    val minutes = totalSeconds / 60
+    val seconds = totalSeconds % 60
+    return "%02d:%02d".format(minutes, seconds)
 }
