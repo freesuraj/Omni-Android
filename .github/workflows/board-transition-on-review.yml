@@ -79,41 +79,29 @@ jobs:
             const targetState = process.env.TARGET_STATE;
             const targetOptionId = process.env.TARGET_OPTION_ID;
             const inProgressOptionId = process.env.STATUS_OPTION_IN_PROGRESS;
-
-            async function getProject() {
-              const query = `
-                query($owner: String!, $number: Int!) {
-                  user(login: $owner) { projectV2(number: $number) { id title } }
-                  organization(login: $owner) { projectV2(number: $number) { id title } }
-                }
-              `;
-              const result = await github.graphql(query, { owner, number: projectNumber });
-              return result.user?.projectV2 || result.organization?.projectV2;
-            }
-
-            async function getProjectItems(projectId) {
-              const items = [];
-              let hasNextPage = true;
-              let cursor = null;
-              const query = `
-                query($projectId: ID!, $cursor: String) {
-                  node(id: $projectId) {
-                    ... on ProjectV2 {
-                      items(first: 100, after: $cursor) {
-                        pageInfo { hasNextPage endCursor }
-                        nodes {
+            const query = `
+              query($repoOwner: String!, $repoName: String!, $issueNumber: Int!) {
+                repository(owner: $repoOwner, name: $repoName) {
+                  issue(number: $issueNumber) {
+                    projectItems(first: 100) {
+                      nodes {
+                        id
+                        project {
                           id
-                          content {
-                            ... on Issue { number title url }
+                          number
+                          title
+                          owner {
+                            ... on User { login }
+                            ... on Organization { login }
                           }
-                          fieldValues(first: 50) {
-                            nodes {
-                              ... on ProjectV2ItemFieldSingleSelectValue {
-                                optionId
-                                name
-                                field {
-                                  ... on ProjectV2FieldCommon { id name }
-                                }
+                        }
+                        fieldValues(first: 50) {
+                          nodes {
+                            ... on ProjectV2ItemFieldSingleSelectValue {
+                              optionId
+                              name
+                              field {
+                                ... on ProjectV2FieldCommon { id name }
                               }
                             }
                           }
@@ -122,24 +110,23 @@ jobs:
                     }
                   }
                 }
-              `;
-              while (hasNextPage) {
-                const result = await github.graphql(query, { projectId, cursor });
-                const page = result.node.items;
-                items.push(...page.nodes);
-                hasNextPage = page.pageInfo.hasNextPage;
-                cursor = page.pageInfo.endCursor;
               }
-              return items;
-            }
-
-            const project = await getProject();
-            if (!project) core.setFailed(`Project #${projectNumber} not found for owner ${owner}.`);
-
-            const items = await getProjectItems(project.id);
-            const target = items.find((item) => item.content?.number === issueNumber);
+            `;
+            const result = await github.graphql(query, {
+              repoOwner: context.repo.owner,
+              repoName: context.repo.repo,
+              issueNumber
+            });
+            const projectItems = result.repository?.issue?.projectItems?.nodes || [];
+            const target = projectItems.find((item) => (
+              item?.project?.number === projectNumber &&
+              (item?.project?.owner?.login || "").toLowerCase() === owner.toLowerCase()
+            ));
             if (!target) {
-              core.setFailed(`Issue #${issueNumber} is not on project board ${project.title}.`);
+              core.warning(
+                `Unable to locate issue #${issueNumber} on project #${projectNumber}. ` +
+                "Project data may be inaccessible to the workflow token; skipping automated transition."
+              );
               return;
             }
 
@@ -166,7 +153,7 @@ jobs:
               }
             `;
             await github.graphql(mutation, {
-              projectId: project.id,
+              projectId: target.project.id,
               itemId: target.id,
               fieldId: statusFieldId,
               optionId: targetOptionId

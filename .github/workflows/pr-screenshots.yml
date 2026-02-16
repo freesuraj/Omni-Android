@@ -34,10 +34,19 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
+          ruby-version: "3.2"
           bundler-cache: true
 
       - name: Capture screenshots
-        run: bundle exec fastlane android screenshots_pr pr:${PR_NUMBER}
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 36
+          arch: x86_64
+          profile: pixel_6
+          force-avd-creation: false
+          disable-animations: true
+          emulator-options: -no-window -noaudio -no-boot-anim -gpu swiftshader_indirect
+          script: bundle exec fastlane android screenshots_pr pr:${PR_NUMBER}
 
       - name: Upload screenshots artifact
         id: upload
@@ -66,4 +75,3 @@ jobs:
               issue_number: prNumber,
               body
             });
-
