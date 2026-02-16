@@ -21,6 +21,7 @@ platform :android do
     # Capture deterministic UI evidence directly from emulator to avoid flakiness from
     # instrumentation startup on CI hosts.
     sh <<~BASH
+      /usr/bin/env bash <<'SCREENSHOT_SCRIPT'
       set -euo pipefail
       APP_ID="com.suraj.apps.Doc2Quiz"
       APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
@@ -43,7 +44,14 @@ platform :android do
       run_with_timeout() {
         local seconds="$1"
         shift
-        timeout "$seconds" "$@"
+
+        if command -v timeout >/dev/null 2>&1; then
+          timeout "$seconds" "$@"
+        elif command -v gtimeout >/dev/null 2>&1; then
+          gtimeout "$seconds" "$@"
+        else
+          "$@"
+        fi
       }
 
       capture() {
@@ -92,6 +100,7 @@ platform :android do
       "$ADB_BIN" shell input tap 1005 145 >/dev/null 2>&1 || true
       sleep 1
       capture "$ARTIFACT_DIR/settings.png"
+      SCREENSHOT_SCRIPT
     BASH
 
     if ENV["GITHUB_ACTIONS"] == "true"
