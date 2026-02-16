@@ -1,0 +1,58 @@
+<resources>
+    <string name="quiz_title_configure">Configure Quiz</string>
+    <string name="quiz_title_generating">Generating Quiz</string>
+    <string name="quiz_title_document_quiz">%1$s Quiz</string>
+    <string name="quiz_title_complete">Quiz Complete</string>
+
+    <string name="quiz_cd_back">Back</string>
+    <string name="quiz_cd_replay">Replay</string>
+
+    <string name="quiz_config_title">Quiz Configuration</string>
+    <string name="quiz_question_count_label">Number of Questions: %1$s</string>
+    <string name="quiz_difficulty_easy">Easy</string>
+    <string name="quiz_difficulty_medium">Medium</string>
+    <string name="quiz_difficulty_hard">Hard</string>
+    <string name="quiz_toggle_show_source_snippet">Show Source Snippet</string>
+    <string name="quiz_toggle_play_sounds">Play Sounds</string>
+    <string name="quiz_free_limit_notice">Free limit: up to %1$d questions per quiz. Upgrade for longer sets.</string>
+
+    <string name="quiz_history_latest_result">Latest quiz result</string>
+    <string name="quiz_history_resume_latest">Resume latest quiz</string>
+    <string name="quiz_history_score">Score %1$d/%2$d</string>
+    <string name="quiz_history_progress">Progress %1$d/%2$d</string>
+
+    <string name="quiz_action_review">Review</string>
+    <string name="quiz_action_resume">Resume</string>
+    <string name="quiz_action_replay">Replay</string>
+    <string name="quiz_action_generate">Generate Quiz</string>
+    <string name="quiz_action_exit">Exit</string>
+    <string name="quiz_action_choose_b">Choose B</string>
+    <string name="quiz_action_choose_a">Choose A</string>
+    <string name="quiz_action_retry_quiz">Retry Quiz</string>
+    <string name="quiz_action_new_setup">New Setup</string>
+
+    <string name="quiz_generating_title">Generating your quiz...</string>
+    <string name="quiz_generating_subtitle">Preparing question set, options, and review summary.</string>
+    <string name="quiz_streak_label">Streak %1$d  |  Best %2$d</string>
+    <string name="quiz_question_progress_empty">Question 0/0</string>
+    <string name="quiz_question_progress">Question %1$d/%2$d</string>
+    <string name="quiz_correct_count_label">Correct: %1$d</string>
+    <string name="quiz_no_active_question">No active question. Return to config and generate a new quiz.</string>
+    <string name="quiz_option_b_label">Option B</string>
+    <string name="quiz_option_a_label">Option A</string>
+    <string name="quiz_swipe_hint">Swipe right for A, left for B</string>
+
+    <string name="quiz_result_title">Quiz Complete!</string>
+    <string name="quiz_result_correct_answers">Correct Answers</string>
+    <string name="quiz_result_review_title">Review</string>
+    <string name="quiz_result_cd_correct">Correct</string>
+    <string name="quiz_result_cd_incorrect">Incorrect</string>
+    <string name="quiz_result_answer_line">Your answer: %1$s • Correct: %2$s</string>
+
+    <string name="quiz_error_free_limit">Free plan supports up to %1$d quiz questions per set.</string>
+    <string name="quiz_provider_notice_fallback">Using on-device fallback generation until provider integrations are configured.</string>
+    <string name="quiz_error_requires_premium_configuration">This quiz configuration requires premium access.</string>
+    <string name="quiz_error_load_history_failed">Unable to load quiz history.</string>
+    <string name="quiz_error_document_not_found">Document not found.</string>
+    <string name="quiz_error_requires_premium_replay">Premium access is required to replay this quiz.</string>
+</resources>

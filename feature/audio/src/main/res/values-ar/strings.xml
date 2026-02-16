@@ -1,0 +1,24 @@
+<resources>
+    <string name="audio_title">صوت مباشر</string>
+    <string name="audio_subtitle">سجل، أوقف، استأنف، وانسخ الكلام في الوقت الفعلي.</string>
+    <string name="audio_elapsed_time">المدة %1$s</string>
+    <string name="audio_cd_record_or_resume">تسجيل أو استئناف</string>
+    <string name="audio_cd_pause">إيقاف مؤقت</string>
+    <string name="audio_cd_finish_recording">إنهاء التسجيل</string>
+    <string name="audio_premium_unlocked_recordings">تم فتح المميزات: تسجيلات مباشرة غير محدودة</string>
+    <string name="audio_free_recordings_remaining">التسجيلات المجانية المتبقية: %1$d من 2</string>
+    <string name="audio_live_transcript_title">نص مباشر</string>
+    <string name="audio_transcript_placeholder">سيظهر نص كلامك هنا أثناء التسجيل.</string>
+
+    <string name="audio_status_idle">خامل</string>
+    <string name="audio_status_recording">جارٍ التسجيل</string>
+    <string name="audio_status_paused">متوقف مؤقتًا</string>
+    <string name="audio_status_saving">جارٍ الحفظ</string>
+
+    <string name="audio_error_pause_failed">تعذر إيقاف التسجيل مؤقتًا.</string>
+    <string name="audio_error_microphone_permission_required">مطلوب إذن الميكروفون للتسجيل المباشر.</string>
+    <string name="audio_error_free_recording_limit">تشمل الخطة المجانية تسجيلين مباشرين مدى الحياة.</string>
+    <string name="audio_error_start_failed">تعذر بدء التسجيل. حاول مرة أخرى.</string>
+    <string name="audio_error_resume_failed">تعذر استئناف التسجيل.</string>
+    <string name="audio_error_recording_file_missing">لم يتم إنشاء ملف التسجيل.</string>
+</resources>

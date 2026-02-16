@@ -1,0 +1,34 @@
+<resources>
+    <string name="analysis_cd_back">Voltar</string>
+    <string name="analysis_title_default">Análise detalhada</string>
+    <string name="analysis_title_configure">Configurar análise</string>
+    <string name="analysis_title_generating">Gerando análise</string>
+
+    <string name="analysis_scope_title">Escopo da análise detalhada</string>
+    <string name="analysis_segments_not_ready">Os segmentos de análise ainda não estão prontos.</string>
+    <string name="analysis_segments_progress">%1$d/%2$d segmentos analisados</string>
+    <string name="analysis_scope_pdf_description">Executa análise por página e salva os resultados para revisão.</string>
+    <string name="analysis_scope_non_pdf_description">Executa análise por seção para transcrições/conteúdo.</string>
+    <string name="analysis_premium_notice">A análise detalhada é um fluxo premium.</string>
+
+    <string name="analysis_action_retry">Tentar novamente</string>
+    <string name="analysis_action_resume">Retomar análise</string>
+    <string name="analysis_action_regenerate">Gerar análise novamente</string>
+    <string name="analysis_action_generate">Gerar análise</string>
+    <string name="analysis_action_retry_from_scratch">Reiniciar do zero</string>
+    <string name="analysis_view_action_resume">Retomar</string>
+    <string name="analysis_view_action_regenerate">Gerar novamente</string>
+
+    <string name="analysis_generating_title">Gerando análise detalhada...</string>
+    <string name="analysis_saved_count">%1$d/%2$d salvos</string>
+    <string name="analysis_progress_preparing">Preparando análise...</string>
+    <string name="analysis_progress_restarting">Reiniciando análise...</string>
+    <string name="analysis_progress_available_after_processing">A análise estará disponível quando o processamento terminar</string>
+    <string name="analysis_progress_ready_to_analyze">Pronto para analisar</string>
+
+    <string name="analysis_section_title_page">Página %1$d</string>
+    <string name="analysis_section_title_section">Seção %1$d</string>
+
+    <string name="analysis_error_requires_premium">A análise detalhada é um recurso premium. Faça upgrade para continuar.</string>
+    <string name="analysis_error_document_not_found">Documento não encontrado.</string>
+</resources>

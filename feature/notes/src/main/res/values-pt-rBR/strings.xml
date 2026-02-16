@@ -1,0 +1,28 @@
+<resources>
+    <string name="notes_cd_back">Voltar</string>
+    <string name="notes_title_new_flashcards">Novos flashcards</string>
+    <string name="notes_cd_regenerate">Gerar novamente</string>
+    <string name="notes_action_done">Concluir</string>
+
+    <string name="notes_config_heading">Gerar flashcards de estudo (notas)</string>
+    <string name="notes_action_create_flashcards">Criar flashcards</string>
+
+    <string name="notes_generating_title">Gerando flashcards...</string>
+    <string name="notes_generating_subtitle">Organizando o conteúdo e preparando cartões de estudo.</string>
+
+    <string name="notes_filter_bookmarked_only">Somente favoritos</string>
+    <string name="notes_filter_auto_read">Leitura automática</string>
+    <string name="notes_empty_filter_title">Nenhum cartão neste filtro</string>
+    <string name="notes_empty_filter_subtitle">Desative o filtro de favoritos ou gere um novo conjunto.</string>
+    <string name="notes_page_indicator_empty">0 de 0 cartões</string>
+    <string name="notes_page_indicator">%1$d de %2$d cartões</string>
+
+    <string name="notes_card_cd_speak">Falar</string>
+    <string name="notes_card_label_question">PERGUNTA</string>
+    <string name="notes_card_label_answer">RESPOSTA</string>
+    <string name="notes_card_cd_bookmark">Favorito</string>
+    <string name="notes_card_hint_reveal_answer">Toque para revelar a resposta</string>
+    <string name="notes_card_hint_back_to_question">Toque para voltar à pergunta</string>
+
+    <string name="notes_error_document_not_found">Documento não encontrado.</string>
+</resources>

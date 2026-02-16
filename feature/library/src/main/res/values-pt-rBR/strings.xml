@@ -1,0 +1,54 @@
+<resources>
+    <string name="library_title">Biblioteca</string>
+    <string name="library_header_title">Comece com documento, nota de áudio ou artigo</string>
+    <string name="library_header_subtitle">Importe com + e depois abra o painel para gerar materiais de estudo.</string>
+    <string name="library_what_you_get">O que você recebe</string>
+    <string name="library_plan_guardrails_title">Limites do plano</string>
+    <string name="library_plan_guardrails_subtitle">O plano gratuito permite um documento armazenado. Faça upgrade para armazenamento ilimitado.</string>
+    <string name="library_your_imports">Suas importações</string>
+    <string name="library_record_live_audio">Gravar áudio ao vivo</string>
+    <string name="library_open_dashboard">Abrir painel</string>
+    <string name="library_document_preview_fallback">Abra o painel para ver os resultados do onboarding.</string>
+    <string name="library_status_onboarding">Processando</string>
+    <string name="library_status_ready">Pronto</string>
+
+    <string name="library_content_desc_import">Importar</string>
+    <string name="library_content_desc_settings">Configurações</string>
+    <string name="library_content_desc_document_actions">Ações do documento</string>
+
+    <string name="library_import_document_option">Documento</string>
+    <string name="library_import_web_article_option">Artigo da web</string>
+    <string name="library_import_audio_option">Arquivo de áudio</string>
+
+    <string name="library_action_import">Importar</string>
+    <string name="library_action_cancel">Cancelar</string>
+    <string name="library_action_save">Salvar</string>
+    <string name="library_action_rename">Renomear</string>
+    <string name="library_action_delete">Excluir</string>
+
+    <string name="library_import_web_article_title">Importar artigo da web</string>
+    <string name="library_article_url_label">URL do artigo</string>
+    <string name="library_rename_document_title">Renomear documento</string>
+    <string name="library_document_title_label">Título do documento</string>
+    <string name="library_delete_document_title">Excluir documento</string>
+    <string name="library_document_fallback_title">este documento</string>
+    <string name="library_delete_document_message">Excluir "%1$s"? Esta ação não pode ser desfeita.</string>
+
+    <string name="library_chip_quiz">Quiz</string>
+    <string name="library_chip_flashcards">Flashcards</string>
+    <string name="library_chip_summary">Resumo</string>
+    <string name="library_chip_qa">Perguntas e respostas</string>
+    <string name="library_chip_analysis">Análise</string>
+    <string name="library_chip_audio">Áudio</string>
+
+    <string name="library_step_import_title">Importar fonte</string>
+    <string name="library_step_import_subtitle">Use + para adicionar documento, nota de áudio ou artigo da web.</string>
+    <string name="library_step_generate_title">Gerar conjunto de estudo</string>
+    <string name="library_step_generate_subtitle">O Omni cria quiz, notas, resumo e contexto de perguntas e respostas.</string>
+    <string name="library_step_study_title">Estudar e revisar</string>
+    <string name="library_step_study_subtitle">Use as saídas do painel e continue aprendendo em um só lugar.</string>
+
+    <string name="library_busy_importing_source">Importando fonte...</string>
+    <string name="library_busy_renaming_document">Renomeando documento...</string>
+    <string name="library_busy_deleting_document">Excluindo documento...</string>
+</resources>

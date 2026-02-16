@@ -1,0 +1,28 @@
+<resources>
+    <string name="notes_cd_back">Back</string>
+    <string name="notes_title_new_flashcards">New Flashcards</string>
+    <string name="notes_cd_regenerate">Regenerate</string>
+    <string name="notes_action_done">Done</string>
+
+    <string name="notes_config_heading">Generate Study Flashcards (Notes)</string>
+    <string name="notes_action_create_flashcards">Create Flashcards</string>
+
+    <string name="notes_generating_title">Generating flashcards...</string>
+    <string name="notes_generating_subtitle">Chunking source content and preparing study cards.</string>
+
+    <string name="notes_filter_bookmarked_only">Bookmarked only</string>
+    <string name="notes_filter_auto_read">Auto-read</string>
+    <string name="notes_empty_filter_title">No cards in this filter</string>
+    <string name="notes_empty_filter_subtitle">Toggle bookmark filter off or generate a new set.</string>
+    <string name="notes_page_indicator_empty">0 of 0 cards</string>
+    <string name="notes_page_indicator">%1$d of %2$d cards</string>
+
+    <string name="notes_card_cd_speak">Speak</string>
+    <string name="notes_card_label_question">QUESTION</string>
+    <string name="notes_card_label_answer">ANSWER</string>
+    <string name="notes_card_cd_bookmark">Bookmark</string>
+    <string name="notes_card_hint_reveal_answer">Tap to reveal answer</string>
+    <string name="notes_card_hint_back_to_question">Tap to go back to question</string>
+
+    <string name="notes_error_document_not_found">Document not found.</string>
+</resources>

@@ -31,7 +31,7 @@ data class AnalysisItemUi(
 )
 
 data class AnalysisUiState(
-    val documentTitle: String = "Detailed Analysis",
+    val documentTitle: String = "",
     val fileType: DocumentFileType = DocumentFileType.TXT,
     val isPremiumUnlocked: Boolean = false,
     val expectedAnalysisCount: Int = 0,
@@ -40,7 +40,7 @@ data class AnalysisUiState(
     val progress: DetailedAnalysisProgress = DetailedAnalysisProgress(
         completedCount = 0,
         totalCount = 0,
-        label = "Preparing analysis"
+        label = ""
     ),
     val shouldOpenPaywall: Boolean = false,
     val errorMessage: String? = null
@@ -54,9 +54,19 @@ class AnalysisViewModel(
     application: Application,
     private val documentId: String
 ) : AndroidViewModel(application) {
+    private val app = application
     private val repository = DetailedAnalysisRepository(application.applicationContext)
 
-    private val _uiState = MutableStateFlow(AnalysisUiState())
+    private val _uiState = MutableStateFlow(
+        AnalysisUiState(
+            documentTitle = app.getString(R.string.analysis_title_default),
+            progress = DetailedAnalysisProgress(
+                completedCount = 0,
+                totalCount = 0,
+                label = app.getString(R.string.analysis_progress_preparing)
+            )
+        )
+    )
     val uiState: StateFlow<AnalysisUiState> = _uiState.asStateFlow()
 
     init {
@@ -93,9 +103,9 @@ class AnalysisViewModel(
                         completedCount = if (retryFromScratch) 0 else it.completedCount,
                         totalCount = it.expectedAnalysisCount,
                         label = if (retryFromScratch) {
-                            "Restarting analysis..."
+                            app.getString(R.string.analysis_progress_restarting)
                         } else {
-                            "Preparing analysis..."
+                            app.getString(R.string.analysis_progress_preparing)
                         }
                     )
                 )
@@ -116,7 +126,7 @@ class AnalysisViewModel(
                         it.copy(
                             mode = AnalysisScreenMode.VIEW,
                             expectedAnalysisCount = result.expectedAnalysisCount,
-                            analyses = result.analyses.map { entity -> entity.toUi(fileType) },
+                            analyses = result.analyses.map { entity -> entity.toUi(fileType, app) },
                             errorMessage = null
                         )
                     }
@@ -127,7 +137,7 @@ class AnalysisViewModel(
                         it.copy(
                             mode = if (it.hasPersistedAnalyses) AnalysisScreenMode.VIEW else AnalysisScreenMode.CONFIG,
                             shouldOpenPaywall = true,
-                            errorMessage = "Detailed Analysis is a premium feature. Upgrade to continue."
+                            errorMessage = app.getString(R.string.analysis_error_requires_premium)
                         )
                     }
                 }
@@ -147,7 +157,7 @@ class AnalysisViewModel(
     private suspend fun loadBootstrap() {
         val bootstrap = repository.loadBootstrap(documentId)
         if (bootstrap == null) {
-            _uiState.update { it.copy(errorMessage = "Document not found.") }
+            _uiState.update { it.copy(errorMessage = app.getString(R.string.analysis_error_document_not_found)) }
             return
         }
 
@@ -157,15 +167,17 @@ class AnalysisViewModel(
                 fileType = bootstrap.fileType,
                 isPremiumUnlocked = bootstrap.isPremiumUnlocked,
                 expectedAnalysisCount = bootstrap.expectedAnalysisCount,
-                analyses = bootstrap.analyses.map { entity -> entity.toUi(bootstrap.fileType) },
+                analyses = bootstrap.analyses.map { entity ->
+                    entity.toUi(bootstrap.fileType, app)
+                },
                 mode = if (bootstrap.analyses.isEmpty()) AnalysisScreenMode.CONFIG else AnalysisScreenMode.VIEW,
                 progress = DetailedAnalysisProgress(
                     completedCount = bootstrap.analyses.size,
                     totalCount = bootstrap.expectedAnalysisCount,
                     label = if (bootstrap.expectedAnalysisCount == 0) {
-                        "Analysis will be available when processing completes"
+                        app.getString(R.string.analysis_progress_available_after_processing)
                     } else {
-                        "Ready to analyze"
+                        app.getString(R.string.analysis_progress_ready_to_analyze)
                     }
                 ),
                 errorMessage = null
@@ -188,12 +200,15 @@ class AnalysisViewModel(
     }
 }
 
-private fun PageAnalysisEntity.toUi(fileType: DocumentFileType): AnalysisItemUi {
+private fun PageAnalysisEntity.toUi(
+    fileType: DocumentFileType,
+    application: Application
+): AnalysisItemUi {
     val sectionTitle = when (fileType) {
-        DocumentFileType.PDF -> "Page $pageNumber"
+        DocumentFileType.PDF -> application.getString(R.string.analysis_section_title_page, pageNumber)
         DocumentFileType.TXT,
         DocumentFileType.WEB,
-        DocumentFileType.AUDIO -> "Section $pageNumber"
+        DocumentFileType.AUDIO -> application.getString(R.string.analysis_section_title_section, pageNumber)
     }
 
     return AnalysisItemUi(

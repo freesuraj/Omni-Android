@@ -26,7 +26,7 @@ enum class SummaryScreenMode {
 }
 
 data class SummaryUiState(
-    val documentTitle: String = "Configure Summary",
+    val documentTitle: String = "",
     val mode: SummaryScreenMode = SummaryScreenMode.CONFIG,
     val isPremiumUnlocked: Boolean = false,
     val targetWordCount: Int = DEFAULT_SUMMARY_WORD_TARGET,
@@ -45,9 +45,14 @@ class SummaryViewModel(
     application: Application,
     private val documentId: String
 ) : AndroidViewModel(application) {
+    private val app = application
     private val repository = SummaryRepository(application.applicationContext)
 
-    private val _uiState = MutableStateFlow(SummaryUiState())
+    private val _uiState = MutableStateFlow(
+        SummaryUiState(
+            documentTitle = app.getString(R.string.summary_title_configure)
+        )
+    )
     val uiState: StateFlow<SummaryUiState> = _uiState.asStateFlow()
 
     init {
@@ -95,7 +100,7 @@ class SummaryViewModel(
                             mode = SummaryScreenMode.CONFIG,
                             isBusy = false,
                             shouldOpenPaywall = true,
-                            errorMessage = "This summary length requires premium access."
+                            errorMessage = app.getString(R.string.summary_error_requires_premium_length)
                         )
                     }
                 }
@@ -139,7 +144,7 @@ class SummaryViewModel(
     private suspend fun loadBootstrap() {
         val bootstrap = repository.loadBootstrap(documentId)
         if (bootstrap == null) {
-            _uiState.update { it.copy(errorMessage = "Document not found.") }
+            _uiState.update { it.copy(errorMessage = app.getString(R.string.summary_error_document_not_found)) }
             return
         }
 

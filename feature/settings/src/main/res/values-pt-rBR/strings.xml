@@ -1,0 +1,17 @@
+<resources>
+    <string name="settings_title">Configurações</string>
+    <string name="settings_section_llm_provider">Provedor de LLM</string>
+    <string name="settings_choose_ai">Escolha a IA a usar</string>
+    <string name="settings_provider_configuration">Configuração de %1$s</string>
+    <string name="settings_api_key_label">Chave de API</string>
+    <string name="settings_validate_save_key">Validar e salvar chave</string>
+    <string name="settings_saved_key_notice">Uma chave já está salva neste dispositivo.</string>
+    <string name="settings_clear_key">Limpar chave</string>
+    <string name="settings_get_api_key">Obter chave de API</string>
+    <string name="settings_section_about">Sobre</string>
+    <string name="settings_app_version_label">Versão do app Omni</string>
+    <string name="settings_terms_of_use">Termos de uso</string>
+    <string name="settings_api_key_configured">Chave de API configurada</string>
+    <string name="settings_selected_content_description">Selecionado</string>
+    <string name="settings_message_cleared_key">Chave salva removida para %1$s.</string>
+</resources>

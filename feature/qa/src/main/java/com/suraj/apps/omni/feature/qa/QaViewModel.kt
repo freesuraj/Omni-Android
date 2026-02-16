@@ -23,7 +23,7 @@ data class QaMessageUi(
 )
 
 data class QaUiState(
-    val documentTitle: String = "Q&A",
+    val documentTitle: String = "",
     val messages: List<QaMessageUi> = emptyList(),
     val draftQuestion: String = "",
     val isSending: Boolean = false,
@@ -35,9 +35,12 @@ class QaViewModel(
     application: Application,
     private val documentId: String
 ) : AndroidViewModel(application) {
+    private val app = application
     private val repository = QaRepository(application.applicationContext)
 
-    private val _uiState = MutableStateFlow(QaUiState())
+    private val _uiState = MutableStateFlow(
+        QaUiState(documentTitle = app.getString(R.string.qa_title_default))
+    )
     val uiState: StateFlow<QaUiState> = _uiState.asStateFlow()
 
     init {
@@ -57,7 +60,7 @@ class QaViewModel(
             .replace(Regex("\\s+"), " ")
             .trim()
         if (question.isBlank()) {
-            _uiState.update { it.copy(errorMessage = "Enter a question first.") }
+            _uiState.update { it.copy(errorMessage = app.getString(R.string.qa_error_enter_question)) }
             return
         }
 
@@ -88,7 +91,7 @@ class QaViewModel(
                         it.copy(
                             isSending = false,
                             shouldOpenPaywall = true,
-                            errorMessage = "Q&A is a premium feature. Upgrade to continue."
+                            errorMessage = app.getString(R.string.qa_error_requires_premium)
                         )
                     }
                 }
@@ -116,7 +119,7 @@ class QaViewModel(
     private suspend fun loadBootstrap() {
         val bootstrap = repository.loadBootstrap(documentId)
         if (bootstrap == null) {
-            _uiState.update { it.copy(errorMessage = "Document not found.") }
+            _uiState.update { it.copy(errorMessage = app.getString(R.string.qa_error_document_not_found)) }
             return
         }
 

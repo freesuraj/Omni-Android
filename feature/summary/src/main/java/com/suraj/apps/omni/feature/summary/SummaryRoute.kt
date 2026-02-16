@@ -42,6 +42,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -103,7 +104,7 @@ fun SummaryRoute(
             type = "text/plain"
             putExtra(Intent.EXTRA_TEXT, summaryText)
         }
-        context.startActivity(Intent.createChooser(shareIntent, "Share summary"))
+        context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.summary_share_chooser_title)))
     }
 
     LaunchedEffect(uiState.errorMessage) {
@@ -123,14 +124,14 @@ fun SummaryRoute(
             TopAppBar(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.summary_cd_back))
                     }
                 },
                 title = {
                     Text(
                         text = when (uiState.mode) {
-                            SummaryScreenMode.CONFIG -> "Configure Summary"
-                            SummaryScreenMode.GENERATING -> "Generating Summary"
+                            SummaryScreenMode.CONFIG -> stringResource(R.string.summary_title_configure)
+                            SummaryScreenMode.GENERATING -> stringResource(R.string.summary_title_generating)
                             SummaryScreenMode.VIEW -> uiState.documentTitle
                         }
                     )
@@ -138,7 +139,7 @@ fun SummaryRoute(
                 actions = {
                     if (uiState.mode == SummaryScreenMode.VIEW) {
                         TextButton(onClick = viewModel::backToConfig) {
-                            Text("New")
+                            Text(stringResource(R.string.summary_action_new))
                         }
                     }
                 }
@@ -188,7 +189,7 @@ private fun SummaryConfigScreen(
         verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
         Text(
-            text = "Summary Length",
+            text = stringResource(R.string.summary_length_title),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -202,7 +203,7 @@ private fun SummaryConfigScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
-                    text = "Target Word Count: ${uiState.targetWordCount}",
+                    text = stringResource(R.string.summary_target_word_count, uiState.targetWordCount),
                     style = MaterialTheme.typography.titleMedium
                 )
                 Slider(
@@ -220,7 +221,7 @@ private fun SummaryConfigScreen(
                 color = MaterialTheme.colorScheme.secondaryContainer
             ) {
                 Text(
-                    text = "Free limit: up to ${uiState.maxWordCount} words per summary.",
+                    text = stringResource(R.string.summary_free_limit, uiState.maxWordCount),
                     modifier = Modifier.padding(12.dp),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSecondaryContainer
@@ -229,7 +230,7 @@ private fun SummaryConfigScreen(
         }
 
         Button(onClick = onGenerate, modifier = Modifier.fillMaxWidth()) {
-            Text("Generate Summary")
+            Text(stringResource(R.string.summary_action_generate))
         }
     }
 }
@@ -245,12 +246,12 @@ private fun SummaryGeneratingScreen(
     ) {
         CircularProgressIndicator()
         Text(
-            text = "Generating summary...",
+            text = stringResource(R.string.summary_generating_title),
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(top = 16.dp)
         )
         Text(
-            text = "Extracting key points from the document.",
+            text = stringResource(R.string.summary_generating_subtitle),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 8.dp)
@@ -280,14 +281,14 @@ private fun SummaryViewScreen(
                 onClick = { selectedSummary?.let { onSpeakSummary(it.content) } },
                 modifier = Modifier.weight(1f)
             ) {
-                Text("Listen")
+                Text(stringResource(R.string.summary_action_listen))
             }
             Button(
                 onClick = { selectedSummary?.let { onShareSummary(it.content) } },
                 modifier = Modifier.weight(1f)
             ) {
                 Icon(Icons.Default.Share, contentDescription = null)
-                Text("Share", modifier = Modifier.padding(start = 6.dp))
+                Text(stringResource(R.string.summary_action_share), modifier = Modifier.padding(start = 6.dp))
             }
         }
 
@@ -301,7 +302,7 @@ private fun SummaryViewScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Text(
-                        text = "Summary • ${summary.wordCount} words",
+                        text = stringResource(R.string.summary_label_word_count, summary.wordCount),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -314,7 +315,7 @@ private fun SummaryViewScreen(
         }
 
         Text(
-            text = "Saved summaries",
+            text = stringResource(R.string.summary_saved_summaries),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold
         )
@@ -327,14 +328,14 @@ private fun SummaryViewScreen(
                 selected = uiState.selectedSummaryId == summary.id,
                 onClick = { onSelectSummary(summary.id) },
                 label = {
-                    Text("$label • ${summary.wordCount} words")
+                    Text(stringResource(R.string.summary_saved_item_label, label, summary.wordCount))
                 },
                 modifier = Modifier.fillMaxWidth()
             )
         }
 
         TextButton(onClick = onGenerateAgain, modifier = Modifier.fillMaxWidth()) {
-            Text("Generate Another Summary")
+            Text(stringResource(R.string.summary_action_generate_another))
         }
     }
 }

@@ -38,6 +38,7 @@ class PaywallViewModel(
     application: Application
 ) : AndroidViewModel(application) {
     private val repository = BillingRepository(application.applicationContext)
+    private val app = application
 
     private val _uiState = MutableStateFlow(PaywallUiState())
     val uiState: StateFlow<PaywallUiState> = _uiState.asStateFlow()
@@ -62,7 +63,7 @@ class PaywallViewModel(
                         it.copy(
                             isPremiumUnlocked = true,
                             isWorking = false,
-                            successMessage = "Omni Pro unlocked.",
+                            successMessage = app.getString(R.string.paywall_message_unlocked),
                             shouldClose = true
                         )
                     }
@@ -89,7 +90,7 @@ class PaywallViewModel(
                         it.copy(
                             isPremiumUnlocked = true,
                             isWorking = false,
-                            successMessage = "Purchases restored.",
+                            successMessage = app.getString(R.string.paywall_message_restored),
                             shouldClose = true
                         )
                     }
@@ -137,6 +138,22 @@ class PaywallViewModel(
         }
     }
 
+    private fun BillingPlan.toUi(): PaywallPlanUi {
+        val badge = when {
+            isBestValue && hasFreeTrial -> app.getString(R.string.paywall_badge_best_value_trial)
+            isBestValue -> app.getString(R.string.paywall_badge_best_value)
+            isLifetime -> app.getString(R.string.paywall_badge_one_time)
+            else -> null
+        }
+        return PaywallPlanUi(
+            productId = productId,
+            title = title,
+            subtitle = subtitle,
+            priceLabel = priceLabel,
+            badge = badge
+        )
+    }
+
     companion object {
         fun factory(application: Application): ViewModelProvider.Factory {
             return object : ViewModelProvider.Factory {
@@ -147,20 +164,4 @@ class PaywallViewModel(
             }
         }
     }
-}
-
-private fun BillingPlan.toUi(): PaywallPlanUi {
-    val badge = when {
-        isBestValue && hasFreeTrial -> "Best value • 7-day trial"
-        isBestValue -> "Best value"
-        isLifetime -> "One-time"
-        else -> null
-    }
-    return PaywallPlanUi(
-        productId = productId,
-        title = title,
-        subtitle = subtitle,
-        priceLabel = priceLabel,
-        badge = badge
-    )
 }

@@ -53,7 +53,7 @@ data class AnswerFeedback(
 )
 
 data class QuizUiState(
-    val documentTitle: String = "Configure Quiz",
+    val documentTitle: String = "",
     val mode: QuizScreenMode = QuizScreenMode.CONFIG,
     val settings: QuizSettings = QuizSettings(questionCount = FREE_MAX_QUIZ_QUESTIONS),
     val isPremiumUnlocked: Boolean = false,
@@ -72,17 +72,18 @@ data class QuizUiState(
     val isBusy: Boolean = false
 ) {
     val questionCountLabel: String get() = "${settings.questionCount}"
-    val questionProgressLabel: String
-        get() = if (questions.isEmpty()) "Question 0/0" else "Question ${currentQuestionIndex + 1}/${questions.size}"
 }
 
 class QuizViewModel(
     application: Application,
     private val documentId: String
 ) : AndroidViewModel(application) {
+    private val app = application
     private val repository = QuizRepository(application.applicationContext)
 
-    private val _uiState = MutableStateFlow(QuizUiState())
+    private val _uiState = MutableStateFlow(
+        QuizUiState(documentTitle = app.getString(R.string.quiz_title_configure))
+    )
     val uiState: StateFlow<QuizUiState> = _uiState.asStateFlow()
 
     init {
@@ -116,7 +117,10 @@ class QuizViewModel(
             _uiState.update {
                 it.copy(
                     shouldOpenPaywall = true,
-                    errorMessage = "Free plan supports up to $FREE_MAX_QUIZ_QUESTIONS quiz questions per set."
+                    errorMessage = app.getString(
+                        R.string.quiz_error_free_limit,
+                        FREE_MAX_QUIZ_QUESTIONS
+                    )
                 )
             }
             return
@@ -141,7 +145,7 @@ class QuizViewModel(
                     applySnapshot(
                         snapshot = result.data.snapshot,
                         providerNotice = if (result.data.usedFallbackGenerator) {
-                            "Using on-device fallback generation until provider integrations are configured."
+                            app.getString(R.string.quiz_provider_notice_fallback)
                         } else {
                             null
                         },
@@ -155,7 +159,7 @@ class QuizViewModel(
                             mode = QuizScreenMode.CONFIG,
                             isBusy = false,
                             shouldOpenPaywall = true,
-                            errorMessage = "This quiz configuration requires premium access."
+                            errorMessage = app.getString(R.string.quiz_error_requires_premium_configuration)
                         )
                     }
                 }
@@ -211,7 +215,7 @@ class QuizViewModel(
         viewModelScope.launch {
             val snapshot = repository.loadQuiz(preview.quizId)
             if (snapshot == null) {
-                _uiState.update { it.copy(errorMessage = "Unable to load quiz history.") }
+                _uiState.update { it.copy(errorMessage = app.getString(R.string.quiz_error_load_history_failed)) }
                 return@launch
             }
             applySnapshot(
@@ -258,7 +262,7 @@ class QuizViewModel(
     private suspend fun loadBootstrap() {
         val bootstrap = repository.loadBootstrap(documentId)
         if (bootstrap == null) {
-            _uiState.update { it.copy(errorMessage = "Document not found.") }
+            _uiState.update { it.copy(errorMessage = app.getString(R.string.quiz_error_document_not_found)) }
             return
         }
 
@@ -314,7 +318,7 @@ class QuizViewModel(
                             mode = QuizScreenMode.CONFIG,
                             isBusy = false,
                             shouldOpenPaywall = true,
-                            errorMessage = "Premium access is required to replay this quiz."
+                            errorMessage = app.getString(R.string.quiz_error_requires_premium_replay)
                         )
                     }
                 }

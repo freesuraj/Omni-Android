@@ -1,0 +1,13 @@
+<resources>
+    <string name="qa_title_default">Perguntas e respostas</string>
+    <string name="qa_cd_back">Voltar</string>
+    <string name="qa_empty_title">Pergunte qualquer coisa sobre este documento</string>
+    <string name="qa_empty_subtitle">Perguntas e respostas são salvas por documento.</string>
+    <string name="qa_thinking">Pensando...</string>
+    <string name="qa_input_label">Faça uma pergunta</string>
+    <string name="qa_send_button">Enviar</string>
+
+    <string name="qa_error_enter_question">Digite uma pergunta primeiro.</string>
+    <string name="qa_error_requires_premium">Perguntas e respostas é um recurso premium. Faça upgrade para continuar.</string>
+    <string name="qa_error_document_not_found">Documento não encontrado.</string>
+</resources>

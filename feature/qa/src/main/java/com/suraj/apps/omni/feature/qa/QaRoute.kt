@@ -33,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -77,7 +78,7 @@ fun QaRoute(
             TopAppBar(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.qa_cd_back))
                     }
                 },
                 title = { Text(uiState.documentTitle) }
@@ -101,12 +102,12 @@ fun QaRoute(
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Text(
-                            text = "Ask anything about this document",
+                            text = stringResource(R.string.qa_empty_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold
                         )
                         Text(
-                            text = "Questions and answers are saved per document.",
+                            text = stringResource(R.string.qa_empty_subtitle),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -153,7 +154,7 @@ fun QaRoute(
                             )
                         ) {
                             Text(
-                                text = "Thinking...",
+                                text = stringResource(R.string.qa_thinking),
                                 modifier = Modifier.padding(12.dp),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -172,7 +173,7 @@ fun QaRoute(
                     value = uiState.draftQuestion,
                     onValueChange = viewModel::onDraftChanged,
                     modifier = Modifier.weight(1f),
-                    label = { Text("Ask a question") },
+                    label = { Text(stringResource(R.string.qa_input_label)) },
                     enabled = !uiState.isSending,
                     maxLines = 4
                 )
@@ -180,7 +181,7 @@ fun QaRoute(
                     onClick = viewModel::sendQuestion,
                     enabled = !uiState.isSending
                 ) {
-                    Text("Send")
+                    Text(stringResource(R.string.qa_send_button))
                 }
             }
         }

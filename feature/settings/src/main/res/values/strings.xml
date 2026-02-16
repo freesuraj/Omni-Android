@@ -1,0 +1,17 @@
+<resources>
+    <string name="settings_title">Settings</string>
+    <string name="settings_section_llm_provider">LLM Provider</string>
+    <string name="settings_choose_ai">Choose the AI to use</string>
+    <string name="settings_provider_configuration">%1$s Configuration</string>
+    <string name="settings_api_key_label">API Key</string>
+    <string name="settings_validate_save_key">Validate &amp; Save Key</string>
+    <string name="settings_saved_key_notice">A key is already saved on this device.</string>
+    <string name="settings_clear_key">Clear key</string>
+    <string name="settings_get_api_key">Get API Key</string>
+    <string name="settings_section_about">About</string>
+    <string name="settings_app_version_label">Omni app version</string>
+    <string name="settings_terms_of_use">Terms of Use</string>
+    <string name="settings_api_key_configured">API key configured</string>
+    <string name="settings_selected_content_description">Selected</string>
+    <string name="settings_message_cleared_key">Cleared saved key for %1$s.</string>
+</resources>

@@ -33,6 +33,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -74,12 +75,12 @@ fun PaywallRoute(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Unlock Omni Pro") },
+                title = { Text(stringResource(R.string.paywall_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.paywall_back_content_description)
                         )
                     }
                 }
@@ -97,7 +98,7 @@ fun PaywallRoute(
             ) {
                 CircularProgressIndicator()
                 Text(
-                    text = "Loading plans...",
+                    text = stringResource(R.string.paywall_loading_plans),
                     modifier = Modifier.padding(top = 12.dp),
                     style = MaterialTheme.typography.bodyLarge
                 )
@@ -114,14 +115,14 @@ fun PaywallRoute(
             verticalArrangement = Arrangement.spacedBy(OmniSpacing.large)
         ) {
             OmniSectionHeader(
-                title = "Get full access to premium workflows",
-                subtitle = "Monthly, annual trial, and lifetime options are available."
+                title = stringResource(R.string.paywall_heading),
+                subtitle = stringResource(R.string.paywall_subheading)
             )
 
             if (uiState.isPremiumUnlocked) {
                 OmniFeatureCard(
-                    title = "Omni Pro active",
-                    subtitle = "Premium features are currently unlocked on this device."
+                    title = stringResource(R.string.paywall_active_title),
+                    subtitle = stringResource(R.string.paywall_active_subtitle)
                 )
             }
 
@@ -187,18 +188,18 @@ fun PaywallRoute(
                 enabled = !uiState.isWorking && uiState.selectedPlanId != null,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Unlock Omni Pro")
+                Text(stringResource(R.string.paywall_unlock_button))
             }
             TextButton(
                 onClick = viewModel::restorePurchases,
                 enabled = !uiState.isWorking,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Restore Purchases")
+                Text(stringResource(R.string.paywall_restore_button))
             }
 
             Text(
-                text = "Subscriptions renew automatically unless cancelled 24 hours before renewal.",
+                text = stringResource(R.string.paywall_renewal_note),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

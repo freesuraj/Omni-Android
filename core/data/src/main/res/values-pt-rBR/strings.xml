@@ -1,0 +1,21 @@
+<resources>
+    <string name="provider_message_no_personal_key_required">%1$s não requer uma chave de API pessoal.</string>
+    <string name="provider_message_invalid_key">A chave de API parece inválida. Cole a chave completa e tente novamente.</string>
+    <string name="provider_message_key_saved">Chave de API salva para %1$s.</string>
+    <string name="provider_message_ready">%1$s está pronto.</string>
+    <string name="provider_message_configured">%1$s está configurado.</string>
+    <string name="provider_message_add_valid_key">Adicione uma chave de API válida para %1$s em Configurações.</string>
+    <string name="provider_generation_missing_api_key">%1$s precisa de uma chave de API válida. Abra Configurações para configurar.</string>
+    <string name="provider_generation_failed">A geração falhou para %1$s.</string>
+    <string name="billing_error_selected_plan_unavailable">O plano selecionado não está disponível.</string>
+    <string name="billing_error_no_restorable_purchase">Nenhuma compra restaurável foi encontrada para esta conta.</string>
+    <string name="billing_plan_monthly_title">Mensal</string>
+    <string name="billing_plan_monthly_subtitle">Acesso mensal flexível</string>
+    <string name="billing_plan_monthly_price">US$4,99/mês</string>
+    <string name="billing_plan_yearly_title">Anual</string>
+    <string name="billing_plan_yearly_subtitle">Teste grátis de 7 dias, depois cobrança anual</string>
+    <string name="billing_plan_yearly_price">US$29,99/ano</string>
+    <string name="billing_plan_lifetime_title">Vitalício</string>
+    <string name="billing_plan_lifetime_subtitle">Compra única, sem cobranças recorrentes</string>
+    <string name="billing_plan_lifetime_price">US$79,99 pagamento único</string>
+</resources>

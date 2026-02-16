@@ -32,6 +32,7 @@ class LibraryViewModel(
     application: Application
 ) : AndroidViewModel(application) {
     private val repository = DocumentImportRepository(application.applicationContext)
+    private val app = application
 
     private val _uiState = MutableStateFlow(LibraryUiState())
     val uiState: StateFlow<LibraryUiState> = _uiState.asStateFlow()
@@ -47,7 +48,7 @@ class LibraryViewModel(
     fun onImportDocument(uri: Uri?) {
         if (uri == null) return
         runDocumentMutation(
-            busyMessage = "Importing source...",
+            busyMessage = app.getString(R.string.library_busy_importing_source),
             navigateToDashboardOnSuccess = true
         ) { repository.importDocument(uri) }
     }
@@ -55,7 +56,7 @@ class LibraryViewModel(
     fun onImportAudio(uri: Uri?) {
         if (uri == null) return
         runDocumentMutation(
-            busyMessage = "Importing source...",
+            busyMessage = app.getString(R.string.library_busy_importing_source),
             navigateToDashboardOnSuccess = true
         ) { repository.importAudio(uri) }
     }
@@ -63,7 +64,7 @@ class LibraryViewModel(
     fun onImportWebArticle() {
         val url = _uiState.value.webUrlInput
         runDocumentMutation(
-            busyMessage = "Importing source...",
+            busyMessage = app.getString(R.string.library_busy_importing_source),
             navigateToDashboardOnSuccess = true
         ) { repository.importWebArticle(url) }
     }
@@ -109,7 +110,7 @@ class LibraryViewModel(
         val targetDocumentId = _uiState.value.renameDocumentId ?: return
         val newTitle = _uiState.value.renameInput
         runDocumentMutation(
-            busyMessage = "Renaming document..."
+            busyMessage = app.getString(R.string.library_busy_renaming_document)
         ) { repository.renameDocument(targetDocumentId, newTitle) }
     }
 
@@ -135,7 +136,7 @@ class LibraryViewModel(
     fun confirmDelete() {
         val targetDocumentId = _uiState.value.deleteDocumentId ?: return
         runDocumentMutation(
-            busyMessage = "Deleting document..."
+            busyMessage = app.getString(R.string.library_busy_deleting_document)
         ) { repository.deleteDocument(targetDocumentId) }
     }
 

@@ -1,0 +1,21 @@
+<resources>
+    <string name="summary_share_chooser_title">Compartilhar resumo</string>
+    <string name="summary_cd_back">Voltar</string>
+    <string name="summary_title_configure">Configurar resumo</string>
+    <string name="summary_title_generating">Gerando resumo</string>
+    <string name="summary_action_new">Novo</string>
+    <string name="summary_length_title">Tamanho do resumo</string>
+    <string name="summary_target_word_count">Quantidade alvo de palavras: %1$d</string>
+    <string name="summary_free_limit">Limite gratuito: até %1$d palavras por resumo.</string>
+    <string name="summary_action_generate">Gerar resumo</string>
+    <string name="summary_generating_title">Gerando resumo...</string>
+    <string name="summary_generating_subtitle">Extraindo pontos-chave do documento.</string>
+    <string name="summary_action_listen">Ouvir</string>
+    <string name="summary_action_share">Compartilhar</string>
+    <string name="summary_label_word_count">Resumo • %1$d palavras</string>
+    <string name="summary_saved_summaries">Resumos salvos</string>
+    <string name="summary_saved_item_label">%1$s • %2$d palavras</string>
+    <string name="summary_action_generate_another">Gerar outro resumo</string>
+    <string name="summary_error_requires_premium_length">Este tamanho de resumo requer acesso premium.</string>
+    <string name="summary_error_document_not_found">Documento não encontrado.</string>
+</resources>

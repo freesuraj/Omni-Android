@@ -1,0 +1,58 @@
+<resources>
+    <string name="quiz_title_configure">Configurar quiz</string>
+    <string name="quiz_title_generating">Gerando quiz</string>
+    <string name="quiz_title_document_quiz">Quiz de %1$s</string>
+    <string name="quiz_title_complete">Quiz concluído</string>
+
+    <string name="quiz_cd_back">Voltar</string>
+    <string name="quiz_cd_replay">Repetir</string>
+
+    <string name="quiz_config_title">Configuração do quiz</string>
+    <string name="quiz_question_count_label">Número de perguntas: %1$s</string>
+    <string name="quiz_difficulty_easy">Fácil</string>
+    <string name="quiz_difficulty_medium">Médio</string>
+    <string name="quiz_difficulty_hard">Difícil</string>
+    <string name="quiz_toggle_show_source_snippet">Mostrar trecho da fonte</string>
+    <string name="quiz_toggle_play_sounds">Reproduzir sons</string>
+    <string name="quiz_free_limit_notice">Limite gratuito: até %1$d perguntas por quiz. Faça upgrade para conjuntos maiores.</string>
+
+    <string name="quiz_history_latest_result">Resultado mais recente</string>
+    <string name="quiz_history_resume_latest">Retomar último quiz</string>
+    <string name="quiz_history_score">Pontuação %1$d/%2$d</string>
+    <string name="quiz_history_progress">Progresso %1$d/%2$d</string>
+
+    <string name="quiz_action_review">Revisar</string>
+    <string name="quiz_action_resume">Retomar</string>
+    <string name="quiz_action_replay">Repetir</string>
+    <string name="quiz_action_generate">Gerar quiz</string>
+    <string name="quiz_action_exit">Sair</string>
+    <string name="quiz_action_choose_b">Escolher B</string>
+    <string name="quiz_action_choose_a">Escolher A</string>
+    <string name="quiz_action_retry_quiz">Refazer quiz</string>
+    <string name="quiz_action_new_setup">Nova configuração</string>
+
+    <string name="quiz_generating_title">Gerando seu quiz...</string>
+    <string name="quiz_generating_subtitle">Preparando perguntas, opções e resumo de revisão.</string>
+    <string name="quiz_streak_label">Sequência %1$d  |  Melhor %2$d</string>
+    <string name="quiz_question_progress_empty">Pergunta 0/0</string>
+    <string name="quiz_question_progress">Pergunta %1$d/%2$d</string>
+    <string name="quiz_correct_count_label">Corretas: %1$d</string>
+    <string name="quiz_no_active_question">Nenhuma pergunta ativa. Volte à configuração e gere um novo quiz.</string>
+    <string name="quiz_option_b_label">Opção B</string>
+    <string name="quiz_option_a_label">Opção A</string>
+    <string name="quiz_swipe_hint">Deslize para a direita para A e para a esquerda para B</string>
+
+    <string name="quiz_result_title">Quiz concluído!</string>
+    <string name="quiz_result_correct_answers">Respostas corretas</string>
+    <string name="quiz_result_review_title">Revisão</string>
+    <string name="quiz_result_cd_correct">Correto</string>
+    <string name="quiz_result_cd_incorrect">Incorreto</string>
+    <string name="quiz_result_answer_line">Sua resposta: %1$s • Correta: %2$s</string>
+
+    <string name="quiz_error_free_limit">O plano gratuito suporta até %1$d perguntas por conjunto.</string>
+    <string name="quiz_provider_notice_fallback">Usando geração local até que as integrações de provedores sejam configuradas.</string>
+    <string name="quiz_error_requires_premium_configuration">Esta configuração de quiz requer acesso premium.</string>
+    <string name="quiz_error_load_history_failed">Não foi possível carregar o histórico do quiz.</string>
+    <string name="quiz_error_document_not_found">Documento não encontrado.</string>
+    <string name="quiz_error_requires_premium_replay">É necessário acesso premium para repetir este quiz.</string>
+</resources>
