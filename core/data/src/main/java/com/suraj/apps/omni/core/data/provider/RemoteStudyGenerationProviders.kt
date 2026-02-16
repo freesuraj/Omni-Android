@@ -46,7 +46,7 @@ internal fun defaultRemoteProvider(
     return PromptDrivenRemoteStudyGenerationProvider(completionClient)
 }
 
-internal class PromptDrivenRemoteStudyGenerationProvider(
+private class PromptDrivenRemoteStudyGenerationProvider(
     private val completionClient: CompletionClient
 ) : StudyGenerationProvider {
     override suspend fun generateQuizQuestions(
