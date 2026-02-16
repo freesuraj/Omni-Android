@@ -60,6 +60,26 @@ class DocumentImportRepository(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     fun observeDocuments(): Flow<List<DocumentEntity>> = database.documentDao().observeAll()
+    fun observeDocument(documentId: String): Flow<DocumentEntity?> =
+        database.documentDao().observeById(documentId)
+
+    suspend fun getDocument(documentId: String): DocumentEntity? = withContext(ioDispatcher) {
+        database.documentDao().getById(documentId)
+    }
+
+    suspend fun updateOnboardingState(
+        documentId: String,
+        isOnboarding: Boolean,
+        onboardingStatus: String?
+    ) = withContext(ioDispatcher) {
+        val document = database.documentDao().getById(documentId) ?: return@withContext
+        database.documentDao().upsert(
+            document.copy(
+                isOnboarding = isOnboarding,
+                onboardingStatus = onboardingStatus
+            )
+        )
+    }
 
     suspend fun importDocument(uri: Uri): DocumentImportResult = withContext(ioDispatcher) {
         if (!canImportDocument()) {

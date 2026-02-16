@@ -26,7 +26,11 @@ android {
 
 dependencies {
     implementation(project(":core:designsystem"))
+    implementation(project(":core:data"))
+    implementation(project(":core:model"))
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.material3)
