@@ -62,7 +62,7 @@ fun DashboardRoute(
     onOpenQuiz: (String) -> Unit,
     onOpenNotes: (String) -> Unit,
     onOpenSummary: (String) -> Unit,
-    onOpenQa: () -> Unit,
+    onOpenQa: (String) -> Unit,
     onOpenAnalysis: () -> Unit,
     onOpenPaywall: () -> Unit
 ) {
@@ -194,7 +194,7 @@ fun DashboardRoute(
                         text = "Open",
                         onClick = {
                             if (viewModel.requestPremiumFeatureAccess("Q&A")) {
-                                onOpenQa()
+                                onOpenQa(documentId)
                             } else {
                                 onOpenPaywall()
                             }
