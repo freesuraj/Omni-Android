@@ -60,7 +60,7 @@ private fun featureAction(
 fun DashboardRoute(
     documentId: String,
     onOpenQuiz: (String) -> Unit,
-    onOpenNotes: () -> Unit,
+    onOpenNotes: (String) -> Unit,
     onOpenSummary: () -> Unit,
     onOpenQa: () -> Unit,
     onOpenAnalysis: () -> Unit,
@@ -170,7 +170,7 @@ fun DashboardRoute(
                     featureAction(
                         enabled = !uiState.isOnboarding,
                         text = "Open",
-                        onClick = onOpenNotes
+                        onClick = { onOpenNotes(documentId) }
                     )
                 }
             )
