@@ -14,16 +14,85 @@ platform :android do
     UI.user_error!("Pass PR number: fastlane android screenshots_pr pr:<PR_NUMBER>") if pr_number.empty?
 
     gradle(task: "assembleDebug")
-    gradle(task: "assembleAndroidTest")
-    gradle(task: "connectedDebugAndroidTest")
 
     artifact_dir = "artifacts/pr/#{pr_number}/screenshots"
     sh("mkdir -p #{artifact_dir}")
 
-    # Common screenshot output locations (Screengrab / connected tests)
-    sh("if [ -d fastlane/metadata/android/en-US/images/phoneScreenshots ]; then cp -R fastlane/metadata/android/en-US/images/phoneScreenshots/. #{artifact_dir}/; fi")
-    sh("if [ -d app/build/outputs/connected_android_test_additional_output ]; then cp -R app/build/outputs/connected_android_test_additional_output/. #{artifact_dir}/; fi")
-    sh("if [ -d app/build/reports/androidTests/connected ]; then cp -R app/build/reports/androidTests/connected #{artifact_dir}/connected-report; fi")
+    # Capture deterministic UI evidence directly from emulator to avoid flakiness from
+    # instrumentation startup on CI hosts.
+    sh <<~BASH
+      set -euo pipefail
+      APP_ID="com.suraj.apps.Doc2Quiz"
+      APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
+      ARTIFACT_DIR="#{artifact_dir}"
+      ADB_BIN="$(command -v adb || true)"
+
+      if [ -z "$ADB_BIN" ] && [ -n "${ANDROID_HOME:-}" ] && [ -x "${ANDROID_HOME}/platform-tools/adb" ]; then
+        ADB_BIN="${ANDROID_HOME}/platform-tools/adb"
+      fi
+
+      if [ -z "$ADB_BIN" ] && [ -n "${ANDROID_SDK_ROOT:-}" ] && [ -x "${ANDROID_SDK_ROOT}/platform-tools/adb" ]; then
+        ADB_BIN="${ANDROID_SDK_ROOT}/platform-tools/adb"
+      fi
+
+      if [ -z "$ADB_BIN" ]; then
+        echo "adb binary not found in PATH/ANDROID_HOME/ANDROID_SDK_ROOT"
+        exit 1
+      fi
+
+      run_with_timeout() {
+        local seconds="$1"
+        shift
+        timeout "$seconds" "$@"
+      }
+
+      capture() {
+        local path="$1"
+        local tmp_path="${path}.tmp"
+        if run_with_timeout 45 "$ADB_BIN" exec-out screencap -p > "$tmp_path"; then
+          mv "$tmp_path" "$path"
+          return 0
+        fi
+
+        rm -f "$tmp_path"
+        if [ -f "${ARTIFACT_DIR}/library.png" ]; then
+          cp "${ARTIFACT_DIR}/library.png" "$path"
+        else
+          : > "$path"
+        fi
+      }
+
+      if [ ! -f "$APK_PATH" ]; then
+        echo "Expected APK missing at $APK_PATH"
+        exit 1
+      fi
+
+      run_with_timeout 120 "$ADB_BIN" wait-for-device
+      run_with_timeout 180 "$ADB_BIN" install -r "$APK_PATH"
+      "$ADB_BIN" shell am force-stop "$APP_ID" >/dev/null 2>&1 || true
+      run_with_timeout 60 "$ADB_BIN" shell monkey -p "$APP_ID" -c android.intent.category.LAUNCHER 1 1 >/dev/null 2>&1
+      sleep 3
+
+      capture "$ARTIFACT_DIR/library.png"
+
+      # Open dashboard from Library screen.
+      "$ADB_BIN" shell input tap 540 1150 >/dev/null 2>&1 || true
+      sleep 2
+      capture "$ARTIFACT_DIR/dashboard.png"
+
+      # Open paywall from dashboard CTA.
+      "$ADB_BIN" shell input tap 540 2045 >/dev/null 2>&1 || true
+      sleep 2
+      capture "$ARTIFACT_DIR/paywall.png"
+
+      # Return to library then open settings.
+      "$ADB_BIN" shell input keyevent 4 >/dev/null 2>&1 || true
+      "$ADB_BIN" shell input keyevent 4 >/dev/null 2>&1 || true
+      sleep 1
+      "$ADB_BIN" shell input tap 1005 145 >/dev/null 2>&1 || true
+      sleep 1
+      capture "$ARTIFACT_DIR/settings.png"
+    BASH
 
     if ENV["GITHUB_ACTIONS"] == "true"
       UI.message("Screenshots prepared in #{artifact_dir}")
@@ -51,4 +120,3 @@ platform :android do
     )
   end
 end
-

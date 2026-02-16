@@ -59,12 +59,12 @@ Last updated: 2026-02-16
 - Dashboard route now accepts `documentId`.
 
 ## Current board status snapshot
-- `#1` Done
-- `#2` Done
-- `#3` Done
-- `#4` Done
-- `#5` In Progress (Live audio recording tab + waveform + live transcript)
-- `#6+` Todo
+- `#1-#13` Done
+- `#14` Todo (Detailed Analysis parity)
+- `#15` Done
+- `#16` Todo (Localization + RTL)
+- `#17` Done
+- `#18` In Progress (QA gate + release readiness)
 
 ## Important implementation files to know first
 - Navigation:
@@ -81,8 +81,9 @@ Last updated: 2026-02-16
 
 ## Known caveats / follow-ups
 - Import pipeline currently uses placeholder extraction for PDF/audio text; deeper extraction/transcription is planned in later tickets.
-- Premium status currently read from shared preferences (`omni_access.premium_unlocked`) as interim behavior until billing parity ticket is completed.
-- Fastlane + screenshot upload flow is scaffolded but still needs full end-to-end usage as features land.
+- Premium gating now flows through shared entitlement/billing repository wiring (ticket #15).
+- Provider selection/key management is implemented with encrypted key storage (ticket #17).
+- Local fastlane remains blocked on this machine by Ruby/Bundler mismatch (`bundler 2.6.9` with system Ruby 2.6).
 
 ## Recommended startup sequence for future Codex runs
 1. Open this file and `AGENTS.md`.
