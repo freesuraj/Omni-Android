@@ -22,6 +22,9 @@ interface DocumentDao {
     @Query("SELECT * FROM documents WHERE id = :documentId LIMIT 1")
     suspend fun getById(documentId: String): DocumentEntity?
 
+    @Query("SELECT * FROM documents WHERE id = :documentId LIMIT 1")
+    fun observeById(documentId: String): Flow<DocumentEntity?>
+
     @Transaction
     @Query("SELECT * FROM documents WHERE id = :documentId LIMIT 1")
     suspend fun getAggregateById(documentId: String): DocumentAggregate?
