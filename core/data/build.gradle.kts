@@ -35,6 +35,7 @@ dependencies {
     implementation(project(":core:model"))
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
+    implementation(libs.play.billing.ktx)
     ksp(libs.androidx.room.compiler)
 
     testImplementation(libs.junit)
