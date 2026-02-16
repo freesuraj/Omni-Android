@@ -1,6 +1,8 @@
 package com.suraj.apps.omni.feature.dashboard
 
 import android.app.Application
+import android.media.MediaMetadataRetriever
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -9,6 +11,8 @@ import com.suraj.apps.omni.core.data.importing.DocumentImportRepository
 import com.suraj.apps.omni.core.data.local.entity.DocumentEntity
 import com.suraj.apps.omni.core.data.transcription.AudioTranscriptionResult
 import com.suraj.apps.omni.core.model.DocumentFileType
+import java.io.File
+import kotlin.math.roundToInt
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,6 +26,11 @@ data class DashboardUiState(
     val isOnboarding: Boolean = false,
     val onboardingLabel: String = "Preparing onboarding",
     val onboardingProgress: Float = 0f,
+    val sourceStats: String = "",
+    val sourceUrl: String? = null,
+    val audioSourcePath: String? = null,
+    val audioTranscript: String = "",
+    val isPremiumUnlocked: Boolean = false,
     val errorMessage: String? = null
 )
 
@@ -49,6 +58,13 @@ class DashboardViewModel(
                     return@collect
                 }
 
+                val fullText = repository.readFullText(document.id).orEmpty()
+                val audioSourcePath = resolveLocalSourcePath(document)
+                val sourceStats = buildSourceStats(
+                    document = document,
+                    fullText = fullText,
+                    audioPath = audioSourcePath
+                )
                 val statusView = statusView(document)
                 _uiState.update {
                     it.copy(
@@ -56,6 +72,19 @@ class DashboardViewModel(
                         isOnboarding = document.isOnboarding,
                         onboardingLabel = statusView.label,
                         onboardingProgress = statusView.progress,
+                        sourceStats = sourceStats,
+                        sourceUrl = document.sourceUrl,
+                        audioSourcePath = if (document.fileType == DocumentFileType.AUDIO) {
+                            audioSourcePath
+                        } else {
+                            null
+                        },
+                        audioTranscript = if (document.fileType == DocumentFileType.AUDIO) {
+                            fullText
+                        } else {
+                            ""
+                        },
+                        isPremiumUnlocked = repository.isPremiumUnlocked(),
                         errorMessage = if (document.onboardingStatus == "transcription_failed") {
                             "Audio transcription failed. Retry onboarding."
                         } else {
@@ -80,6 +109,18 @@ class DashboardViewModel(
             )
             maybeStartOnboarding(currentDocument.copy(isOnboarding = true, onboardingStatus = "imported"))
         }
+    }
+
+    fun requestPremiumFeatureAccess(featureName: String): Boolean {
+        if (_uiState.value.isPremiumUnlocked) return true
+        _uiState.update {
+            it.copy(errorMessage = "$featureName is a premium feature. Upgrade to continue.")
+        }
+        return false
+    }
+
+    fun reportError(message: String) {
+        _uiState.update { it.copy(errorMessage = message) }
     }
 
     fun consumeError() {
@@ -220,6 +261,54 @@ class DashboardViewModel(
             )
         }
         return StatusView(label = "Preparing onboarding", progress = 0.05f)
+    }
+
+    private fun resolveLocalSourcePath(document: DocumentEntity): String? {
+        val path = document.fileBookmarkData?.toString(Charsets.UTF_8).orEmpty()
+        if (path.isBlank()) return null
+        return path.takeIf { File(it).exists() }
+    }
+
+    private fun buildSourceStats(
+        document: DocumentEntity,
+        fullText: String,
+        audioPath: String?
+    ): String {
+        val wordCount = fullText
+            .split(Regex("\\s+"))
+            .filter { it.isNotBlank() }
+            .size
+        return when (document.fileType) {
+            DocumentFileType.PDF -> "PDF source • ${wordCount.coerceAtLeast(1)} words extracted"
+            DocumentFileType.TXT -> "Text source • ${wordCount.coerceAtLeast(1)} words"
+            DocumentFileType.WEB -> {
+                val host = document.sourceUrl?.let { Uri.parse(it).host }.orEmpty().ifBlank { "web article" }
+                "Web source • $host • ${wordCount.coerceAtLeast(1)} words"
+            }
+
+            DocumentFileType.AUDIO -> {
+                val durationLabel = resolveAudioDurationLabel(audioPath)
+                "Audio source • $durationLabel • ${wordCount.coerceAtLeast(1)} transcript words"
+            }
+        }
+    }
+
+    private fun resolveAudioDurationLabel(audioPath: String?): String {
+        if (audioPath.isNullOrBlank()) return "duration unavailable"
+        val durationMs = runCatching {
+            val retriever = MediaMetadataRetriever()
+            try {
+                retriever.setDataSource(audioPath)
+                retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull()
+            } finally {
+                runCatching { retriever.release() }
+            }
+        }.getOrNull()
+        if (durationMs == null || durationMs <= 0L) return "duration unavailable"
+        val totalSeconds = (durationMs / 1000.0).roundToInt()
+        val minutes = totalSeconds / 60
+        val seconds = totalSeconds % 60
+        return String.format("%02d:%02d", minutes, seconds)
     }
 
     companion object {
