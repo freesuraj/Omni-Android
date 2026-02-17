@@ -22,6 +22,16 @@ Native Android build of Omni using Jetpack Compose.
 ./gradlew :app:lintDebug :app:assembleDebug :app:testDebugUnitTest
 ```
 
+## Omni API key (build-time)
+- Omni provider key is injected at build/package time only.
+- Provide `OMNI_GEMINI_API_KEY` as:
+  - environment variable, or
+  - Gradle property `-POMNI_GEMINI_API_KEY=...`
+- Example:
+```bash
+OMNI_GEMINI_API_KEY=your_key_here ./gradlew :app:assembleDebug
+```
+
 ## PR screenshot evidence (local emulator)
 - CI no longer generates PR screenshots.
 - For each PR, capture screenshots from your local emulator for the affected flow(s).

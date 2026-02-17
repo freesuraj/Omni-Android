@@ -3,6 +3,10 @@ package com.suraj.apps.omni.core.data.importing
 import android.net.Uri
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
+import com.tom_roush.pdfbox.pdmodel.PDDocument
+import com.tom_roush.pdfbox.pdmodel.PDPage
+import com.tom_roush.pdfbox.pdmodel.PDPageContentStream
+import com.tom_roush.pdfbox.pdmodel.font.PDType1Font
 import com.suraj.apps.omni.core.data.local.OmniDatabase
 import com.suraj.apps.omni.core.data.local.entity.DocumentEntity
 import com.suraj.apps.omni.core.data.transcription.AudioTranscriptionEngine
@@ -11,10 +15,6 @@ import com.suraj.apps.omni.core.data.transcription.AudioTranscriptionResult
 import com.suraj.apps.omni.core.model.DocumentFileType
 import java.io.File
 import kotlinx.coroutines.runBlocking
-import org.apache.pdfbox.pdmodel.PDDocument
-import org.apache.pdfbox.pdmodel.PDPage
-import org.apache.pdfbox.pdmodel.PDPageContentStream
-import org.apache.pdfbox.pdmodel.font.PDType1Font
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

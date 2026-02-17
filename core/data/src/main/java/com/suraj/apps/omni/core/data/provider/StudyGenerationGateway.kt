@@ -1,8 +1,8 @@
 package com.suraj.apps.omni.core.data.provider
 
 import android.content.Context
+import com.suraj.apps.omni.core.data.BuildConfig
 import com.suraj.apps.omni.core.model.QuizDifficulty
-import java.util.Base64
 import kotlin.random.Random
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -235,21 +235,8 @@ private sealed interface ProviderSelection {
     ) : ProviderSelection
 }
 
-private const val OMNI_GEMINI_API_KEY_ENV = "OMNI_GEMINI_API_KEY"
-private const val OMNI_GEMINI_API_KEY_PROPERTY = "omni.gemini.api.key"
-private const val OMNI_GEMINI_API_KEY_B64 = "QUl6YVN5Qjdya0E1dXFCMTQ0MXpvbll3RmVaYm9MaVdDajJHNXhz"
-
 private fun defaultOmniApiKey(): String? {
-    val envValue = System.getenv(OMNI_GEMINI_API_KEY_ENV)?.trim().orEmpty()
-    if (envValue.isNotBlank()) return envValue
-
-    val propertyValue = System.getProperty(OMNI_GEMINI_API_KEY_PROPERTY)?.trim().orEmpty()
-    if (propertyValue.isNotBlank()) return propertyValue
-
-    val decodedFallback = runCatching {
-        String(Base64.getDecoder().decode(OMNI_GEMINI_API_KEY_B64), Charsets.UTF_8).trim()
-    }.getOrDefault("")
-    return decodedFallback.ifBlank { null }
+    return BuildConfig.OMNI_GEMINI_API_KEY.trim().ifBlank { null }
 }
 
 class LocalHeuristicStudyGenerationProvider : StudyGenerationProvider {

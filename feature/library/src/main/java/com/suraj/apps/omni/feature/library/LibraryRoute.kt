@@ -25,7 +25,7 @@ import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.GraphicEq
-import androidx.compose.material.icons.rounded.StickyNote2
+import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
@@ -411,42 +411,48 @@ private fun DocumentRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onOpenDashboard)
             .padding(horizontal = OmniSpacing.large, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(OmniSpacing.medium)
     ) {
-        Icon(
-            imageVector = when (document.fileType) {
-                DocumentFileType.AUDIO -> Icons.Rounded.GraphicEq
-                else -> Icons.Rounded.Description
-            },
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(24.dp)
-        )
-
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(2.dp)
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .clickable(onClick = onOpenDashboard),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(OmniSpacing.medium)
         ) {
-            Text(
-                text = document.title,
-                style = MaterialTheme.typography.titleLarge
+            Icon(
+                imageVector = when (document.fileType) {
+                    DocumentFileType.AUDIO -> Icons.Rounded.GraphicEq
+                    else -> Icons.Rounded.Description
+                },
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(24.dp)
             )
-            Text(
-                text = document.fileType.name,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Text(
+                    text = document.title,
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Text(
+                    text = document.fileType.name,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
 
         Box {
             IconButton(onClick = onOpenMenu) {
                 Icon(
-                    imageVector = Icons.Rounded.StickyNote2,
+                    imageVector = Icons.Rounded.MoreVert,
                     contentDescription = stringResource(R.string.library_content_desc_document_actions),
-                    tint = MaterialTheme.colorScheme.tertiary
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             DropdownMenu(

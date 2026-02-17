@@ -7,6 +7,9 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import android.text.Html
 import android.webkit.URLUtil
+import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
+import com.tom_roush.pdfbox.pdmodel.PDDocument
+import com.tom_roush.pdfbox.text.PDFTextStripper
 import com.suraj.apps.omni.core.data.entitlement.PremiumAccessStore
 import com.suraj.apps.omni.core.data.entitlement.SharedPrefsPremiumAccessStore
 import com.suraj.apps.omni.core.data.local.OmniDatabase
@@ -29,8 +32,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
-import org.apache.pdfbox.pdmodel.PDDocument
-import org.apache.pdfbox.text.PDFTextStripper
 
 sealed interface DocumentImportResult {
     data class Success(val documentId: String) : DocumentImportResult
@@ -385,6 +386,7 @@ class DocumentImportRepository(
     }
 
     private fun extractPdfText(copiedFile: File): String? {
+        initializePdfBoxIfNeeded()
         return runCatching {
             PDDocument.load(copiedFile).use { document ->
                 if (document.numberOfPages <= 0) return@use ""
@@ -396,6 +398,14 @@ class DocumentImportRepository(
             ?.replace(Regex("\\s+"), " ")
             ?.trim()
             ?.ifBlank { null }
+    }
+
+    private fun initializePdfBoxIfNeeded() {
+        if (isPdfBoxInitialized) return
+        runCatching {
+            PDFBoxResourceLoader.init(context.applicationContext)
+            isPdfBoxInitialized = true
+        }
     }
 
     private fun fallbackPreview(fileType: DocumentFileType): String = when (fileType) {
@@ -552,6 +562,7 @@ class DocumentImportRepository(
             "Audio imported. Transcription runs in onboarding."
         private const val PLACEHOLDER_LIVE_AUDIO_TEXT =
             "Live recording captured. Transcript will appear after processing."
+        @Volatile private var isPdfBoxInitialized: Boolean = false
     }
 
     private fun defaultLiveRecordingTitle(): String {

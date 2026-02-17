@@ -10,6 +10,13 @@ android {
 
     defaultConfig {
         minSdk = 26
+        val omniGeminiApiKey = providers.environmentVariable("OMNI_GEMINI_API_KEY")
+            .orElse(providers.gradleProperty("OMNI_GEMINI_API_KEY"))
+            .orElse("")
+            .get()
+            .replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+        buildConfigField("String", "OMNI_GEMINI_API_KEY", "\"$omniGeminiApiKey\"")
     }
 
     compileOptions {
@@ -27,6 +34,9 @@ android {
     }
     sourceSets {
         getByName("androidTest").assets.srcDirs(files("$projectDir/schemas"))
+    }
+    buildFeatures {
+        buildConfig = true
     }
 }
 
