@@ -63,6 +63,12 @@ class LibraryViewModel(
 
     fun onImportWebArticle() {
         val url = _uiState.value.webUrlInput
+        _uiState.update {
+            it.copy(
+                showWebDialog = false,
+                webUrlInput = ""
+            )
+        }
         runDocumentMutation(
             busyMessage = app.getString(R.string.library_busy_importing_source),
             navigateToDashboardOnSuccess = true

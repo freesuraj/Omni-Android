@@ -18,6 +18,7 @@
     <string name="notes_page_indicator">%1$d of %2$d cards</string>
 
     <string name="notes_card_cd_speak">Speak</string>
+    <string name="notes_card_cd_stop_speaking">Stop speaking</string>
     <string name="notes_card_label_question">QUESTION</string>
     <string name="notes_card_label_answer">ANSWER</string>
     <string name="notes_card_cd_bookmark">Bookmark</string>

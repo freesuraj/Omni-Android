@@ -53,6 +53,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
@@ -119,14 +120,18 @@ fun DashboardRoute(
         val featureCards = listOf(
             DashboardFeatureCard(
                 title = stringResource(R.string.dashboard_feature_quiz_title),
-                trailing = stringResource(R.string.dashboard_card_quiz_trailing),
+                trailing = uiState.latestQuizQuestionCount.takeIf { it > 0 }?.let { count ->
+                    pluralStringResource(R.plurals.dashboard_card_quiz_generated, count, count)
+                },
                 color = Color(0xFF1F9BFF),
                 icon = Icons.Rounded.Help,
                 onClick = { onOpenQuiz(documentId) }
             ),
             DashboardFeatureCard(
                 title = stringResource(R.string.dashboard_feature_notes_title),
-                trailing = stringResource(R.string.dashboard_card_notes_trailing),
+                trailing = uiState.studyNoteCount.takeIf { it > 0 }?.let { count ->
+                    pluralStringResource(R.plurals.dashboard_card_notes_generated, count, count)
+                },
                 color = Color(0xFFC95DE8),
                 icon = Icons.Rounded.AutoAwesome,
                 onClick = { onOpenNotes(documentId) }
@@ -204,7 +209,7 @@ fun DashboardRoute(
 
 private data class DashboardFeatureCard(
     val title: String,
-    val trailing: String,
+    val trailing: String?,
     val color: Color,
     val icon: ImageVector,
     val onClick: () -> Unit
@@ -372,11 +377,13 @@ private fun DashboardActionCard(card: DashboardFeatureCard) {
             )
 
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = card.trailing,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                card.trailing?.let { trailing ->
+                    Text(
+                        text = trailing,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 Icon(
                     imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
                     contentDescription = null,

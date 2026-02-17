@@ -29,11 +29,17 @@
     <string name="dashboard_feature_analysis_title">Detailed Analysis</string>
     <string name="dashboard_feature_analysis_subtitle">Run deeper analysis for pages and transcripts (premium).</string>
     <string name="dashboard_upgrade_button">Upgrade for premium workflows</string>
-    <string name="dashboard_card_quiz_trailing">10 Questions</string>
-    <string name="dashboard_card_notes_trailing">17 cards</string>
     <string name="dashboard_card_summary_trailing">Key insights</string>
     <string name="dashboard_card_analysis_trailing">Page-by-page</string>
     <string name="dashboard_card_qa_trailing">Learn with AI</string>
+    <plurals name="dashboard_card_quiz_generated">
+        <item quantity="one">%d Question</item>
+        <item quantity="other">%d Questions</item>
+    </plurals>
+    <plurals name="dashboard_card_notes_generated">
+        <item quantity="one">%d card</item>
+        <item quantity="other">%d cards</item>
+    </plurals>
     <string name="dashboard_onboarding_footer">This might take a moment...</string>
 
     <string name="dashboard_audio_preview_title">Audio player + transcript</string>

@@ -7,6 +7,7 @@ import androidx.room.Upsert
 import com.suraj.apps.omni.core.data.local.entity.QuestionEntity
 import com.suraj.apps.omni.core.data.local.entity.QuizEntity
 import com.suraj.apps.omni.core.data.local.model.QuizWithQuestions
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface QuizDao {
@@ -41,4 +42,17 @@ interface QuizDao {
 
     @Query("SELECT COUNT(*) FROM questions")
     suspend fun countQuestions(): Int
+
+    @Query(
+        """
+        SELECT COUNT(*) FROM questions
+        WHERE quizId = (
+            SELECT id FROM quizzes
+            WHERE documentId = :documentId
+            ORDER BY createdAtEpochMs DESC
+            LIMIT 1
+        )
+        """
+    )
+    fun observeLatestQuizQuestionCount(documentId: String): Flow<Int>
 }

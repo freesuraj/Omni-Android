@@ -11,6 +11,10 @@ import com.suraj.apps.omni.core.data.transcription.AudioTranscriptionResult
 import com.suraj.apps.omni.core.model.DocumentFileType
 import java.io.File
 import kotlinx.coroutines.runBlocking
+import org.apache.pdfbox.pdmodel.PDDocument
+import org.apache.pdfbox.pdmodel.PDPage
+import org.apache.pdfbox.pdmodel.PDPageContentStream
+import org.apache.pdfbox.pdmodel.font.PDType1Font
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -69,6 +73,32 @@ class DocumentImportRepositoryTest {
 
         val fullText = repository.readFullText(success.documentId)
         assertEquals(sourceText, fullText)
+    }
+
+    @Test
+    fun importPdfExtractsFullDocumentTextIntoArtifact() = runBlocking {
+        val sourceFile = File(appContext.cacheDir, "sample-import.pdf")
+        buildPdf(
+            file = sourceFile,
+            lines = listOf(
+                "Bitcoin prevents double spending without trusted intermediaries.",
+                "Nodes validate transactions and propagate them across the network."
+            )
+        )
+        val repository = DocumentImportRepository(
+            context = appContext,
+            database = database,
+            premiumAccessChecker = FakePremiumAccessChecker(isPremium = false)
+        )
+
+        val result = repository.importDocument(Uri.fromFile(sourceFile))
+
+        val success = result as DocumentImportResult.Success
+        val fullText = repository.readFullText(success.documentId).orEmpty()
+        assertTrue(fullText.contains("Bitcoin prevents double spending"))
+        assertTrue(fullText.contains("Nodes validate transactions"))
+        assertFalse(fullText.equals("PDF imported. Text extraction runs in onboarding.", ignoreCase = true))
+        assertFalse(fullText.equals("PDF imported. Unable to extract readable text.", ignoreCase = true))
     }
 
     @Test
@@ -303,6 +333,23 @@ class DocumentImportRepositoryTest {
             onTranscribe()
             progressEvents.forEach(onProgress)
             return result
+        }
+    }
+
+    private fun buildPdf(file: File, lines: List<String>) {
+        PDDocument().use { document ->
+            lines.forEach { line ->
+                val page = PDPage()
+                document.addPage(page)
+                PDPageContentStream(document, page).use { stream ->
+                    stream.beginText()
+                    stream.setFont(PDType1Font.HELVETICA, 12f)
+                    stream.newLineAtOffset(72f, 720f)
+                    stream.showText(line)
+                    stream.endText()
+                }
+            }
+            document.save(file)
         }
     }
 }

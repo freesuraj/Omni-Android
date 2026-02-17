@@ -1,6 +1,7 @@
 package com.suraj.apps.omni.feature.analysis
 
 import android.app.Application
+import android.widget.TextView
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -32,12 +33,15 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import io.noties.markwon.Markwon
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -298,13 +302,35 @@ private fun AnalysisViewScreen(
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold
                     )
-                    Text(
-                        text = item.content,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    MarkdownAnalysisText(
+                        markdown = item.content,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
         }
     }
+}
+
+@Composable
+private fun MarkdownAnalysisText(
+    markdown: String,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val markwon = remember(context) { Markwon.create(context) }
+    val bodyColor = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
+
+    AndroidView(
+        modifier = modifier,
+        factory = { viewContext ->
+            TextView(viewContext).apply {
+                setTextColor(bodyColor)
+            }
+        },
+        update = { textView ->
+            textView.setTextColor(bodyColor)
+            markwon.setMarkdown(textView, markdown)
+        }
+    )
 }

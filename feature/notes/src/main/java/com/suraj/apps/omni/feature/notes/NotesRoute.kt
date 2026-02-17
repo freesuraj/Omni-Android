@@ -2,7 +2,10 @@ package com.suraj.apps.omni.feature.notes
 
 import android.app.Application
 import android.graphics.Color.parseColor
+import android.os.Handler
+import android.os.Looper
 import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -28,6 +31,7 @@ import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.VolumeOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -80,6 +84,8 @@ fun NotesRoute(
 
     var textToSpeech by remember { mutableStateOf<TextToSpeech?>(null) }
     var ttsReady by remember { mutableStateOf(false) }
+    var isSpeaking by remember { mutableStateOf(false) }
+    val mainHandler = remember { Handler(Looper.getMainLooper()) }
 
     DisposableEffect(context) {
         lateinit var engine: TextToSpeech
@@ -87,6 +93,26 @@ fun NotesRoute(
             ttsReady = status == TextToSpeech.SUCCESS
             if (ttsReady) {
                 engine.language = Locale.getDefault()
+                engine.setOnUtteranceProgressListener(
+                    object : UtteranceProgressListener() {
+                        override fun onStart(utteranceId: String?) {
+                            mainHandler.post { isSpeaking = true }
+                        }
+
+                        @Deprecated("Deprecated in Java")
+                        override fun onError(utteranceId: String?) {
+                            mainHandler.post { isSpeaking = false }
+                        }
+
+                        override fun onError(utteranceId: String?, errorCode: Int) {
+                            mainHandler.post { isSpeaking = false }
+                        }
+
+                        override fun onDone(utteranceId: String?) {
+                            mainHandler.post { isSpeaking = false }
+                        }
+                    }
+                )
             }
         }
         textToSpeech = engine
@@ -96,11 +122,15 @@ fun NotesRoute(
             textToSpeech?.shutdown()
             textToSpeech = null
             ttsReady = false
+            isSpeaking = false
         }
     }
 
     val speakCurrent: (String) -> Unit = { text ->
-        if (text.isNotBlank() && ttsReady) {
+        if (isSpeaking) {
+            textToSpeech?.stop()
+            isSpeaking = false
+        } else if (text.isNotBlank() && ttsReady) {
             textToSpeech?.speak(
                 text,
                 TextToSpeech.QUEUE_FLUSH,
@@ -116,7 +146,7 @@ fun NotesRoute(
     LaunchedEffect(uiState.autoReadEnabled, currentNote?.id, currentNote?.isFlipped) {
         if (!uiState.autoReadEnabled) return@LaunchedEffect
         val note = currentNote ?: return@LaunchedEffect
-        val text = if (note.isFlipped) note.backContent else note.frontContent
+        val text = sanitizeNoteText(if (note.isFlipped) note.backContent else note.frontContent)
         speakCurrent(text)
     }
 
@@ -182,6 +212,7 @@ fun NotesRoute(
                 onToggleBookmark = viewModel::toggleBookmark,
                 onBookmarkedFilterChanged = viewModel::setBookmarkedOnly,
                 onAutoReadChanged = viewModel::setAutoReadEnabled,
+                isSpeaking = isSpeaking,
                 onSpeak = speakCurrent
             )
         }
@@ -268,6 +299,7 @@ private fun NotesCardsScreen(
     onToggleBookmark: (String) -> Unit,
     onBookmarkedFilterChanged: (Boolean) -> Unit,
     onAutoReadChanged: (Boolean) -> Unit,
+    isSpeaking: Boolean,
     onSpeak: (String) -> Unit
 ) {
     val visibleNotes = uiState.visibleNotes
@@ -347,6 +379,7 @@ private fun NotesCardsScreen(
                     modifier = Modifier.fillMaxSize(),
                     onToggleFlip = { onToggleFlip(note.id) },
                     onToggleBookmark = { onToggleBookmark(note.id) },
+                    isSpeaking = isSpeaking,
                     onSpeak = {
                         onSpeak(if (note.isFlipped) note.backContent else note.frontContent)
                     }
@@ -383,6 +416,7 @@ private fun NoteCard(
     modifier: Modifier = Modifier,
     onToggleFlip: () -> Unit,
     onToggleBookmark: () -> Unit,
+    isSpeaking: Boolean,
     onSpeak: () -> Unit
 ) {
     val rotation by animateFloatAsState(
@@ -428,7 +462,13 @@ private fun NoteCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onSpeak) {
-                        Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = stringResource(R.string.notes_card_cd_speak))
+                        Icon(
+                            imageVector = if (isSpeaking) Icons.Default.VolumeOff else Icons.AutoMirrored.Filled.VolumeUp,
+                            contentDescription = stringResource(
+                                if (isSpeaking) R.string.notes_card_cd_stop_speaking else R.string.notes_card_cd_speak
+                            ),
+                            tint = if (isSpeaking) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                     Text(
                         text = if (showingBack) stringResource(R.string.notes_card_label_answer) else stringResource(R.string.notes_card_label_question),
@@ -444,7 +484,7 @@ private fun NoteCard(
                 }
 
                 Text(
-                    text = if (showingBack) note.backContent else note.frontContent,
+                    text = sanitizeNoteText(if (showingBack) note.backContent else note.frontContent),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier
@@ -461,4 +501,17 @@ private fun NoteCard(
             }
         }
     }
+}
+
+private fun sanitizeNoteText(text: String): String {
+    return text
+        .replace(Regex("`{1,3}"), "")
+        .replace(Regex("\\*\\*(.*?)\\*\\*"), "$1")
+        .replace(Regex("__(.*?)__"), "$1")
+        .replace(Regex("\\*(.*?)\\*"), "$1")
+        .replace(Regex("_(.*?)_"), "$1")
+        .replace(Regex("^#{1,6}\\s*", RegexOption.MULTILINE), "")
+        .replace(Regex("^>\\s*", RegexOption.MULTILINE), "")
+        .replace(Regex("\\[(.*?)]\\((.*?)\\)"), "$1")
+        .trim()
 }

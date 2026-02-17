@@ -29,6 +29,8 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
+import org.apache.pdfbox.pdmodel.PDDocument
+import org.apache.pdfbox.text.PDFTextStripper
 
 sealed interface DocumentImportResult {
     data class Success(val documentId: String) : DocumentImportResult
@@ -63,6 +65,10 @@ class DocumentImportRepository(
     fun observeDocuments(): Flow<List<DocumentEntity>> = database.documentDao().observeAll()
     fun observeDocument(documentId: String): Flow<DocumentEntity?> =
         database.documentDao().observeById(documentId)
+    fun observeLatestQuizQuestionCount(documentId: String): Flow<Int> =
+        database.quizDao().observeLatestQuizQuestionCount(documentId)
+    fun observeStudyNoteCount(documentId: String): Flow<Int> =
+        database.studyNoteDao().observeCountForDocument(documentId)
 
     suspend fun getDocument(documentId: String): DocumentEntity? = withContext(ioDispatcher) {
         database.documentDao().getById(documentId)
@@ -371,10 +377,25 @@ class DocumentImportRepository(
                     .orEmpty()
             }.ifBlank { "Imported text file." }
 
-            DocumentFileType.PDF -> "PDF imported. Text extraction runs in onboarding."
+            DocumentFileType.PDF -> extractPdfText(copiedFile)
+                ?: "PDF imported. Unable to extract readable text."
             DocumentFileType.AUDIO -> "Audio imported. Transcription runs in onboarding."
             DocumentFileType.WEB -> "Web article imported."
         }
+    }
+
+    private fun extractPdfText(copiedFile: File): String? {
+        return runCatching {
+            PDDocument.load(copiedFile).use { document ->
+                if (document.numberOfPages <= 0) return@use ""
+                PDFTextStripper()
+                    .apply { sortByPosition = true }
+                    .getText(document)
+            }
+        }.getOrNull()
+            ?.replace(Regex("\\s+"), " ")
+            ?.trim()
+            ?.ifBlank { null }
     }
 
     private fun fallbackPreview(fileType: DocumentFileType): String = when (fileType) {

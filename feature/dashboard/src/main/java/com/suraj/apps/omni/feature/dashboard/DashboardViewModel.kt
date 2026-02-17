@@ -29,6 +29,8 @@ data class DashboardUiState(
     val onboardingProgress: Float = 0f,
     val sourceStats: String = "",
     val sourceUrl: String? = null,
+    val latestQuizQuestionCount: Int = 0,
+    val studyNoteCount: Int = 0,
     val audioSourcePath: String? = null,
     val audioTranscript: String = "",
     val isPremiumUnlocked: Boolean = false,
@@ -52,6 +54,16 @@ class DashboardViewModel(
     private var activeOnboardingDocumentId: String? = null
 
     init {
+        viewModelScope.launch {
+            repository.observeLatestQuizQuestionCount(documentId).collect { count ->
+                _uiState.update { it.copy(latestQuizQuestionCount = count.coerceAtLeast(0)) }
+            }
+        }
+        viewModelScope.launch {
+            repository.observeStudyNoteCount(documentId).collect { count ->
+                _uiState.update { it.copy(studyNoteCount = count.coerceAtLeast(0)) }
+            }
+        }
         viewModelScope.launch {
             repository.observeDocument(documentId).collect { document ->
                 if (document == null) {

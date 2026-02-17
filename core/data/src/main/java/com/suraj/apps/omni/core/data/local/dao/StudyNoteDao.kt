@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Upsert
 import com.suraj.apps.omni.core.data.local.entity.StudyNoteEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface StudyNoteDao {
@@ -27,4 +28,7 @@ interface StudyNoteDao {
 
     @Query("SELECT COUNT(*) FROM study_notes")
     suspend fun count(): Int
+
+    @Query("SELECT COUNT(*) FROM study_notes WHERE documentId = :documentId")
+    fun observeCountForDocument(documentId: String): Flow<Int>
 }

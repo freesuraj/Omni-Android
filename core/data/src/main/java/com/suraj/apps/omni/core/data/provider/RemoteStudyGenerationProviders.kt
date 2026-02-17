@@ -162,7 +162,7 @@ private object ProviderPrompts {
         Rules:
         1. Question should be specific and clear.
         2. Answer should be concise (under 40 words).
-        3. Use Markdown in the answer for emphasis.
+        3. Return plain text only in answers (no Markdown).
         """.trimIndent()
 
     fun notesUserPrompt(text: String, targetCount: Int): String =
@@ -260,7 +260,7 @@ private object ProviderResponseParser {
         for (index in 0 until notesArray.length()) {
             val item = notesArray.optJSONObject(index) ?: continue
             val question = item.optString("question").trim()
-            val answer = item.optString("answer").trim()
+            val answer = stripMarkdownFormatting(item.optString("answer").trim())
             if (question.isBlank() || answer.isBlank()) continue
             result += ProviderStudyNote(front = question, back = answer)
         }
@@ -478,4 +478,17 @@ private fun cleanJsonMarkdown(rawText: String): String {
     if (cleaned.startsWith("```")) cleaned = cleaned.removePrefix("```")
     if (cleaned.endsWith("```")) cleaned = cleaned.removeSuffix("```")
     return cleaned.trim()
+}
+
+private fun stripMarkdownFormatting(text: String): String {
+    return text
+        .replace(Regex("`{1,3}"), "")
+        .replace(Regex("\\*\\*(.*?)\\*\\*"), "$1")
+        .replace(Regex("__(.*?)__"), "$1")
+        .replace(Regex("\\*(.*?)\\*"), "$1")
+        .replace(Regex("_(.*?)_"), "$1")
+        .replace(Regex("^#{1,6}\\s*", RegexOption.MULTILINE), "")
+        .replace(Regex("^>\\s*", RegexOption.MULTILINE), "")
+        .replace(Regex("\\[(.*?)]\\((.*?)\\)"), "$1")
+        .trim()
 }
