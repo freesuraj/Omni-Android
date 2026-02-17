@@ -1,3 +1,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <style name="Theme.Omni" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.Omni.Splash" parent="Theme.Omni">
+        <item name="android:windowBackground">@drawable/launch_screen</item>
+    </style>
 </resources>

@@ -5,6 +5,8 @@ import android.content.Intent
 import android.media.MediaRecorder
 import android.os.Bundle
 import android.os.SystemClock
+import android.speech.RecognizerIntent.EXTRA_LANGUAGE
+import android.speech.RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
@@ -20,6 +22,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 private const val WAVEFORM_BAR_COUNT = 28
 private const val MIN_WAVE_AMPLITUDE = 0.08f
@@ -319,7 +322,12 @@ class AudioViewModel(
     }
 
     private fun startSpeechListening() {
-        if (!SpeechRecognizer.isRecognitionAvailable(appContext)) return
+        if (!SpeechRecognizer.isRecognitionAvailable(appContext)) {
+            _uiState.update {
+                it.copy(errorMessage = app.getString(R.string.audio_error_speech_recognition_unavailable))
+            }
+            return
+        }
         if (speechRecognizer == null) {
             speechRecognizer = SpeechRecognizer.createSpeechRecognizer(appContext).also {
                 it.setRecognitionListener(speechListener)
@@ -342,13 +350,17 @@ class AudioViewModel(
     }
 
     private fun speechRecognizerIntent(): Intent {
+        val languageTag = Locale.getDefault().toLanguageTag()
         return Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(
                 RecognizerIntent.EXTRA_LANGUAGE_MODEL,
                 RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
             )
             putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
-            putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
+            // Do not force offline-only mode; it fails on many emulators/devices.
+            putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, false)
+            putExtra(EXTRA_LANGUAGE, languageTag)
+            putExtra(EXTRA_LANGUAGE_PREFERENCE, languageTag)
         }
     }
 
@@ -363,6 +375,9 @@ class AudioViewModel(
         override fun onError(error: Int) {
             if (!shouldRestartSpeechRecognition) return
             if (_uiState.value.status != RecordingStatus.RECORDING) return
+            if (error == SpeechRecognizer.ERROR_RECOGNIZER_BUSY) {
+                return
+            }
             viewModelScope.launch {
                 delay(350)
                 if (shouldRestartSpeechRecognition && _uiState.value.status == RecordingStatus.RECORDING) {

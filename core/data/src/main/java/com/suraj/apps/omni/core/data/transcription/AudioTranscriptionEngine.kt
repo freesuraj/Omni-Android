@@ -1,5 +1,7 @@
 package com.suraj.apps.omni.core.data.transcription
 
+import android.media.MediaExtractor
+import android.media.MediaFormat
 import android.media.MediaMetadataRetriever
 import java.io.File
 import kotlin.math.min
@@ -167,13 +169,36 @@ class OnDeviceAudioTranscriptionEngine(
 
 class MediaMetadataAudioDurationResolver : AudioDurationResolver {
     override fun resolveDurationMs(audioFile: File): Long? {
-        return runCatching {
+        val retrieverDuration = runCatching {
             val retriever = MediaMetadataRetriever()
             try {
                 retriever.setDataSource(audioFile.absolutePath)
                 retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull()
             } finally {
                 runCatching { retriever.release() }
+            }
+        }.getOrNull()
+        if (retrieverDuration != null && retrieverDuration > 0L) {
+            return retrieverDuration
+        }
+
+        return runCatching {
+            val extractor = MediaExtractor()
+            try {
+                extractor.setDataSource(audioFile.absolutePath)
+                var maxDurationUs = 0L
+                for (trackIndex in 0 until extractor.trackCount) {
+                    val format = extractor.getTrackFormat(trackIndex)
+                    if (format.containsKey(MediaFormat.KEY_DURATION)) {
+                        val trackDurationUs = format.getLong(MediaFormat.KEY_DURATION)
+                        if (trackDurationUs > maxDurationUs) {
+                            maxDurationUs = trackDurationUs
+                        }
+                    }
+                }
+                if (maxDurationUs > 0L) maxDurationUs / 1000L else null
+            } finally {
+                runCatching { extractor.release() }
             }
         }.getOrNull()
     }
