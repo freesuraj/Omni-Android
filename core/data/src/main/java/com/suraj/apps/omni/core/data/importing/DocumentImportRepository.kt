@@ -20,7 +20,7 @@ import com.suraj.apps.omni.core.data.transcription.AudioTranscriptionEngine
 import com.suraj.apps.omni.core.data.transcription.AudioTranscriptionProgress
 import com.suraj.apps.omni.core.data.transcription.AudioTranscriptionResult
 import com.suraj.apps.omni.core.data.transcription.GeminiAudioTranscriptionEngine
-import com.suraj.apps.omni.core.data.transcription.OnDeviceAudioTranscriptionEngine
+import com.suraj.apps.omni.core.data.transcription.LocalAudioTranscriptionEngine
 import com.suraj.apps.omni.core.model.DocumentFileType
 import java.io.File
 import java.net.HttpURLConnection
@@ -65,7 +65,7 @@ class DocumentImportRepository(
         if (apiKey.isNotBlank()) {
             GeminiAudioTranscriptionEngine(apiKey)
         } else {
-            OnDeviceAudioTranscriptionEngine()
+            LocalAudioTranscriptionEngine()
         }
     },
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
@@ -239,6 +239,14 @@ class DocumentImportRepository(
         val audioFile = File(audioPath)
         if (!audioFile.exists()) {
             return@withContext AudioTranscriptionResult.Failure("Audio file is missing.")
+        }
+        
+        // Premium Limit: Non-premium users are limited to ~4MB (approx 3 mins) for Gemini transcription.
+        // Live transcription via SpeechRecognizer is unlimited as it runs on-device.
+        if (!premiumAccessChecker.isPremiumUnlocked() && audioFile.length() > 4 * 1024 * 1024) {
+             return@withContext AudioTranscriptionResult.Failure(
+                 "File too large. Free plan limits audio transcription to ~3 minutes."
+             )
         }
 
         database.documentDao().upsert(

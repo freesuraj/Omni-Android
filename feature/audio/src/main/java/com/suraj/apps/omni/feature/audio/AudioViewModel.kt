@@ -14,7 +14,7 @@ import android.speech.SpeechRecognizer
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.suraj.apps.omni.core.data.transcription.AudioTranscriptionResult
-import com.suraj.apps.omni.core.data.transcription.OnDeviceAudioTranscriptionEngine
+import com.suraj.apps.omni.core.data.transcription.LocalAudioTranscriptionEngine
 import com.suraj.apps.omni.core.data.importing.DocumentImportRepository
 import com.suraj.apps.omni.core.data.importing.DocumentImportResult
 import java.io.File
@@ -58,7 +58,7 @@ class AudioViewModel(
     private val app = application
     private val appContext = application.applicationContext
     private val repository = DocumentImportRepository(appContext)
-    private val fallbackAudioTranscriptionEngine = OnDeviceAudioTranscriptionEngine()
+    private val fallbackAudioTranscriptionEngine = LocalAudioTranscriptionEngine()
 
     private val _uiState = MutableStateFlow(AudioUiState())
     val uiState: StateFlow<AudioUiState> = _uiState.asStateFlow()
@@ -182,7 +182,7 @@ class AudioViewModel(
 
         val newRecorder = runCatching {
             MediaRecorder().apply {
-                setAudioSource(MediaRecorder.AudioSource.MIC)
+                setAudioSource(MediaRecorder.AudioSource.VOICE_RECOGNITION)
                 setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
                 setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
                 setAudioEncodingBitRate(128_000)
@@ -393,6 +393,7 @@ class AudioViewModel(
             putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3)
             putExtra(EXTRA_LANGUAGE, languageTag)
             putExtra(EXTRA_LANGUAGE_PREFERENCE, languageTag)
+            putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, appContext.packageName)
         }
     }
 
