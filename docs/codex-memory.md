@@ -1,95 +1,82 @@
 # Codex Working Memory (Omni-Android)
 
-Last updated: 2026-02-16
+Last updated: 2026-02-18
+Branch snapshot: `fix/transcription-unavailable-state` (clean working tree, **ahead 1** vs origin due local revert)
 
-## Project identity
+## Project Identity
 - Repo: `freesuraj/Omni-Android`
 - Local path: `/Users/suraj/Projects/Personal/Omni-Android`
-- Product: **Omni** Android app (Jetpack Compose), parity with iOS Omni (formerly Doc2Quiz)
-- Package/app id: `com.suraj.apps.Doc2Quiz` (kept intentionally)
+- App: Omni Android (Jetpack Compose)
+- Product parity target: Omni iOS behavior/screens
 
-## Guardrails currently in effect
-- Source of truth for agent workflow: `AGENTS.md`
-- Always run validation before marking work done:
+## Current High-Priority Situation
+- User-reported issue remains: live audio transcription not reliably working on real device (Oppo Android 16), dashboard often shows `transcript pending`.
+- Branch/PR state right now:
+  - Open PR: #50 `Improve live transcription fallback and unavailable state handling`
+  - PR URL: `https://github.com/freesuraj/Omni-Android/pull/50`
+  - Local commit on branch: `068bc7a` = revert of prior attempt (`3b46d53`) because it "didn't really work".
+  - Local branch is ahead of origin by 1 commit; revert is not pushed yet.
+  - Net code on local branch is effectively back to `main` behavior for that attempted fix.
+
+## Workflow Rules In Force (important)
+- Source of truth: `AGENTS.md`
+- For each requested task: create a ticket first **unless user explicitly says no ticket**.
+- Board statuses allowed: `Todo`, `In Progress`, `Done`.
+- Every PR requires:
+  - summary
+  - validation results
+  - duplication/DRY notes
+  - local emulator screenshots attached to PR (CI screenshot workflow removed).
+- Required validation before done:
   - `./gradlew :app:lintDebug :app:assembleDebug`
-  - `./gradlew :app:testDebugUnitTest` (or fastlane verify lane once fully wired)
-- Check for duplication with `rg` before adding code.
-- GitHub Project board uses 3 states only: `Todo`, `In Progress`, `Done`.
-- iOS model parity reference: `references/ios-swiftdata-to-android-model.md`
+  - `bundle exec fastlane android verify` (or fallback `./gradlew :app:testDebugUnitTest`)
 
-## Environment notes
-- Android Studio installed.
-- Java runtime used for CLI builds:
-  - `JAVA_HOME=/Applications/Android Studio.app/Contents/jbr/Contents/Home`
-- Local SDK expected at `~/Library/Android/sdk` (set in `local.properties`).
+## Major Completed Work (merged)
+- PR #41: removed CI PR screenshots workflow; moved to local screenshot evidence.
+- PR #43: implemented `StudyGenerationProvider` across LLM providers.
+- PR #45: fixed live transcript preview/dashboard placeholder-word behavior (first pass).
+- PR #47: wired Play product IDs and dynamic paywall pricing.
+- PR #49: live transcription follow-up + audio transcript opening improvements.
 
-## What has been implemented
+## Key Product/Tech Decisions Already Applied
+- Omni provider uses Gemini model path (`gemini-2.0-flash-lite`) under Omni abstraction.
+- Omni API key is no longer hardcoded in source; build reads from Gradle/env properties.
+- Premium product IDs in Android billing:
+  - lifetime: `com.suraj.apps.omni.pro.forever`
+  - monthly: `com.suraj.apps.omni.pro.monthly`
+  - yearly: `com.suraj.apps.omni.pro.yearly`
+- PR screenshot generation in CI removed; local emulator screenshots are the process.
 
-### Ticket #1 (Done)
-- Android multi-module scaffold and navigation shell created:
-  - `app`
-  - `core:designsystem`, `core:model`, `core:data`
-  - feature modules: `library`, `audio`, `settings`, `dashboard`, `quiz`, `notes`, `summary`, `qa`, `analysis`, `paywall`
-- Hilt application shell and basic app nav setup added.
-
-### Ticket #2 (Done)
-- Design system baseline and first-pass parity placeholders added:
-  - theme tokens, typography, reusable UI components, progress overlay
-- Feature placeholder routes updated for initial UX structure.
-
-### Ticket #3 (Done)
-- Room persistence parity foundation implemented:
-  - entities, relations, DAOs, converters, DB factory, migration scaffold
-  - schema export enabled and committed under:
-    - `core/data/schemas/com.suraj.apps.omni.core.data.local.OmniDatabase/1.json`
-- DAO integration tests added for:
-  - relation loading
-  - cascade deletes (document -> children, quiz -> questions)
-
-### Ticket #4 (Done)
-- Import/storage pipeline implemented:
-  - document import (PDF/TXT)
-  - audio file import
-  - web article import by URL
-- Full text artifacts persisted to `files/text/<documentId>.txt`
-- Imported file copies persisted to `files/imports/<documentId>.<ext>`
-- Metadata/preview persisted to Room `documents`.
-- Free-tier document cap enforced (1 document for non-premium) with paywall routing.
-- Library UI now has + menu actions and web URL dialog.
-- Dashboard route now accepts `documentId`.
-
-## Current board status snapshot
-- `#1-#13` Done
-- `#14` Todo (Detailed Analysis parity)
-- `#15` Done
-- `#16` Todo (Localization + RTL)
-- `#17` Done
-- `#18` In Progress (QA gate + release readiness)
-
-## Important implementation files to know first
-- Navigation:
-  - `app/src/main/java/com/suraj/apps/omni/navigation/AppRoutes.kt`
-  - `app/src/main/java/com/suraj/apps/omni/navigation/OmniAppNavHost.kt`
-- Library/import:
-  - `feature/library/src/main/java/com/suraj/apps/omni/feature/library/LibraryRoute.kt`
-  - `feature/library/src/main/java/com/suraj/apps/omni/feature/library/LibraryViewModel.kt`
+## Areas Frequently Touched Recently
+- Live transcription engine:
+  - `core/data/src/main/java/com/suraj/apps/omni/core/data/transcription/AudioTranscriptionEngine.kt`
+- Audio recording/viewmodel:
+  - `feature/audio/src/main/java/com/suraj/apps/omni/feature/audio/AudioViewModel.kt`
+- Dashboard transcription/source status:
+  - `feature/dashboard/src/main/java/com/suraj/apps/omni/feature/dashboard/DashboardViewModel.kt`
+- Study provider routing:
+  - `core/data/src/main/java/com/suraj/apps/omni/core/data/provider/StudyGenerationGateway.kt`
+  - `core/data/src/main/java/com/suraj/apps/omni/core/data/provider/RemoteStudyGenerationProviders.kt`
+- Import pipeline:
   - `core/data/src/main/java/com/suraj/apps/omni/core/data/importing/DocumentImportRepository.kt`
-- Persistence:
-  - `core/data/src/main/java/com/suraj/apps/omni/core/data/local/OmniDatabase.kt`
-  - `core/data/src/main/java/com/suraj/apps/omni/core/data/local/dao/*.kt`
-  - `core/data/src/main/java/com/suraj/apps/omni/core/data/local/entity/*.kt`
 
-## Known caveats / follow-ups
-- Import pipeline currently uses placeholder extraction for PDF/audio text; deeper extraction/transcription is planned in later tickets.
-- Premium gating now flows through shared entitlement/billing repository wiring (ticket #15).
-- Provider selection/key management is implemented with encrypted key storage (ticket #17).
-- Local fastlane remains blocked on this machine by Ruby/Bundler mismatch (`bundler 2.6.9` with system Ruby 2.6).
+## Board Snapshot (Project #2)
+- Core tickets (#1 through #18) are now in `Done`.
+- Later fixes also done and linked (examples: #40, #42, #44, #46, #48).
+- No open GitHub issues were listed at last check (`gh issue list --state open` returned empty), so new work may come via freshly created tickets only.
 
-## Recommended startup sequence for future Codex runs
-1. Open this file and `AGENTS.md`.
-2. Verify board status (`gh project item-list 2 --owner freesuraj --format json`).
-3. Move next ticket to `In Progress`.
-4. Implement with duplication check.
-5. Run validation commands.
-6. Comment on issue with changes + validation.
-7. Move ticket to `Done` and next ticket to `In Progress`.
+## Validation/Env Notes
+- Java for CLI builds:
+  - `JAVA_HOME=/Applications/Android Studio.app/Contents/jbr/Contents/Home`
+- Typical verify command used:
+  - `JAVA_HOME='/Applications/Android Studio.app/Contents/jbr/Contents/Home' ./gradlew :app:lintDebug :app:assembleDebug :app:testDebugUnitTest`
+
+## Immediate Next Actions For Any New Agent
+2. Reproduce live transcription issue on physical Android 16 device (not only emulator).
+3. Add robust unavailable/timeout/error-state handling for recognizer and onboarding transcript pipeline.
+4. Verify dashboard/source details behavior for all transcript states: available, pending, unavailable.
+5. Run lint/build/tests, capture local screenshots, update PR with evidence, then move board ticket state accordingly.
+
+## Risk Notes
+- Speech recognizer behavior varies by OEM/ROM and Google speech services availability; emulator pass does not guarantee device pass.
+- Current branch divergence (`ahead 1`) can confuse PR #50 unless reconciled (push revert or reset strategy agreed).
