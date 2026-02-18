@@ -48,7 +48,8 @@ data class AudioUiState(
     val shouldOpenPaywall: Boolean = false,
     val pendingDashboardDocumentId: String? = null,
     val remainingFreeRecordings: Int? = null,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val isLiveTranscriptionAvailable: Boolean = true
 )
 
 class AudioViewModel(
@@ -73,6 +74,7 @@ class AudioViewModel(
     private var shouldRestartSpeechRecognition = false
     private var committedTranscript = ""
     private var partialTranscript = ""
+    private var consecutiveSpeechRecognizerErrors = 0
 
     init {
         refreshRemainingFreeRecordings()
@@ -208,9 +210,11 @@ class AudioViewModel(
                 transcript = "",
                 elapsedMs = 0L,
                 waveform = List(WAVEFORM_BAR_COUNT) { MIN_WAVE_AMPLITUDE },
-                errorMessage = null
+                errorMessage = null,
+                isLiveTranscriptionAvailable = true
             )
         }
+        consecutiveSpeechRecognizerErrors = 0
         startAmplitudePolling()
         startElapsedTimer()
         startSpeechListening()
@@ -340,7 +344,10 @@ class AudioViewModel(
         val recognizerAvailable = SpeechRecognizer.isRecognitionAvailable(appContext)
         if (!recognizerAvailable && !onDeviceAvailable) {
             _uiState.update {
-                it.copy(errorMessage = app.getString(R.string.audio_error_speech_recognition_unavailable))
+                it.copy(
+                    errorMessage = app.getString(R.string.audio_error_speech_recognition_unavailable),
+                    isLiveTranscriptionAvailable = false
+                )
             }
             return
         }
@@ -403,6 +410,14 @@ class AudioViewModel(
             if (error == SpeechRecognizer.ERROR_RECOGNIZER_BUSY) {
                 return
             }
+
+            consecutiveSpeechRecognizerErrors++
+            if (consecutiveSpeechRecognizerErrors > 3) {
+                shouldRestartSpeechRecognition = false
+                _uiState.update { it.copy(isLiveTranscriptionAvailable = false) }
+                return
+            }
+
             viewModelScope.launch {
                 delay(350)
                 if (shouldRestartSpeechRecognition && _uiState.value.status == RecordingStatus.RECORDING) {
@@ -425,6 +440,7 @@ class AudioViewModel(
                 .orEmpty()
                 .trim()
             if (partial.isBlank()) return
+            consecutiveSpeechRecognizerErrors = 0
             partialTranscript = partial
             publishTranscript()
         }

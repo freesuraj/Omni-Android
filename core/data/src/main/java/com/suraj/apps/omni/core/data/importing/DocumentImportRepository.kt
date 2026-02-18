@@ -10,6 +10,7 @@ import android.webkit.URLUtil
 import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.text.PDFTextStripper
+import com.suraj.apps.omni.core.data.BuildConfig
 import com.suraj.apps.omni.core.data.entitlement.PremiumAccessStore
 import com.suraj.apps.omni.core.data.entitlement.SharedPrefsPremiumAccessStore
 import com.suraj.apps.omni.core.data.local.OmniDatabase
@@ -18,6 +19,7 @@ import com.suraj.apps.omni.core.data.local.entity.DocumentEntity
 import com.suraj.apps.omni.core.data.transcription.AudioTranscriptionEngine
 import com.suraj.apps.omni.core.data.transcription.AudioTranscriptionProgress
 import com.suraj.apps.omni.core.data.transcription.AudioTranscriptionResult
+import com.suraj.apps.omni.core.data.transcription.GeminiAudioTranscriptionEngine
 import com.suraj.apps.omni.core.data.transcription.OnDeviceAudioTranscriptionEngine
 import com.suraj.apps.omni.core.model.DocumentFileType
 import java.io.File
@@ -58,7 +60,14 @@ class DocumentImportRepository(
     private val database: OmniDatabase = OmniDatabaseFactory.create(context),
     private val premiumAccessChecker: PremiumAccessChecker = SharedPrefsPremiumAccessChecker(context),
     private val premiumAccessStore: PremiumAccessStore = SharedPrefsPremiumAccessStore(context),
-    private val audioTranscriptionEngine: AudioTranscriptionEngine = OnDeviceAudioTranscriptionEngine(),
+    private val audioTranscriptionEngine: AudioTranscriptionEngine = run {
+        val apiKey = BuildConfig.OMNI_GEMINI_API_KEY.trim()
+        if (apiKey.isNotBlank()) {
+            GeminiAudioTranscriptionEngine(apiKey)
+        } else {
+            OnDeviceAudioTranscriptionEngine()
+        }
+    },
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     fun isPremiumUnlocked(): Boolean = premiumAccessChecker.isPremiumUnlocked()

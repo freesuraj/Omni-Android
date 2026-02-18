@@ -164,6 +164,7 @@ class DashboardViewModel(
 
     private fun maybeStartOnboarding(document: DocumentEntity) {
         if (!document.isOnboarding) return
+        if (document.onboardingStatus == "transcription_failed") return
         if (activeOnboardingDocumentId == document.id && onboardingJob?.isActive == true) return
 
         onboardingJob?.cancel()

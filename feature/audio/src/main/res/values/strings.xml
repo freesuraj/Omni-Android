@@ -9,6 +9,7 @@
     <string name="audio_free_recordings_remaining">Free recordings remaining: %1$d of 2</string>
     <string name="audio_live_transcript_title">Live transcript</string>
     <string name="audio_transcript_placeholder">Your speech transcript appears here while recording.</string>
+    <string name="audio_transcript_unavailable_fallback">Live transcription unavailable. Full transcript will appear after recording.</string>
 
     <string name="audio_status_idle">Idle</string>
     <string name="audio_status_recording">Recording</string>

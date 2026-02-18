@@ -220,7 +220,13 @@ fun AudioRoute(
                             .padding(OmniSpacing.medium),
                         contentAlignment = Alignment.TopStart
                     ) {
-                        if (uiState.transcript.isBlank()) {
+                        if (!uiState.isLiveTranscriptionAvailable) {
+                            Text(
+                                text = stringResource(R.string.audio_transcript_unavailable_fallback),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        } else if (uiState.transcript.isBlank()) {
                             Text(
                                 text = stringResource(R.string.audio_transcript_placeholder),
                                 style = MaterialTheme.typography.bodyMedium,
