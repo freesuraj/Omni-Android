@@ -54,6 +54,7 @@
     <string name="dashboard_source_stats_web">Fonte web • %1$s • %2$d palavras</string>
     <string name="dashboard_source_stats_audio">Fonte de áudio • %1$s • %2$d palavras transcritas</string>
     <string name="dashboard_source_stats_audio_pending">Fonte de áudio • %1$s • transcrição pendente</string>
+    <string name="dashboard_source_stats_audio_failed">Fonte de áudio • %1$s • transcrição indisponível neste dispositivo</string>
     <string name="dashboard_web_article_fallback_host">artigo web</string>
     <string name="dashboard_duration_unavailable">duração indisponível</string>
 
