@@ -438,7 +438,8 @@ class DocumentImportRepository(
 
     private fun isPlaceholderAudioTranscriptValue(value: String): Boolean {
         return value.equals(PLACEHOLDER_IMPORTED_AUDIO_TEXT, ignoreCase = true) ||
-            value.equals(PLACEHOLDER_LIVE_AUDIO_TEXT, ignoreCase = true)
+            value.equals(PLACEHOLDER_LIVE_AUDIO_TEXT, ignoreCase = true) ||
+            value.startsWith(PLACEHOLDER_HEURISTIC_AUDIO_PREFIX, ignoreCase = true)
     }
 
     private fun normalizeUrl(rawUrl: String): String? {
@@ -566,6 +567,7 @@ class DocumentImportRepository(
             "Audio imported. Transcription runs in onboarding."
         private const val PLACEHOLDER_LIVE_AUDIO_TEXT =
             "Live recording captured. Transcript will appear after processing."
+        private const val PLACEHOLDER_HEURISTIC_AUDIO_PREFIX = "Audio segment "
         @Volatile private var isPdfBoxInitialized: Boolean = false
     }
 

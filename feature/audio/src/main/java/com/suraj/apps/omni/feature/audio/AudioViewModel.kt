@@ -258,6 +258,9 @@ class AudioViewModel(
                     is AudioTranscriptionResult.Failure -> ""
                 }
             }
+            if (repository.isPlaceholderAudioTranscript(transcript)) {
+                transcript = ""
+            }
             when (val result = repository.importLiveRecording(finalFile, transcript)) {
                 is DocumentImportResult.Success -> {
                     finalFile.delete()
@@ -334,14 +337,18 @@ class AudioViewModel(
     private fun startSpeechListening() {
         val onDeviceAvailable = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
             SpeechRecognizer.isOnDeviceRecognitionAvailable(appContext)
-        if (!SpeechRecognizer.isRecognitionAvailable(appContext) && !onDeviceAvailable) {
+        val recognizerAvailable = SpeechRecognizer.isRecognitionAvailable(appContext)
+        if (!recognizerAvailable && !onDeviceAvailable) {
             _uiState.update {
                 it.copy(errorMessage = app.getString(R.string.audio_error_speech_recognition_unavailable))
             }
             return
         }
         if (speechRecognizer == null) {
-            val recognizer = if (onDeviceAvailable) {
+            // Prefer the standard recognizer first for better emulator/device compatibility.
+            val recognizer = if (recognizerAvailable) {
+                SpeechRecognizer.createSpeechRecognizer(appContext)
+            } else if (onDeviceAvailable) {
                 SpeechRecognizer.createOnDeviceSpeechRecognizer(appContext)
             } else {
                 SpeechRecognizer.createSpeechRecognizer(appContext)
@@ -376,6 +383,7 @@ class AudioViewModel(
             putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
             // Do not force offline-only mode; it fails on many emulators/devices.
             putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, false)
+            putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3)
             putExtra(EXTRA_LANGUAGE, languageTag)
             putExtra(EXTRA_LANGUAGE_PREFERENCE, languageTag)
         }
