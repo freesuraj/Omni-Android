@@ -490,8 +490,7 @@ private fun openOriginalSource(
         }
 
         DocumentFileType.PDF,
-        DocumentFileType.TXT,
-        DocumentFileType.AUDIO -> {
+        DocumentFileType.TXT -> {
             val path = document.fileBookmarkData?.toString(Charsets.UTF_8).orEmpty()
             if (path.isBlank()) {
                 onError(context.getString(R.string.dashboard_error_file_reference_missing))
@@ -513,13 +512,31 @@ private fun openOriginalSource(
                 return
             }
         }
+
+        DocumentFileType.AUDIO -> {
+            val transcriptFile = File(context.filesDir, "text/${document.id}.txt")
+            if (!transcriptFile.exists()) {
+                onError(context.getString(R.string.dashboard_audio_transcript_preparing))
+                return
+            }
+            runCatching {
+                FileProvider.getUriForFile(
+                    context,
+                    "${context.packageName}.fileprovider",
+                    transcriptFile
+                )
+            }.getOrElse {
+                onError(context.getString(R.string.dashboard_error_open_source_file_failed))
+                return
+            }
+        }
     }
 
     val mimeType = when (document.fileType) {
         DocumentFileType.PDF -> "application/pdf"
         DocumentFileType.TXT -> "text/plain"
         DocumentFileType.WEB -> null
-        DocumentFileType.AUDIO -> "audio/*"
+        DocumentFileType.AUDIO -> "text/plain"
     }
     val intent = Intent(Intent.ACTION_VIEW).apply {
         data = uri
