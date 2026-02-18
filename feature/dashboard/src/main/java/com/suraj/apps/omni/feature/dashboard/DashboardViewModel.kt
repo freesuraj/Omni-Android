@@ -340,12 +340,7 @@ class DashboardViewModel(
 
             DocumentFileType.AUDIO -> {
                 val durationLabel = resolveAudioDurationLabel(audioPath)
-                if (document.onboardingStatus == "transcription_failed") {
-                    app.getString(
-                        R.string.dashboard_source_stats_audio_failed,
-                        durationLabel
-                    )
-                } else if (wordCount <= 0) {
+                if (wordCount <= 0) {
                     app.getString(
                         R.string.dashboard_source_stats_audio_pending,
                         durationLabel

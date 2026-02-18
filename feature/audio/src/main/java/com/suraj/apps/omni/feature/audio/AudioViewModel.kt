@@ -6,6 +6,8 @@ import android.media.MediaRecorder
 import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
+import android.speech.RecognizerIntent.EXTRA_LANGUAGE
+import android.speech.RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
@@ -23,6 +25,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 private const val WAVEFORM_BAR_COUNT = 28
 private const val MIN_WAVE_AMPLITUDE = 0.08f
@@ -70,7 +73,6 @@ class AudioViewModel(
     private var shouldRestartSpeechRecognition = false
     private var committedTranscript = ""
     private var partialTranscript = ""
-    private var speechUnavailableReported = false
 
     init {
         refreshRemainingFreeRecordings()
@@ -144,7 +146,6 @@ class AudioViewModel(
         stopElapsedTimer()
         releaseRecorder()
         stopSpeechListening(keepRecognizer = false)
-        speechUnavailableReported = false
     }
 
     private fun startRecordingWithChecks(hasMicrophonePermission: Boolean) {
@@ -201,7 +202,6 @@ class AudioViewModel(
         elapsedBeforeCurrentRunMs = 0L
         committedTranscript = ""
         partialTranscript = ""
-        speechUnavailableReported = false
         _uiState.update {
             it.copy(
                 status = RecordingStatus.RECORDING,
@@ -339,7 +339,9 @@ class AudioViewModel(
             SpeechRecognizer.isOnDeviceRecognitionAvailable(appContext)
         val recognizerAvailable = SpeechRecognizer.isRecognitionAvailable(appContext)
         if (!recognizerAvailable && !onDeviceAvailable) {
-            reportSpeechUnavailableOnce()
+            _uiState.update {
+                it.copy(errorMessage = app.getString(R.string.audio_error_speech_recognition_unavailable))
+            }
             return
         }
         if (speechRecognizer == null) {
@@ -356,7 +358,7 @@ class AudioViewModel(
             }
         }
         shouldRestartSpeechRecognition = true
-        startListeningSafely()
+        runCatching { speechRecognizer?.startListening(speechRecognizerIntent()) }
     }
 
     private fun stopSpeechListening(keepRecognizer: Boolean) {
@@ -372,6 +374,7 @@ class AudioViewModel(
     }
 
     private fun speechRecognizerIntent(): Intent {
+        val languageTag = Locale.getDefault().toLanguageTag()
         return Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(
                 RecognizerIntent.EXTRA_LANGUAGE_MODEL,
@@ -381,10 +384,8 @@ class AudioViewModel(
             // Do not force offline-only mode; it fails on many emulators/devices.
             putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, false)
             putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3)
-            putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, appContext.packageName)
-            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 1200L)
-            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 800L)
-            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 1000L)
+            putExtra(EXTRA_LANGUAGE, languageTag)
+            putExtra(EXTRA_LANGUAGE_PREFERENCE, languageTag)
         }
     }
 
@@ -405,7 +406,7 @@ class AudioViewModel(
             viewModelScope.launch {
                 delay(350)
                 if (shouldRestartSpeechRecognition && _uiState.value.status == RecordingStatus.RECORDING) {
-                    startListeningSafely()
+                    runCatching { speechRecognizer?.startListening(speechRecognizerIntent()) }
                 }
             }
         }
@@ -413,7 +414,7 @@ class AudioViewModel(
         override fun onResults(results: Bundle) {
             commitTranscriptResult(results)
             if (shouldRestartSpeechRecognition && _uiState.value.status == RecordingStatus.RECORDING) {
-                startListeningSafely()
+                runCatching { speechRecognizer?.startListening(speechRecognizerIntent()) }
             }
         }
 
@@ -455,19 +456,6 @@ class AudioViewModel(
             }
         }.replace(Regex("\\s+"), " ").trim()
         _uiState.update { it.copy(transcript = combined) }
-    }
-
-    private fun startListeningSafely() {
-        runCatching { speechRecognizer?.startListening(speechRecognizerIntent()) }
-            .onFailure { reportSpeechUnavailableOnce() }
-    }
-
-    private fun reportSpeechUnavailableOnce() {
-        if (speechUnavailableReported) return
-        speechUnavailableReported = true
-        _uiState.update {
-            it.copy(errorMessage = app.getString(R.string.audio_error_speech_recognition_unavailable))
-        }
     }
 
     private fun stopRecorder() {
