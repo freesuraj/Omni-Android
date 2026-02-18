@@ -87,7 +87,7 @@ class BillingRepository(
             } else {
                 default.copy(
                     priceLabel = remote.priceLabel,
-                    hasFreeTrial = default.hasFreeTrial || remote.hasFreeTrial,
+                    hasFreeTrial = remote.hasFreeTrial,
                     source = BillingPlanSource.PLAY_STORE
                 )
             }
@@ -143,7 +143,7 @@ class BillingRepository(
                 source = BillingPlanSource.LOCAL_FALLBACK
             ),
             BillingPlan(
-                productId = PLAN_YEARLY_TRIAL,
+                productId = PLAN_YEARLY,
                 title = appContext.getString(R.string.billing_plan_yearly_title),
                 subtitle = appContext.getString(R.string.billing_plan_yearly_subtitle),
                 priceLabel = appContext.getString(R.string.billing_plan_yearly_price),
@@ -179,7 +179,7 @@ class GooglePlayBillingCatalogClient(
         if (!ensureConnected()) return@withContext emptyList()
 
         val subscriptionDetails = queryProductDetails(
-            productIds = listOf(PLAN_MONTHLY, PLAN_YEARLY_TRIAL),
+            productIds = listOf(PLAN_MONTHLY, PLAN_YEARLY),
             productType = BillingClient.ProductType.SUBS
         )
         val inAppDetails = queryProductDetails(
@@ -298,12 +298,12 @@ class GooglePlayBillingCatalogClient(
     }
 }
 
-const val PLAN_MONTHLY = "omni_pro_monthly"
-const val PLAN_YEARLY_TRIAL = "omni_pro_yearly_trial"
-const val PLAN_LIFETIME = "omni_pro_lifetime"
+const val PLAN_MONTHLY = "com.suraj.apps.omni.pro.monthly"
+const val PLAN_YEARLY = "com.suraj.apps.omni.pro.yearly"
+const val PLAN_LIFETIME = "com.suraj.apps.omni.pro.forever"
 
 private val PLAN_PRODUCT_IDS = setOf(
     PLAN_MONTHLY,
-    PLAN_YEARLY_TRIAL,
+    PLAN_YEARLY,
     PLAN_LIFETIME
 )

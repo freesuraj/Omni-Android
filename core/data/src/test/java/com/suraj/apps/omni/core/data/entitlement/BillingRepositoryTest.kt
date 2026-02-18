@@ -29,7 +29,7 @@ class BillingRepositoryTest {
             billingCatalogClient = FakeBillingCatalogClient(
                 catalog = listOf(
                     RemoteBillingProduct(
-                        productId = PLAN_YEARLY_TRIAL,
+                        productId = PLAN_YEARLY,
                         priceLabel = "$24.99/year",
                         hasFreeTrial = true
                     )
@@ -39,7 +39,7 @@ class BillingRepositoryTest {
 
         val plans = repository.loadPlans()
 
-        val yearly = plans.first { it.productId == PLAN_YEARLY_TRIAL }
+        val yearly = plans.first { it.productId == PLAN_YEARLY }
         assertEquals("$24.99/year", yearly.priceLabel)
         assertTrue(yearly.hasFreeTrial)
         assertEquals(BillingPlanSource.PLAY_STORE, yearly.source)
