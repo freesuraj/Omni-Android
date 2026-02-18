@@ -20,9 +20,31 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    val uploadStoreFile = providers.gradleProperty("OMNI_UPLOAD_STORE_FILE").orNull
+    val uploadStorePassword = providers.gradleProperty("OMNI_UPLOAD_STORE_PASSWORD").orNull
+    val uploadKeyAlias = providers.gradleProperty("OMNI_UPLOAD_KEY_ALIAS").orNull
+    val uploadKeyPassword = providers.gradleProperty("OMNI_UPLOAD_KEY_PASSWORD").orNull
+
+    if (
+        uploadStoreFile != null &&
+        uploadStorePassword != null &&
+        uploadKeyAlias != null &&
+        uploadKeyPassword != null
+    ) {
+        signingConfigs {
+            create("release") {
+                storeFile = file(uploadStoreFile)
+                storePassword = uploadStorePassword
+                keyAlias = uploadKeyAlias
+                keyPassword = uploadKeyPassword
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.findByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

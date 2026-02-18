@@ -42,8 +42,8 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/test_output/
 artifacts/
+local-artifacts/
 
 # Bundler
 .bundle/
 vendor/bundle/
-
