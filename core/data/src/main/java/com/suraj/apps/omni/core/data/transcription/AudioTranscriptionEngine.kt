@@ -206,23 +206,8 @@ class MediaMetadataAudioDurationResolver : AudioDurationResolver {
 
 class HeuristicOnDeviceChunkTranscriber : AudioChunkTranscriber {
     override suspend fun transcribeChunk(audioFile: File, chunk: AudioChunkWindow): String {
-        return buildString {
-            append("Audio segment ")
-            append(chunk.index + 1)
-            append("/")
-            append(chunk.totalChunks)
-            append(" processed from ")
-            append(formatMs(chunk.startMs))
-            append(" to ")
-            append(formatMs(chunk.endMs))
-            append(".")
-        }
-    }
-
-    private fun formatMs(value: Long): String {
-        val totalSeconds = value / 1000
-        val minutes = totalSeconds / 60
-        val seconds = totalSeconds % 60
-        return String.format("%02d:%02d", minutes, seconds)
+        // No on-device file-based transcription available; return empty so the engine
+        // reports a Failure and callers fall back to the "transcript pending" path.
+        return ""
     }
 }

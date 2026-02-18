@@ -86,6 +86,21 @@ class OnDeviceAudioTranscriptionEngineTest {
         assertEquals(3, long.size)
     }
 
+    @Test
+    fun defaultHeuristicTranscriberReturnsFailureForMissingSpeechContent() = runBlocking {
+        val audioFile = temporaryAudioFile()
+        val engine = OnDeviceAudioTranscriptionEngine(
+            durationResolver = AudioDurationResolver { 30_000L }
+            // Uses default HeuristicOnDeviceChunkTranscriber which returns ""
+        )
+
+        val result = engine.transcribe(audioFile)
+
+        assertTrue(result is AudioTranscriptionResult.Failure)
+        val failure = result as AudioTranscriptionResult.Failure
+        assertEquals("No speech content was produced from audio chunks.", failure.message)
+    }
+
     private fun temporaryAudioFile(): File {
         return File.createTempFile("omni-audio-test", ".m4a").apply {
             deleteOnExit()
