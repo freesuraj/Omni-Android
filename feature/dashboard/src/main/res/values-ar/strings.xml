@@ -29,11 +29,17 @@
     <string name="dashboard_feature_analysis_title">تحليل مفصل</string>
     <string name="dashboard_feature_analysis_subtitle">شغّل تحليلاً أعمق للصفحات والنصوص (مميز).</string>
     <string name="dashboard_upgrade_button">الترقية إلى سير عمل مميز</string>
-    <string name="dashboard_card_quiz_trailing">10 أسئلة</string>
-    <string name="dashboard_card_notes_trailing">17 بطاقة</string>
     <string name="dashboard_card_summary_trailing">أهم النقاط</string>
     <string name="dashboard_card_analysis_trailing">صفحة بصفحة</string>
     <string name="dashboard_card_qa_trailing">تعلّم بالذكاء الاصطناعي</string>
+    <plurals name="dashboard_card_quiz_generated">
+        <item quantity="one">%d سؤال</item>
+        <item quantity="other">%d أسئلة</item>
+    </plurals>
+    <plurals name="dashboard_card_notes_generated">
+        <item quantity="one">%d بطاقة</item>
+        <item quantity="other">%d بطاقة</item>
+    </plurals>
     <string name="dashboard_onboarding_footer">قد يستغرق هذا لحظة...</string>
 
     <string name="dashboard_audio_preview_title">مشغل صوت + نص</string>
@@ -47,6 +53,7 @@
     <string name="dashboard_source_stats_text">مصدر نصي • %1$d كلمة</string>
     <string name="dashboard_source_stats_web">مصدر ويب • %1$s • %2$d كلمة</string>
     <string name="dashboard_source_stats_audio">مصدر صوتي • %1$s • %2$d كلمة منسوخة</string>
+    <string name="dashboard_source_stats_audio_pending">مصدر صوتي • %1$s • النسخ قيد الإعداد</string>
     <string name="dashboard_web_article_fallback_host">مقال ويب</string>
     <string name="dashboard_duration_unavailable">المدة غير متاحة</string>
 

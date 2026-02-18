@@ -274,6 +274,11 @@ class DocumentImportRepository(
         textFile.readText()
     }
 
+    fun isPlaceholderAudioTranscript(value: String?): Boolean {
+        val normalized = value.orEmpty().replace(Regex("\\s+"), " ").trim()
+        return isPlaceholderAudioTranscriptValue(normalized)
+    }
+
     suspend fun renameDocument(
         documentId: String,
         title: String
@@ -431,10 +436,9 @@ class DocumentImportRepository(
             .ifBlank { fallback }
     }
 
-    private fun isPlaceholderAudioTranscript(value: String): Boolean {
-        val normalized = value.replace(Regex("\\s+"), " ").trim()
-        return normalized.equals(PLACEHOLDER_IMPORTED_AUDIO_TEXT, ignoreCase = true) ||
-            normalized.equals(PLACEHOLDER_LIVE_AUDIO_TEXT, ignoreCase = true)
+    private fun isPlaceholderAudioTranscriptValue(value: String): Boolean {
+        return value.equals(PLACEHOLDER_IMPORTED_AUDIO_TEXT, ignoreCase = true) ||
+            value.equals(PLACEHOLDER_LIVE_AUDIO_TEXT, ignoreCase = true)
     }
 
     private fun normalizeUrl(rawUrl: String): String? {

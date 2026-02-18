@@ -29,11 +29,17 @@
     <string name="dashboard_feature_analysis_title">Análise detalhada</string>
     <string name="dashboard_feature_analysis_subtitle">Execute análises mais profundas de páginas e transcrições (premium).</string>
     <string name="dashboard_upgrade_button">Fazer upgrade para fluxos premium</string>
-    <string name="dashboard_card_quiz_trailing">10 perguntas</string>
-    <string name="dashboard_card_notes_trailing">17 cartões</string>
     <string name="dashboard_card_summary_trailing">Principais insights</string>
     <string name="dashboard_card_analysis_trailing">Página por página</string>
     <string name="dashboard_card_qa_trailing">Aprenda com IA</string>
+    <plurals name="dashboard_card_quiz_generated">
+        <item quantity="one">%d pergunta</item>
+        <item quantity="other">%d perguntas</item>
+    </plurals>
+    <plurals name="dashboard_card_notes_generated">
+        <item quantity="one">%d cartão</item>
+        <item quantity="other">%d cartões</item>
+    </plurals>
     <string name="dashboard_onboarding_footer">Isso pode levar um momento...</string>
 
     <string name="dashboard_audio_preview_title">Player de áudio + transcrição</string>
@@ -47,6 +53,7 @@
     <string name="dashboard_source_stats_text">Fonte de texto • %1$d palavras</string>
     <string name="dashboard_source_stats_web">Fonte web • %1$s • %2$d palavras</string>
     <string name="dashboard_source_stats_audio">Fonte de áudio • %1$s • %2$d palavras transcritas</string>
+    <string name="dashboard_source_stats_audio_pending">Fonte de áudio • %1$s • transcrição pendente</string>
     <string name="dashboard_web_article_fallback_host">artigo web</string>
     <string name="dashboard_duration_unavailable">duração indisponível</string>
 

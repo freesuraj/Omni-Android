@@ -77,10 +77,22 @@ class DashboardViewModel(
                 }
 
                 val fullText = repository.readFullText(document.id).orEmpty()
+                val visibleAudioTranscript = if (
+                    document.fileType == DocumentFileType.AUDIO &&
+                    repository.isPlaceholderAudioTranscript(fullText)
+                ) {
+                    ""
+                } else {
+                    fullText
+                }
                 val audioSourcePath = resolveLocalSourcePath(document)
                 val sourceStats = buildSourceStats(
                     document = document,
-                    fullText = fullText,
+                    fullText = if (document.fileType == DocumentFileType.AUDIO) {
+                        visibleAudioTranscript
+                    } else {
+                        fullText
+                    },
                     audioPath = audioSourcePath
                 )
                 val statusView = statusView(document)
@@ -99,7 +111,7 @@ class DashboardViewModel(
                             null
                         },
                         audioTranscript = if (document.fileType == DocumentFileType.AUDIO) {
-                            fullText
+                            visibleAudioTranscript
                         } else {
                             ""
                         },
@@ -328,11 +340,18 @@ class DashboardViewModel(
 
             DocumentFileType.AUDIO -> {
                 val durationLabel = resolveAudioDurationLabel(audioPath)
-                app.getString(
-                    R.string.dashboard_source_stats_audio,
-                    durationLabel,
-                    wordCount.coerceAtLeast(1)
-                )
+                if (wordCount <= 0) {
+                    app.getString(
+                        R.string.dashboard_source_stats_audio_pending,
+                        durationLabel
+                    )
+                } else {
+                    app.getString(
+                        R.string.dashboard_source_stats_audio,
+                        durationLabel,
+                        wordCount
+                    )
+                }
             }
         }
     }
