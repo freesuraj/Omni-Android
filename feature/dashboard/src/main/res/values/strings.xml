@@ -53,6 +53,7 @@
     <string name="dashboard_source_stats_text">Text source • %1$d words</string>
     <string name="dashboard_source_stats_web">Web source • %1$s • %2$d words</string>
     <string name="dashboard_source_stats_audio">Audio source • %1$s • %2$d transcript words</string>
+    <string name="dashboard_source_stats_audio_pending">Audio source • %1$s • transcript pending</string>
     <string name="dashboard_web_article_fallback_host">web article</string>
     <string name="dashboard_duration_unavailable">duration unavailable</string>
 

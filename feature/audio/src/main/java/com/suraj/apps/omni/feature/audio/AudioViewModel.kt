@@ -3,6 +3,7 @@ package com.suraj.apps.omni.feature.audio
 import android.app.Application
 import android.content.Intent
 import android.media.MediaRecorder
+import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.speech.RecognizerIntent.EXTRA_LANGUAGE
@@ -12,6 +13,8 @@ import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.suraj.apps.omni.core.data.transcription.AudioTranscriptionResult
+import com.suraj.apps.omni.core.data.transcription.OnDeviceAudioTranscriptionEngine
 import com.suraj.apps.omni.core.data.importing.DocumentImportRepository
 import com.suraj.apps.omni.core.data.importing.DocumentImportResult
 import java.io.File
@@ -54,6 +57,7 @@ class AudioViewModel(
     private val app = application
     private val appContext = application.applicationContext
     private val repository = DocumentImportRepository(appContext)
+    private val fallbackAudioTranscriptionEngine = OnDeviceAudioTranscriptionEngine()
 
     private val _uiState = MutableStateFlow(AudioUiState())
     val uiState: StateFlow<AudioUiState> = _uiState.asStateFlow()
@@ -247,7 +251,13 @@ class AudioViewModel(
                 return@launch
             }
 
-            val transcript = _uiState.value.transcript
+            var transcript = _uiState.value.transcript.trim()
+            if (transcript.isBlank()) {
+                transcript = when (val fallback = fallbackAudioTranscriptionEngine.transcribe(finalFile)) {
+                    is AudioTranscriptionResult.Success -> fallback.transcript
+                    is AudioTranscriptionResult.Failure -> ""
+                }
+            }
             when (val result = repository.importLiveRecording(finalFile, transcript)) {
                 is DocumentImportResult.Success -> {
                     finalFile.delete()
@@ -322,14 +332,21 @@ class AudioViewModel(
     }
 
     private fun startSpeechListening() {
-        if (!SpeechRecognizer.isRecognitionAvailable(appContext)) {
+        val onDeviceAvailable = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+            SpeechRecognizer.isOnDeviceRecognitionAvailable(appContext)
+        if (!SpeechRecognizer.isRecognitionAvailable(appContext) && !onDeviceAvailable) {
             _uiState.update {
                 it.copy(errorMessage = app.getString(R.string.audio_error_speech_recognition_unavailable))
             }
             return
         }
         if (speechRecognizer == null) {
-            speechRecognizer = SpeechRecognizer.createSpeechRecognizer(appContext).also {
+            val recognizer = if (onDeviceAvailable) {
+                SpeechRecognizer.createOnDeviceSpeechRecognizer(appContext)
+            } else {
+                SpeechRecognizer.createSpeechRecognizer(appContext)
+            }
+            speechRecognizer = recognizer.also {
                 it.setRecognitionListener(speechListener)
             }
         }
