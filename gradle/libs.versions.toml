@@ -19,6 +19,7 @@ billing = "7.1.1"
 securityCrypto = "1.0.0"
 markwon = "4.6.2"
 pdfboxAndroid = "2.0.27.0"
+vosk = "0.3.47"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -51,6 +52,7 @@ play-billing-ktx = { group = "com.android.billingclient", name = "billing-ktx", 
 androidx-security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "securityCrypto" }
 markwon-core = { group = "io.noties.markwon", name = "core", version.ref = "markwon" }
 pdfbox-android = { group = "com.tom-roush", name = "pdfbox-android", version.ref = "pdfboxAndroid" }
+vosk-android = { group = "com.alphacephei", name = "vosk-android", version.ref = "vosk" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
