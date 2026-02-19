@@ -1,23 +1,26 @@
 package com.suraj.apps.omni.feature.audio
 
 import android.app.Application
-import android.content.Intent
 import android.media.MediaRecorder
 import android.os.Build
-import android.os.Bundle
 import android.os.SystemClock
-import android.speech.RecognizerIntent.EXTRA_LANGUAGE
-import android.speech.RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE
-import android.speech.RecognitionListener
-import android.speech.RecognizerIntent
-import android.speech.SpeechRecognizer
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.suraj.apps.omni.core.data.transcription.AudioTranscriptionResult
-import com.suraj.apps.omni.core.data.transcription.LocalAudioTranscriptionEngine
+import com.google.mlkit.genai.common.audio.AudioSource
+import com.google.mlkit.genai.common.DownloadStatus
+import com.google.mlkit.genai.common.FeatureStatus
+import com.google.mlkit.genai.speechrecognition.SpeechRecognition
+import com.google.mlkit.genai.speechrecognition.SpeechRecognizerOptions
+import com.google.mlkit.genai.speechrecognition.SpeechRecognizerResponse
+import com.google.mlkit.genai.speechrecognition.speechRecognizerOptions
+import com.google.mlkit.genai.speechrecognition.speechRecognizerRequest
 import com.suraj.apps.omni.core.data.importing.DocumentImportRepository
 import com.suraj.apps.omni.core.data.importing.DocumentImportResult
+import com.suraj.apps.omni.core.data.transcription.AudioTranscriptionResult
+import com.suraj.apps.omni.core.data.transcription.LocalAudioTranscriptionEngine
 import java.io.File
+import java.util.Locale
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,7 +28,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.Locale
 
 private const val WAVEFORM_BAR_COUNT = 28
 private const val MIN_WAVE_AMPLITUDE = 0.08f
@@ -65,16 +67,15 @@ class AudioViewModel(
 
     private var recorder: MediaRecorder? = null
     private var recorderFile: File? = null
-    private var speechRecognizer: SpeechRecognizer? = null
+    private var mlKitSpeechRecognizer: com.google.mlkit.genai.speechrecognition.SpeechRecognizer? = null
+    private var speechJob: Job? = null
     private var amplitudeJob: Job? = null
     private var elapsedJob: Job? = null
     private var recordingStartElapsedRealtime = 0L
     private var elapsedBeforeCurrentRunMs = 0L
     private var pendingStartAfterPermission = false
-    private var shouldRestartSpeechRecognition = false
     private var committedTranscript = ""
     private var partialTranscript = ""
-    private var consecutiveSpeechRecognizerErrors = 0
 
     init {
         refreshRemainingFreeRecordings()
@@ -214,10 +215,11 @@ class AudioViewModel(
                 isLiveTranscriptionAvailable = true
             )
         }
-        consecutiveSpeechRecognizerErrors = 0
         startAmplitudePolling()
         startElapsedTimer()
-        startSpeechListening()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            startSpeechListening()
+        }
     }
 
     private fun resumeRecording() {
@@ -233,7 +235,9 @@ class AudioViewModel(
         }
         _uiState.update { it.copy(status = RecordingStatus.RECORDING) }
         startAmplitudePolling()
-        startSpeechListening()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            startSpeechListening()
+        }
     }
 
     private fun finalizeRecording() {
@@ -338,130 +342,79 @@ class AudioViewModel(
         elapsedJob = null
     }
 
+    @RequiresApi(Build.VERSION_CODES.S)
     private fun startSpeechListening() {
-        val onDeviceAvailable = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-            SpeechRecognizer.isOnDeviceRecognitionAvailable(appContext)
-        val recognizerAvailable = SpeechRecognizer.isRecognitionAvailable(appContext)
-        if (!recognizerAvailable && !onDeviceAvailable) {
-            _uiState.update {
-                it.copy(
-                    errorMessage = app.getString(R.string.audio_error_speech_recognition_unavailable),
-                    isLiveTranscriptionAvailable = false
-                )
+        speechJob?.cancel()
+        partialTranscript = ""
+        speechJob = viewModelScope.launch {
+            try {
+                val client = mlKitSpeechRecognizer ?: run {
+                    val options = speechRecognizerOptions {
+                        locale = Locale.getDefault()
+                        preferredMode = SpeechRecognizerOptions.Mode.MODE_BASIC
+                    }
+                    SpeechRecognition.getClient(options).also { mlKitSpeechRecognizer = it }
+                }
+
+                val status = client.checkStatus()
+                if (status == FeatureStatus.DOWNLOADABLE) {
+                    client.download().collect { downloadStatus ->
+                        if (downloadStatus is DownloadStatus.DownloadCompleted) {
+                            runRecognitionSession(client)
+                        } else if (downloadStatus is DownloadStatus.DownloadFailed) {
+                            _uiState.update { it.copy(isLiveTranscriptionAvailable = false) }
+                        }
+                    }
+                } else if (status == FeatureStatus.AVAILABLE) {
+                    runRecognitionSession(client)
+                } else {
+                    // Unavailable or downloading
+                    _uiState.update { it.copy(isLiveTranscriptionAvailable = false) }
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLiveTranscriptionAvailable = false) }
             }
-            return
         }
-        if (speechRecognizer == null) {
-            // Prefer the standard recognizer first for better emulator/device compatibility.
-            val recognizer = if (recognizerAvailable) {
-                SpeechRecognizer.createSpeechRecognizer(appContext)
-            } else if (onDeviceAvailable) {
-                SpeechRecognizer.createOnDeviceSpeechRecognizer(appContext)
-            } else {
-                SpeechRecognizer.createSpeechRecognizer(appContext)
-            }
-            speechRecognizer = recognizer.also {
-                it.setRecognitionListener(speechListener)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.S)
+    @OptIn(kotlin.concurrent.atomics.ExperimentalAtomicApi::class)
+    private suspend fun runRecognitionSession(client: com.google.mlkit.genai.speechrecognition.SpeechRecognizer) {
+        val request = speechRecognizerRequest {
+            audioSource = AudioSource.fromMic()
+        }
+        _uiState.update { it.copy(isLiveTranscriptionAvailable = true) }
+        client.startRecognition(request).collect { response ->
+            when (response) {
+                is SpeechRecognizerResponse.PartialTextResponse -> {
+                    partialTranscript = response.text.trim()
+                    publishTranscript()
+                }
+                is SpeechRecognizerResponse.FinalTextResponse -> {
+                    val text = response.text.trim()
+                    if (text.isNotBlank()) {
+                        committedTranscript = if (committedTranscript.isBlank()) text
+                            else "$committedTranscript $text"
+                        committedTranscript = committedTranscript.replace(Regex("\\s+"), " ").trim()
+                    }
+                    partialTranscript = ""
+                    publishTranscript()
+                }
+                is SpeechRecognizerResponse.ErrorResponse -> {
+                    // Non-fatal: session may restart
+                }
+                is SpeechRecognizerResponse.CompletedResponse -> Unit
             }
         }
-        shouldRestartSpeechRecognition = true
-        runCatching { speechRecognizer?.startListening(speechRecognizerIntent()) }
     }
 
     private fun stopSpeechListening(keepRecognizer: Boolean) {
-        shouldRestartSpeechRecognition = false
-        speechRecognizer?.let { recognizer ->
-            runCatching { recognizer.stopListening() }
-            runCatching { recognizer.cancel() }
-            if (!keepRecognizer) {
-                recognizer.destroy()
-                speechRecognizer = null
-            }
+        speechJob?.cancel()
+        speechJob = null
+        if (!keepRecognizer) {
+            mlKitSpeechRecognizer?.close()
+            mlKitSpeechRecognizer = null
         }
-    }
-
-    private fun speechRecognizerIntent(): Intent {
-        val languageTag = Locale.getDefault().toLanguageTag()
-        return Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-            putExtra(
-                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
-            )
-            putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
-            // Do not force offline-only mode; it fails on many emulators/devices.
-            putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, false)
-            putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3)
-            putExtra(EXTRA_LANGUAGE, languageTag)
-            putExtra(EXTRA_LANGUAGE_PREFERENCE, languageTag)
-            putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, appContext.packageName)
-        }
-    }
-
-    private val speechListener = object : RecognitionListener {
-        override fun onReadyForSpeech(params: Bundle?) = Unit
-        override fun onBeginningOfSpeech() = Unit
-        override fun onRmsChanged(rmsdB: Float) = Unit
-        override fun onBufferReceived(buffer: ByteArray?) = Unit
-        override fun onEndOfSpeech() = Unit
-        override fun onEvent(eventType: Int, params: Bundle?) = Unit
-
-        override fun onError(error: Int) {
-            if (!shouldRestartSpeechRecognition) return
-            if (_uiState.value.status != RecordingStatus.RECORDING) return
-            if (error == SpeechRecognizer.ERROR_RECOGNIZER_BUSY) {
-                return
-            }
-
-            consecutiveSpeechRecognizerErrors++
-            if (consecutiveSpeechRecognizerErrors > 3) {
-                shouldRestartSpeechRecognition = false
-                _uiState.update { it.copy(isLiveTranscriptionAvailable = false) }
-                return
-            }
-
-            viewModelScope.launch {
-                delay(350)
-                if (shouldRestartSpeechRecognition && _uiState.value.status == RecordingStatus.RECORDING) {
-                    runCatching { speechRecognizer?.startListening(speechRecognizerIntent()) }
-                }
-            }
-        }
-
-        override fun onResults(results: Bundle) {
-            commitTranscriptResult(results)
-            if (shouldRestartSpeechRecognition && _uiState.value.status == RecordingStatus.RECORDING) {
-                runCatching { speechRecognizer?.startListening(speechRecognizerIntent()) }
-            }
-        }
-
-        override fun onPartialResults(partialResults: Bundle) {
-            val partial = partialResults
-                .getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                ?.firstOrNull()
-                .orEmpty()
-                .trim()
-            if (partial.isBlank()) return
-            consecutiveSpeechRecognizerErrors = 0
-            partialTranscript = partial
-            publishTranscript()
-        }
-    }
-
-    private fun commitTranscriptResult(results: Bundle) {
-        val finalResult = results
-            .getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-            ?.firstOrNull()
-            .orEmpty()
-            .trim()
-        if (finalResult.isBlank()) return
-
-        committedTranscript = if (committedTranscript.isBlank()) {
-            finalResult
-        } else {
-            "$committedTranscript $finalResult"
-        }.replace(Regex("\\s+"), " ").trim()
-        partialTranscript = ""
-        publishTranscript()
     }
 
     private fun publishTranscript() {

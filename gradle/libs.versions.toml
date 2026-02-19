@@ -1,16 +1,16 @@
 [versions]
 agp = "8.6.1"
-kotlin = "2.0.21"
+kotlin = "2.2.20"
 coreKtx = "1.13.1"
 activityCompose = "1.9.2"
 lifecycleRuntime = "2.8.6"
 lifecycleViewModel = "2.8.6"
 composeBom = "2024.09.03"
 navigationCompose = "2.8.2"
-hilt = "2.52"
+hilt = "2.57.1"
 hiltNavigationCompose = "1.2.0"
 coroutines = "1.8.1"
-room = "2.6.1"
+room = "2.7.2"
 robolectric = "4.13"
 junit = "4.13.2"
 androidxJunit = "1.2.1"
@@ -19,6 +19,7 @@ billing = "7.1.1"
 securityCrypto = "1.0.0"
 markwon = "4.6.2"
 pdfboxAndroid = "2.0.27.0"
+mlkitGenaiSpeechRecognition = "1.0.0-alpha1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -51,6 +52,7 @@ play-billing-ktx = { group = "com.android.billingclient", name = "billing-ktx", 
 androidx-security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "securityCrypto" }
 markwon-core = { group = "io.noties.markwon", name = "core", version.ref = "markwon" }
 pdfbox-android = { group = "com.tom-roush", name = "pdfbox-android", version.ref = "pdfboxAndroid" }
+mlkit-genai-speech-recognition = { group = "com.google.mlkit", name = "genai-speech-recognition", version.ref = "mlkitGenaiSpeechRecognition" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -59,4 +61,4 @@ kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
 hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
-ksp = { id = "com.google.devtools.ksp", version = "2.0.21-1.0.28" }
+ksp = { id = "com.google.devtools.ksp", version = "2.2.20-2.0.3" }
