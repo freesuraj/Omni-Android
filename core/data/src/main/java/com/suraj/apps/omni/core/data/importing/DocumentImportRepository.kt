@@ -4,9 +4,11 @@ import android.content.ContentResolver
 import android.content.Context
 import android.database.Cursor
 import android.net.Uri
+import android.os.Build
 import android.provider.OpenableColumns
 import android.text.Html
 import android.webkit.URLUtil
+import com.suraj.apps.omni.core.data.BuildConfig
 import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.text.PDFTextStripper
@@ -49,7 +51,7 @@ class SharedPrefsPremiumAccessChecker(
     constructor(context: Context) : this(SharedPrefsPremiumAccessStore(context))
 
     override fun isPremiumUnlocked(): Boolean {
-        return premiumAccessStore.isPremiumUnlocked()
+        return premiumAccessStore.isPremiumUnlocked() || BuildConfig.DEBUG
     }
 }
 
