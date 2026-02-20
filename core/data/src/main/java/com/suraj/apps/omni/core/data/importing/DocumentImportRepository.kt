@@ -17,7 +17,6 @@ import com.suraj.apps.omni.core.data.entitlement.SharedPrefsPremiumAccessStore
 import com.suraj.apps.omni.core.data.local.OmniDatabase
 import com.suraj.apps.omni.core.data.local.OmniDatabaseFactory
 import com.suraj.apps.omni.core.data.local.entity.DocumentEntity
-import com.suraj.apps.omni.core.data.provider.AudioTranscriptionMode
 import com.suraj.apps.omni.core.data.provider.AiProviderId
 import com.suraj.apps.omni.core.data.provider.EncryptedPrefsProviderSettingsStore
 import com.suraj.apps.omni.core.data.provider.ProviderSettingsStore
@@ -25,9 +24,6 @@ import com.suraj.apps.omni.core.data.transcription.AudioTranscriptionEngine
 import com.suraj.apps.omni.core.data.transcription.AudioTranscriptionProgress
 import com.suraj.apps.omni.core.data.transcription.AudioTranscriptionResult
 import com.suraj.apps.omni.core.data.transcription.GeminiAudioTranscriptionEngine
-import com.suraj.apps.omni.core.data.transcription.OnDeviceAudioTranscriptionEngine
-import com.suraj.apps.omni.core.data.transcription.VoskAudioFileTranscriber
-import com.suraj.apps.omni.core.data.transcription.VoskLiveSpeechEngine
 import com.suraj.apps.omni.core.model.DocumentFileType
 import java.io.File
 import java.net.HttpURLConnection
@@ -69,10 +65,6 @@ class DocumentImportRepository(
     private val premiumAccessStore: PremiumAccessStore = SharedPrefsPremiumAccessStore(context),
     private val providerSettingsStore: ProviderSettingsStore =
         EncryptedPrefsProviderSettingsStore(context),
-    private val voskLiveSpeechEngine: VoskLiveSpeechEngine = VoskLiveSpeechEngine(context),
-    private val onDeviceAudioTranscriptionEngine: AudioTranscriptionEngine = OnDeviceAudioTranscriptionEngine(
-        transcriber = VoskAudioFileTranscriber(voskLiveSpeechEngine)
-    ),
     private val geminiAudioTranscriptionEngineFactory: (String) -> AudioTranscriptionEngine = {
         GeminiAudioTranscriptionEngine(apiKey = it)
     },
@@ -256,25 +248,19 @@ class DocumentImportRepository(
             document.copy(isOnboarding = true, onboardingStatus = "transcribing")
         )
 
-        val selectedMode = providerSettingsStore.getAudioTranscriptionMode()
         val transcriptionEngine = audioTranscriptionEngineOverride ?: run {
-            when (selectedMode) {
-                AudioTranscriptionMode.ON_DEVICE -> onDeviceAudioTranscriptionEngine
-                AudioTranscriptionMode.GEMINI -> {
-                    if (!premiumAccessChecker.isPremiumUnlocked() && audioFile.length() > maxFreeGeminiAudioBytes) {
-                        return@withContext AudioTranscriptionResult.Failure(
-                            "Gemini transcription on free plan is limited to audio files up to 4 MB."
-                        )
-                    }
-                    val apiKey = resolveGeminiApiKeyForTranscription()
-                    if (apiKey.isBlank()) {
-                        return@withContext AudioTranscriptionResult.Failure(
-                            "Gemini transcription key is missing."
-                        )
-                    }
-                    geminiAudioTranscriptionEngineFactory(apiKey)
-                }
+            if (!premiumAccessChecker.isPremiumUnlocked() && audioFile.length() > maxFreeGeminiAudioBytes) {
+                return@withContext AudioTranscriptionResult.Failure(
+                    "Gemini transcription on free plan is limited to audio files up to 4 MB."
+                )
             }
+            val apiKey = resolveGeminiApiKeyForTranscription()
+            if (apiKey.isBlank()) {
+                return@withContext AudioTranscriptionResult.Failure(
+                    "Gemini transcription key is missing."
+                )
+            }
+            geminiAudioTranscriptionEngineFactory(apiKey)
         }
 
         when (val result = transcriptionEngine.transcribe(audioFile, onProgress)) {

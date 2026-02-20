@@ -9,10 +9,6 @@
     <string name="settings_clear_key">Limpar chave</string>
     <string name="settings_get_api_key">Obter chave de API</string>
     <string name="settings_section_about">Sobre</string>
-    <string name="settings_section_audio_transcription">Transcrição de áudio</string>
-    <string name="settings_audio_transcription_on_device">No dispositivo (Vosk)</string>
-    <string name="settings_audio_transcription_gemini">Gemini</string>
-    <string name="settings_audio_transcription_gemini_free_limit">Plano grátis: até 4 MB por arquivo de áudio.</string>
     <string name="settings_app_version_label">Versão do app Omni</string>
     <string name="settings_terms_of_use">Termos de uso</string>
     <string name="settings_api_key_configured">Chave de API configurada</string>

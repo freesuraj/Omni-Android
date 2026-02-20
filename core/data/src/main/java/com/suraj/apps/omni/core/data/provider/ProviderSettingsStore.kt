@@ -7,13 +7,10 @@ import androidx.security.crypto.MasterKeys
 
 const val PROVIDER_PREFS_NAME = "omni_provider_settings"
 private const val KEY_SELECTED_PROVIDER = "selected_provider"
-private const val KEY_AUDIO_TRANSCRIPTION_MODE = "audio_transcription_mode"
 
 interface ProviderSettingsStore {
     fun getSelectedProviderId(): AiProviderId
     fun setSelectedProviderId(providerId: AiProviderId)
-    fun getAudioTranscriptionMode(): AudioTranscriptionMode
-    fun setAudioTranscriptionMode(mode: AudioTranscriptionMode)
     fun getApiKey(providerId: AiProviderId): String?
     fun setApiKey(providerId: AiProviderId, apiKey: String?)
 }
@@ -43,15 +40,6 @@ class EncryptedPrefsProviderSettingsStore(
 
     override fun setSelectedProviderId(providerId: AiProviderId) {
         prefs.edit().putString(KEY_SELECTED_PROVIDER, providerId.storageKey).apply()
-    }
-
-    override fun getAudioTranscriptionMode(): AudioTranscriptionMode {
-        val rawValue = prefs.getString(KEY_AUDIO_TRANSCRIPTION_MODE, null)
-        return AudioTranscriptionMode.fromStorageKey(rawValue)
-    }
-
-    override fun setAudioTranscriptionMode(mode: AudioTranscriptionMode) {
-        prefs.edit().putString(KEY_AUDIO_TRANSCRIPTION_MODE, mode.storageKey).apply()
     }
 
     override fun getApiKey(providerId: AiProviderId): String? {

@@ -9,10 +9,6 @@
     <string name="settings_clear_key">مسح المفتاح</string>
     <string name="settings_get_api_key">الحصول على مفتاح API</string>
     <string name="settings_section_about">حول</string>
-    <string name="settings_section_audio_transcription">نسخ الصوت</string>
-    <string name="settings_audio_transcription_on_device">على الجهاز (Vosk)</string>
-    <string name="settings_audio_transcription_gemini">Gemini</string>
-    <string name="settings_audio_transcription_gemini_free_limit">الخطة المجانية: حتى 4 ميغابايت لكل ملف صوتي.</string>
     <string name="settings_app_version_label">إصدار تطبيق Omni</string>
     <string name="settings_terms_of_use">شروط الاستخدام</string>
     <string name="settings_api_key_configured">تم إعداد مفتاح API</string>
