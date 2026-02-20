@@ -9,15 +9,17 @@ import org.junit.Test
 class OnDeviceAudioTranscriptionEngineTest {
 
     @Test
-    fun shortAudioUsesSinglePassAndCompletesProgress() = runBlocking {
+    fun transcribeUsesSinglePassAndCompletesProgress() = runBlocking {
         val audioFile = temporaryAudioFile()
-        val chunks = mutableListOf<AudioChunkWindow>()
+        var transcribeCalls = 0
         val progressEvents = mutableListOf<AudioTranscriptionProgress>()
         val engine = OnDeviceAudioTranscriptionEngine(
             durationResolver = AudioDurationResolver { 120_000L },
-            chunkTranscriber = AudioChunkTranscriber { _, chunk ->
-                chunks += chunk
-                "chunk-${chunk.index + 1}"
+            transcriber = AudioFileTranscriber { _, durationMs, onProgress ->
+                transcribeCalls += 1
+                assertEquals(120_000L, durationMs)
+                onProgress(0.5f)
+                "single-pass transcript"
             }
         )
 
@@ -25,35 +27,33 @@ class OnDeviceAudioTranscriptionEngineTest {
 
         val success = result as AudioTranscriptionResult.Success
         assertEquals(1, success.chunkCount)
-        assertEquals("chunk-1", success.transcript)
-        assertEquals(1, chunks.size)
-        assertEquals(0L, chunks.first().startMs)
-        assertEquals(120_000L, chunks.first().endMs)
+        assertEquals("single-pass transcript", success.transcript)
+        assertEquals(1, transcribeCalls)
         assertEquals(0f, progressEvents.first().progress)
         assertEquals(1f, progressEvents.last().progress)
         assertEquals(1, progressEvents.last().chunkIndex)
     }
 
     @Test
-    fun longAudioIsTranscribedInChunksWithMonotonicProgress() = runBlocking {
+    fun progressIsMonotonicForSinglePassTranscription() = runBlocking {
         val audioFile = temporaryAudioFile()
         val progressEvents = mutableListOf<AudioTranscriptionProgress>()
-        val processedChunkIndexes = mutableListOf<Int>()
-        val durationMs = 20 * 60 * 1000L + 30_000L
+        val durationMs = 2 * 60 * 1000L
         val engine = OnDeviceAudioTranscriptionEngine(
             durationResolver = AudioDurationResolver { durationMs },
-            chunkTranscriber = AudioChunkTranscriber { _, chunk ->
-                processedChunkIndexes += chunk.index
-                "seg-${chunk.index + 1}"
+            transcriber = AudioFileTranscriber { _, _, onProgress ->
+                onProgress(0.2f)
+                onProgress(0.8f)
+                onProgress(0.6f) // Should be ignored by engine.
+                "hello world"
             }
         )
 
         val result = engine.transcribe(audioFile) { progressEvents += it }
 
         val success = result as AudioTranscriptionResult.Success
-        assertEquals(5, success.chunkCount)
-        assertEquals("seg-1 seg-2 seg-3 seg-4 seg-5", success.transcript)
-        assertEquals(listOf(0, 1, 2, 3, 4), processedChunkIndexes)
+        assertEquals(1, success.chunkCount)
+        assertEquals("hello world", success.transcript)
         assertEquals(0f, progressEvents.first().progress)
         assertEquals(1f, progressEvents.last().progress)
         assertTrue(progressEvents.zipWithNext().all { (left, right) -> right.progress >= left.progress })
@@ -65,7 +65,7 @@ class OnDeviceAudioTranscriptionEngineTest {
         val audioFile = temporaryAudioFile()
         val engine = OnDeviceAudioTranscriptionEngine(
             durationResolver = AudioDurationResolver { null },
-            chunkTranscriber = AudioChunkTranscriber { _, _ -> "unused" }
+            transcriber = AudioFileTranscriber { _, _, _ -> "unused" }
         )
 
         val result = engine.transcribe(audioFile)
@@ -76,29 +76,36 @@ class OnDeviceAudioTranscriptionEngineTest {
     }
 
     @Test
-    fun chunkBuilderSwitchesBetweenSingleAndBatchedModes() {
-        val short = OnDeviceAudioTranscriptionEngine.buildChunks(60_000L)
-        val boundary = OnDeviceAudioTranscriptionEngine.buildChunks(10 * 60 * 1000L)
-        val long = OnDeviceAudioTranscriptionEngine.buildChunks(10 * 60 * 1000L + 1L)
-
-        assertEquals(1, short.size)
-        assertEquals(1, boundary.size)
-        assertEquals(3, long.size)
-    }
-
-    @Test
-    fun defaultHeuristicTranscriberReturnsFailureForMissingSpeechContent() = runBlocking {
+    fun transcriptionFailureWrapsThrownError() = runBlocking {
         val audioFile = temporaryAudioFile()
         val engine = OnDeviceAudioTranscriptionEngine(
             durationResolver = AudioDurationResolver { 30_000L },
-            chunkTranscriber = AudioChunkTranscriber { _, _ -> "" }
+            transcriber = AudioFileTranscriber { _, _, _ ->
+                error("boom")
+            }
         )
 
         val result = engine.transcribe(audioFile)
 
         assertTrue(result is AudioTranscriptionResult.Failure)
         val failure = result as AudioTranscriptionResult.Failure
-        assertEquals("No speech content was produced from audio chunks.", failure.message)
+        assertEquals("Audio transcription failed.", failure.message)
+        assertTrue(failure.cause != null)
+    }
+
+    @Test
+    fun returnsFailureForMissingSpeechContent() = runBlocking {
+        val audioFile = temporaryAudioFile()
+        val engine = OnDeviceAudioTranscriptionEngine(
+            durationResolver = AudioDurationResolver { 30_000L },
+            transcriber = AudioFileTranscriber { _, _, _ -> "" }
+        )
+
+        val result = engine.transcribe(audioFile)
+
+        assertTrue(result is AudioTranscriptionResult.Failure)
+        val failure = result as AudioTranscriptionResult.Failure
+        assertEquals("No speech content was produced from audio.", failure.message)
     }
 
     private fun temporaryAudioFile(): File {

@@ -7,7 +7,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.suraj.apps.omni.core.data.transcription.AudioTranscriptionResult
 import com.suraj.apps.omni.core.data.transcription.OnDeviceAudioTranscriptionEngine
-import com.suraj.apps.omni.core.data.transcription.VoskAudioChunkTranscriber
+import com.suraj.apps.omni.core.data.transcription.VoskAudioFileTranscriber
 import com.suraj.apps.omni.core.data.transcription.VoskLiveSpeechEngine
 import com.suraj.apps.omni.core.data.importing.DocumentImportRepository
 import com.suraj.apps.omni.core.data.importing.DocumentImportResult
@@ -52,7 +52,7 @@ class AudioViewModel(
     private val repository = DocumentImportRepository(appContext)
     private val voskEngine = VoskLiveSpeechEngine(appContext)
     private val fallbackAudioTranscriptionEngine = OnDeviceAudioTranscriptionEngine(
-        chunkTranscriber = VoskAudioChunkTranscriber(voskEngine)
+        transcriber = VoskAudioFileTranscriber(voskEngine)
     )
 
     private val _uiState = MutableStateFlow(AudioUiState())

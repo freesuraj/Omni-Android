@@ -26,7 +26,7 @@ import com.suraj.apps.omni.core.data.transcription.AudioTranscriptionProgress
 import com.suraj.apps.omni.core.data.transcription.AudioTranscriptionResult
 import com.suraj.apps.omni.core.data.transcription.GeminiAudioTranscriptionEngine
 import com.suraj.apps.omni.core.data.transcription.OnDeviceAudioTranscriptionEngine
-import com.suraj.apps.omni.core.data.transcription.VoskAudioChunkTranscriber
+import com.suraj.apps.omni.core.data.transcription.VoskAudioFileTranscriber
 import com.suraj.apps.omni.core.data.transcription.VoskLiveSpeechEngine
 import com.suraj.apps.omni.core.model.DocumentFileType
 import java.io.File
@@ -71,7 +71,7 @@ class DocumentImportRepository(
         EncryptedPrefsProviderSettingsStore(context),
     private val voskLiveSpeechEngine: VoskLiveSpeechEngine = VoskLiveSpeechEngine(context),
     private val onDeviceAudioTranscriptionEngine: AudioTranscriptionEngine = OnDeviceAudioTranscriptionEngine(
-        chunkTranscriber = VoskAudioChunkTranscriber(voskLiveSpeechEngine)
+        transcriber = VoskAudioFileTranscriber(voskLiveSpeechEngine)
     ),
     private val geminiAudioTranscriptionEngineFactory: (String) -> AudioTranscriptionEngine = {
         GeminiAudioTranscriptionEngine(apiKey = it)

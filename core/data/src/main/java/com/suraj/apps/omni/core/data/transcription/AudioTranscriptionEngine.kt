@@ -4,7 +4,6 @@ import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.media.MediaMetadataRetriever
 import java.io.File
-import kotlin.math.min
 
 data class AudioTranscriptionProgress(
     val progress: Float,
@@ -34,34 +33,21 @@ interface AudioTranscriptionEngine {
     ): AudioTranscriptionResult
 }
 
-data class AudioChunkWindow(
-    val startMs: Long,
-    val endMs: Long,
-    val index: Int,
-    val totalChunks: Int
-)
-
 fun interface AudioDurationResolver {
     fun resolveDurationMs(audioFile: File): Long?
 }
 
-fun interface AudioChunkTranscriber {
-    suspend fun transcribeChunk(audioFile: File, chunk: AudioChunkWindow): String
-}
-
-interface ProgressAwareAudioChunkTranscriber : AudioChunkTranscriber {
-    suspend fun transcribeChunk(
+fun interface AudioFileTranscriber {
+    suspend fun transcribe(
         audioFile: File,
-        chunk: AudioChunkWindow,
-        onChunkProgress: (Float) -> Unit
+        durationMs: Long,
+        onProgress: (Float) -> Unit
     ): String
 }
 
 class OnDeviceAudioTranscriptionEngine(
-    private val chunkTranscriber: AudioChunkTranscriber,
-    private val durationResolver: AudioDurationResolver = MediaMetadataAudioDurationResolver(),
-    private val shortAudioThresholdMs: Long = SHORT_AUDIO_THRESHOLD_MS,
-    private val longAudioChunkSizeMs: Long = LONG_AUDIO_CHUNK_SIZE_MS
+    private val transcriber: AudioFileTranscriber,
+    private val durationResolver: AudioDurationResolver = MediaMetadataAudioDurationResolver()
 ) : AudioTranscriptionEngine {
 
     override suspend fun transcribe(
@@ -77,123 +63,60 @@ class OnDeviceAudioTranscriptionEngine(
             return AudioTranscriptionResult.Failure("Audio duration is invalid.")
         }
 
-        val chunks = buildChunks(durationMs, shortAudioThresholdMs, longAudioChunkSizeMs)
-        if (chunks.isEmpty()) {
-            return AudioTranscriptionResult.Failure("Unable to segment audio for transcription.")
-        }
-
         onProgress(
             AudioTranscriptionProgress(
                 progress = 0f,
                 processedDurationMs = 0L,
                 totalDurationMs = durationMs,
                 chunkIndex = 0,
-                chunkCount = chunks.size
+                chunkCount = 1
             )
         )
 
-        val transcriptSegments = mutableListOf<String>()
-        for (chunk in chunks) {
-            var lastChunkProgress = 0f
-            val segment = runCatching {
-                val transcriber = chunkTranscriber
-                if (transcriber is ProgressAwareAudioChunkTranscriber) {
-                    transcriber.transcribeChunk(audioFile, chunk) { chunkProgress ->
-                        val normalizedChunkProgress = chunkProgress.coerceIn(0f, 1f)
-                        if (normalizedChunkProgress <= lastChunkProgress) return@transcribeChunk
-                        lastChunkProgress = normalizedChunkProgress
-                        val chunkDuration = (chunk.endMs - chunk.startMs).coerceAtLeast(1L)
-                        val processedDuration = chunk.startMs + (chunkDuration * normalizedChunkProgress).toLong()
-                        val progress = (processedDuration.toFloat() / durationMs.toFloat()).coerceIn(0f, 1f)
-                        onProgress(
-                            AudioTranscriptionProgress(
-                                progress = progress,
-                                processedDurationMs = processedDuration,
-                                totalDurationMs = durationMs,
-                                chunkIndex = chunk.index + 1,
-                                chunkCount = chunk.totalChunks
-                            )
-                        )
-                    }
-                } else {
-                    transcriber.transcribeChunk(audioFile, chunk)
-                }
-            }.getOrElse { error ->
-                return AudioTranscriptionResult.Failure(
-                    message = "Audio transcription failed on chunk ${chunk.index + 1}.",
-                    cause = error
-                )
-            }
-
-            val normalized = segment.replace(Regex("\\s+"), " ").trim()
-            if (normalized.isNotEmpty()) {
-                transcriptSegments += normalized
-            }
-            val processedDuration = chunk.endMs
-            val progress = (processedDuration.toFloat() / durationMs.toFloat()).coerceIn(0f, 1f)
-            onProgress(
-                AudioTranscriptionProgress(
-                    progress = progress,
-                    processedDurationMs = processedDuration,
-                    totalDurationMs = durationMs,
-                    chunkIndex = chunk.index + 1,
-                    chunkCount = chunk.totalChunks
-                )
-            )
-        }
-
-        val combinedTranscript = transcriptSegments.joinToString(separator = " ").trim()
-        if (combinedTranscript.isEmpty()) {
-            return AudioTranscriptionResult.Failure("No speech content was produced from audio chunks.")
-        }
-
-        return AudioTranscriptionResult.Success(
-            transcript = combinedTranscript,
-            durationMs = durationMs,
-            chunkCount = chunks.size
-        )
-    }
-
-    companion object {
-        const val SHORT_AUDIO_THRESHOLD_MS = 10 * 60 * 1000L
-        const val LONG_AUDIO_CHUNK_SIZE_MS = 5 * 60 * 1000L
-
-        internal fun buildChunks(
-            durationMs: Long,
-            shortAudioThresholdMs: Long = SHORT_AUDIO_THRESHOLD_MS,
-            longAudioChunkSizeMs: Long = LONG_AUDIO_CHUNK_SIZE_MS
-        ): List<AudioChunkWindow> {
-            if (durationMs <= 0L) return emptyList()
-            if (durationMs <= shortAudioThresholdMs) {
-                return listOf(
-                    AudioChunkWindow(
-                        startMs = 0L,
-                        endMs = durationMs,
-                        index = 0,
-                        totalChunks = 1
+        var lastProgress = 0f
+        val rawTranscript = runCatching {
+            transcriber.transcribe(audioFile, durationMs) { transcriberProgress ->
+                val normalizedProgress = transcriberProgress.coerceIn(0f, 1f)
+                if (normalizedProgress <= lastProgress) return@transcribe
+                lastProgress = normalizedProgress
+                val processedDuration = (durationMs * normalizedProgress).toLong().coerceAtMost(durationMs)
+                onProgress(
+                    AudioTranscriptionProgress(
+                        progress = normalizedProgress,
+                        processedDurationMs = processedDuration,
+                        totalDurationMs = durationMs,
+                        chunkIndex = 1,
+                        chunkCount = 1
                     )
                 )
             }
-
-            val chunkSizeMs = longAudioChunkSizeMs.coerceAtLeast(60_000L)
-            val windows = mutableListOf<AudioChunkWindow>()
-            var startMs = 0L
-            var index = 0
-            while (startMs < durationMs) {
-                val endMs = min(startMs + chunkSizeMs, durationMs)
-                windows += AudioChunkWindow(
-                    startMs = startMs,
-                    endMs = endMs,
-                    index = index,
-                    totalChunks = 0
-                )
-                startMs = endMs
-                index += 1
-            }
-
-            val total = windows.size
-            return windows.map { chunk -> chunk.copy(totalChunks = total) }
+        }.getOrElse { error ->
+            return AudioTranscriptionResult.Failure(
+                message = "Audio transcription failed.",
+                cause = error
+            )
         }
+
+        val transcript = rawTranscript.replace(Regex("\\s+"), " ").trim()
+        if (transcript.isEmpty()) {
+            return AudioTranscriptionResult.Failure("No speech content was produced from audio.")
+        }
+
+        onProgress(
+            AudioTranscriptionProgress(
+                progress = 1f,
+                processedDurationMs = durationMs,
+                totalDurationMs = durationMs,
+                chunkIndex = 1,
+                chunkCount = 1
+            )
+        )
+
+        return AudioTranscriptionResult.Success(
+            transcript = transcript,
+            durationMs = durationMs,
+            chunkCount = 1
+        )
     }
 }
 
@@ -234,26 +157,22 @@ class MediaMetadataAudioDurationResolver : AudioDurationResolver {
     }
 }
 
-class VoskAudioChunkTranscriber(
+class VoskAudioFileTranscriber(
     private val voskEngine: VoskLiveSpeechEngine
-) : ProgressAwareAudioChunkTranscriber {
-    override suspend fun transcribeChunk(audioFile: File, chunk: AudioChunkWindow): String {
-        return transcribeChunk(audioFile, chunk) {}
-    }
-
-    override suspend fun transcribeChunk(
+) : AudioFileTranscriber {
+    override suspend fun transcribe(
         audioFile: File,
-        chunk: AudioChunkWindow,
-        onChunkProgress: (Float) -> Unit
+        durationMs: Long,
+        onProgress: (Float) -> Unit
     ): String {
         if (!voskEngine.isModelLoaded()) {
             voskEngine.loadModel()
         }
         return voskEngine.transcribeChunk(
             audioFile = audioFile,
-            startMs = chunk.startMs,
-            endMs = chunk.endMs,
-            onProgress = onChunkProgress
+            startMs = 0L,
+            endMs = durationMs,
+            onProgress = onProgress
         )
     }
 }
