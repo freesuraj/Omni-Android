@@ -4,18 +4,15 @@ import android.app.Application
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import android.media.MediaPlayer
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -41,13 +38,10 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -59,7 +53,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.suraj.apps.omni.core.data.local.entity.DocumentEntity
-import com.suraj.apps.omni.core.designsystem.component.OmniFeatureCard
 import com.suraj.apps.omni.core.designsystem.theme.OmniSpacing
 import com.suraj.apps.omni.core.model.DocumentFileType
 import java.io.File
@@ -68,6 +61,7 @@ import java.io.File
 fun DashboardRoute(
     documentId: String,
     onBack: () -> Unit,
+    onOpenTranscript: (String) -> Unit,
     onOpenQuiz: (String) -> Unit,
     onOpenNotes: (String) -> Unit,
     onOpenSummary: (String) -> Unit,
@@ -86,6 +80,7 @@ fun DashboardRoute(
     )
     val qaFeatureName = stringResource(R.string.dashboard_feature_qa_title)
     val analysisFeatureName = stringResource(R.string.dashboard_feature_analysis_title)
+    val fallbackDashboardTitle = stringResource(R.string.dashboard_title_fallback)
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -180,25 +175,21 @@ fun DashboardRoute(
             verticalArrangement = Arrangement.spacedBy(OmniSpacing.medium)
         ) {
             DashboardHeader(
-                title = uiState.document?.title ?: stringResource(R.string.dashboard_title_fallback),
+                title = uiState.document?.title ?: fallbackDashboardTitle,
                 sourceStats = uiState.sourceStats.ifBlank { stringResource(R.string.dashboard_source_details_preparing) },
                 onBack = onBack,
                 onOpenOriginal = {
-                    openOriginalSource(
-                        context = context,
-                        document = uiState.document,
-                        onError = viewModel::reportError
-                    )
+                    if (uiState.document?.fileType == DocumentFileType.AUDIO) {
+                        onOpenTranscript(documentId)
+                    } else {
+                        openOriginalSource(
+                            context = context,
+                            document = uiState.document,
+                            onError = viewModel::reportError
+                        )
+                    }
                 }
             )
-
-            if (!uiState.audioSourcePath.isNullOrBlank()) {
-                AudioPreviewCard(
-                    audioPath = uiState.audioSourcePath,
-                    transcript = uiState.audioTranscript,
-                    onError = viewModel::reportError
-                )
-            }
 
             featureCards.forEach { card ->
                 DashboardActionCard(card = card)
@@ -391,81 +382,6 @@ private fun DashboardActionCard(card: DashboardFeatureCard) {
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun AudioPreviewCard(
-    audioPath: String?,
-    transcript: String,
-    onError: (String) -> Unit
-) {
-    if (audioPath.isNullOrBlank()) return
-
-    var mediaPlayer by remember(audioPath) { mutableStateOf<MediaPlayer?>(null) }
-    var isPlaying by remember(audioPath) { mutableStateOf(false) }
-    val audioPreviewError = stringResource(R.string.dashboard_error_audio_preview_failed)
-
-    DisposableEffect(audioPath) {
-        onDispose {
-            runCatching { mediaPlayer?.release() }
-            mediaPlayer = null
-        }
-    }
-
-    OmniFeatureCard(
-        title = stringResource(R.string.dashboard_audio_preview_title),
-        subtitle = if (isPlaying) {
-            stringResource(R.string.dashboard_audio_preview_playing)
-        } else {
-            stringResource(R.string.dashboard_audio_preview_idle)
-        },
-        trailing = {
-            Text(
-                text = if (isPlaying) stringResource(R.string.dashboard_audio_action_pause) else stringResource(R.string.dashboard_audio_action_play),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.clickable {
-                    if (mediaPlayer == null) {
-                        val newPlayer = runCatching {
-                            MediaPlayer().apply {
-                                setDataSource(audioPath)
-                                prepare()
-                                setOnCompletionListener { isPlaying = false }
-                            }
-                        }.getOrElse {
-                            onError(audioPreviewError)
-                            return@clickable
-                        }
-                        mediaPlayer = newPlayer
-                    }
-                    val activePlayer = mediaPlayer ?: return@clickable
-                    if (isPlaying) {
-                        activePlayer.pause()
-                        isPlaying = false
-                    } else {
-                        activePlayer.start()
-                        isPlaying = true
-                    }
-                }
-            )
-        }
-    )
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surface
-    ) {
-        Text(
-            text = if (transcript.isBlank()) {
-                stringResource(R.string.dashboard_audio_transcript_preparing)
-            } else {
-                transcript
-            },
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(OmniSpacing.medium)
-        )
     }
 }
 

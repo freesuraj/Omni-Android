@@ -6,6 +6,8 @@ object AppRoutes {
     const val SETTINGS = "settings"
     const val DASHBOARD = "dashboard/{documentId}"
     const val DASHBOARD_ARG_DOCUMENT_ID = "documentId"
+    const val TRANSCRIPTION = "transcription/{documentId}"
+    const val TRANSCRIPTION_ARG_DOCUMENT_ID = "documentId"
     const val QUIZ = "quiz/{documentId}"
     const val QUIZ_ARG_DOCUMENT_ID = "documentId"
     const val NOTES = "notes/{documentId}"
@@ -19,6 +21,7 @@ object AppRoutes {
     const val PAYWALL = "paywall"
 
     fun dashboard(documentId: String): String = "dashboard/$documentId"
+    fun transcription(documentId: String): String = "transcription/$documentId"
     fun quiz(documentId: String): String = "quiz/$documentId"
     fun notes(documentId: String): String = "notes/$documentId"
     fun summary(documentId: String): String = "summary/$documentId"
