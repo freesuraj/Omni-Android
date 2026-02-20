@@ -49,9 +49,17 @@ fun interface AudioChunkTranscriber {
     suspend fun transcribeChunk(audioFile: File, chunk: AudioChunkWindow): String
 }
 
+interface ProgressAwareAudioChunkTranscriber : AudioChunkTranscriber {
+    suspend fun transcribeChunk(
+        audioFile: File,
+        chunk: AudioChunkWindow,
+        onChunkProgress: (Float) -> Unit
+    ): String
+}
+
 class OnDeviceAudioTranscriptionEngine(
+    private val chunkTranscriber: AudioChunkTranscriber,
     private val durationResolver: AudioDurationResolver = MediaMetadataAudioDurationResolver(),
-    private val chunkTranscriber: AudioChunkTranscriber = HeuristicOnDeviceChunkTranscriber(),
     private val shortAudioThresholdMs: Long = SHORT_AUDIO_THRESHOLD_MS,
     private val longAudioChunkSizeMs: Long = LONG_AUDIO_CHUNK_SIZE_MS
 ) : AudioTranscriptionEngine {
@@ -86,8 +94,30 @@ class OnDeviceAudioTranscriptionEngine(
 
         val transcriptSegments = mutableListOf<String>()
         for (chunk in chunks) {
+            var lastChunkProgress = 0f
             val segment = runCatching {
-                chunkTranscriber.transcribeChunk(audioFile, chunk)
+                val transcriber = chunkTranscriber
+                if (transcriber is ProgressAwareAudioChunkTranscriber) {
+                    transcriber.transcribeChunk(audioFile, chunk) { chunkProgress ->
+                        val normalizedChunkProgress = chunkProgress.coerceIn(0f, 1f)
+                        if (normalizedChunkProgress <= lastChunkProgress) return@transcribeChunk
+                        lastChunkProgress = normalizedChunkProgress
+                        val chunkDuration = (chunk.endMs - chunk.startMs).coerceAtLeast(1L)
+                        val processedDuration = chunk.startMs + (chunkDuration * normalizedChunkProgress).toLong()
+                        val progress = (processedDuration.toFloat() / durationMs.toFloat()).coerceIn(0f, 1f)
+                        onProgress(
+                            AudioTranscriptionProgress(
+                                progress = progress,
+                                processedDurationMs = processedDuration,
+                                totalDurationMs = durationMs,
+                                chunkIndex = chunk.index + 1,
+                                chunkCount = chunk.totalChunks
+                            )
+                        )
+                    }
+                } else {
+                    transcriber.transcribeChunk(audioFile, chunk)
+                }
             }.getOrElse { error ->
                 return AudioTranscriptionResult.Failure(
                     message = "Audio transcription failed on chunk ${chunk.index + 1}.",
@@ -204,10 +234,26 @@ class MediaMetadataAudioDurationResolver : AudioDurationResolver {
     }
 }
 
-class HeuristicOnDeviceChunkTranscriber : AudioChunkTranscriber {
+class VoskAudioChunkTranscriber(
+    private val voskEngine: VoskLiveSpeechEngine
+) : ProgressAwareAudioChunkTranscriber {
     override suspend fun transcribeChunk(audioFile: File, chunk: AudioChunkWindow): String {
-        // No on-device file-based transcription available; return empty so the engine
-        // reports a Failure and callers fall back to the "transcript pending" path.
-        return ""
+        return transcribeChunk(audioFile, chunk) {}
+    }
+
+    override suspend fun transcribeChunk(
+        audioFile: File,
+        chunk: AudioChunkWindow,
+        onChunkProgress: (Float) -> Unit
+    ): String {
+        if (!voskEngine.isModelLoaded()) {
+            voskEngine.loadModel()
+        }
+        return voskEngine.transcribeChunk(
+            audioFile = audioFile,
+            startMs = chunk.startMs,
+            endMs = chunk.endMs,
+            onProgress = onChunkProgress
+        )
     }
 }

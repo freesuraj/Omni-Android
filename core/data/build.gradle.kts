@@ -48,6 +48,7 @@ dependencies {
     implementation(libs.androidx.security.crypto)
     implementation(libs.play.billing.ktx)
     implementation(libs.pdfbox.android)
+    implementation(libs.vosk.android)
     ksp(libs.androidx.room.compiler)
 
     testImplementation(libs.junit)

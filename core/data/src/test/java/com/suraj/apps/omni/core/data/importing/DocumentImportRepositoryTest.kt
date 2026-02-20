@@ -237,7 +237,7 @@ class DocumentImportRepositoryTest {
             context = appContext,
             database = database,
             premiumAccessChecker = FakePremiumAccessChecker(isPremium = true),
-            audioTranscriptionEngine = FakeAudioTranscriptionEngine(
+            audioTranscriptionEngineOverride = FakeAudioTranscriptionEngine(
                 result = AudioTranscriptionResult.Success(
                     transcript = "Final on-device transcript from audio chunks.",
                     durationMs = 1_200_000L,
@@ -274,7 +274,7 @@ class DocumentImportRepositoryTest {
             context = appContext,
             database = database,
             premiumAccessChecker = FakePremiumAccessChecker(isPremium = true),
-            audioTranscriptionEngine = FakeAudioTranscriptionEngine(
+            audioTranscriptionEngineOverride = FakeAudioTranscriptionEngine(
                 result = AudioTranscriptionResult.Success("unused", 10L, 1)
             ) {
                 invocationCount += 1
@@ -301,7 +301,7 @@ class DocumentImportRepositoryTest {
             context = appContext,
             database = database,
             premiumAccessChecker = FakePremiumAccessChecker(isPremium = true),
-            audioTranscriptionEngine = FakeAudioTranscriptionEngine(
+            audioTranscriptionEngineOverride = FakeAudioTranscriptionEngine(
                 result = AudioTranscriptionResult.Failure("Recognizer unavailable.")
             )
         )

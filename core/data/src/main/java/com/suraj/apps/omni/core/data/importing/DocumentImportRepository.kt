@@ -17,10 +17,17 @@ import com.suraj.apps.omni.core.data.entitlement.SharedPrefsPremiumAccessStore
 import com.suraj.apps.omni.core.data.local.OmniDatabase
 import com.suraj.apps.omni.core.data.local.OmniDatabaseFactory
 import com.suraj.apps.omni.core.data.local.entity.DocumentEntity
+import com.suraj.apps.omni.core.data.provider.AudioTranscriptionMode
+import com.suraj.apps.omni.core.data.provider.AiProviderId
+import com.suraj.apps.omni.core.data.provider.EncryptedPrefsProviderSettingsStore
+import com.suraj.apps.omni.core.data.provider.ProviderSettingsStore
 import com.suraj.apps.omni.core.data.transcription.AudioTranscriptionEngine
 import com.suraj.apps.omni.core.data.transcription.AudioTranscriptionProgress
 import com.suraj.apps.omni.core.data.transcription.AudioTranscriptionResult
+import com.suraj.apps.omni.core.data.transcription.GeminiAudioTranscriptionEngine
 import com.suraj.apps.omni.core.data.transcription.OnDeviceAudioTranscriptionEngine
+import com.suraj.apps.omni.core.data.transcription.VoskAudioChunkTranscriber
+import com.suraj.apps.omni.core.data.transcription.VoskLiveSpeechEngine
 import com.suraj.apps.omni.core.model.DocumentFileType
 import java.io.File
 import java.net.HttpURLConnection
@@ -60,9 +67,20 @@ class DocumentImportRepository(
     private val database: OmniDatabase = OmniDatabaseFactory.create(context),
     private val premiumAccessChecker: PremiumAccessChecker = SharedPrefsPremiumAccessChecker(context),
     private val premiumAccessStore: PremiumAccessStore = SharedPrefsPremiumAccessStore(context),
-    private val audioTranscriptionEngine: AudioTranscriptionEngine = OnDeviceAudioTranscriptionEngine(),
+    private val providerSettingsStore: ProviderSettingsStore =
+        EncryptedPrefsProviderSettingsStore(context),
+    private val voskLiveSpeechEngine: VoskLiveSpeechEngine = VoskLiveSpeechEngine(context),
+    private val onDeviceAudioTranscriptionEngine: AudioTranscriptionEngine = OnDeviceAudioTranscriptionEngine(
+        chunkTranscriber = VoskAudioChunkTranscriber(voskLiveSpeechEngine)
+    ),
+    private val geminiAudioTranscriptionEngineFactory: (String) -> AudioTranscriptionEngine = {
+        GeminiAudioTranscriptionEngine(apiKey = it)
+    },
+    private val audioTranscriptionEngineOverride: AudioTranscriptionEngine? = null,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
+    private val maxFreeGeminiAudioBytes = 4L * 1024L * 1024L
+
     fun isPremiumUnlocked(): Boolean = premiumAccessChecker.isPremiumUnlocked()
 
     fun observeDocuments(): Flow<List<DocumentEntity>> = database.documentDao().observeAll()
@@ -238,7 +256,28 @@ class DocumentImportRepository(
             document.copy(isOnboarding = true, onboardingStatus = "transcribing")
         )
 
-        when (val result = audioTranscriptionEngine.transcribe(audioFile, onProgress)) {
+        val selectedMode = providerSettingsStore.getAudioTranscriptionMode()
+        val transcriptionEngine = audioTranscriptionEngineOverride ?: run {
+            when (selectedMode) {
+                AudioTranscriptionMode.ON_DEVICE -> onDeviceAudioTranscriptionEngine
+                AudioTranscriptionMode.GEMINI -> {
+                    if (!premiumAccessChecker.isPremiumUnlocked() && audioFile.length() > maxFreeGeminiAudioBytes) {
+                        return@withContext AudioTranscriptionResult.Failure(
+                            "Gemini transcription on free plan is limited to audio files up to 4 MB."
+                        )
+                    }
+                    val apiKey = resolveGeminiApiKeyForTranscription()
+                    if (apiKey.isBlank()) {
+                        return@withContext AudioTranscriptionResult.Failure(
+                            "Gemini transcription key is missing."
+                        )
+                    }
+                    geminiAudioTranscriptionEngineFactory(apiKey)
+                }
+            }
+        }
+
+        when (val result = transcriptionEngine.transcribe(audioFile, onProgress)) {
             is AudioTranscriptionResult.Failure -> {
                 val current = database.documentDao().getById(documentId) ?: document
                 database.documentDao().upsert(
@@ -268,6 +307,15 @@ class DocumentImportRepository(
                 result.copy(transcript = normalizedTranscript)
             }
         }
+    }
+
+    private fun resolveGeminiApiKeyForTranscription(): String {
+        val selectedProvider = providerSettingsStore.getSelectedProviderId()
+        if (selectedProvider == AiProviderId.GEMINI) {
+            val selectedProviderKey = providerSettingsStore.getApiKey(AiProviderId.GEMINI).orEmpty().trim()
+            if (selectedProviderKey.isNotBlank()) return selectedProviderKey
+        }
+        return BuildConfig.OMNI_GEMINI_API_KEY.trim()
     }
 
     suspend fun readFullText(documentId: String): String? = withContext(ioDispatcher) {

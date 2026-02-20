@@ -90,8 +90,8 @@ class OnDeviceAudioTranscriptionEngineTest {
     fun defaultHeuristicTranscriberReturnsFailureForMissingSpeechContent() = runBlocking {
         val audioFile = temporaryAudioFile()
         val engine = OnDeviceAudioTranscriptionEngine(
-            durationResolver = AudioDurationResolver { 30_000L }
-            // Uses default HeuristicOnDeviceChunkTranscriber which returns ""
+            durationResolver = AudioDurationResolver { 30_000L },
+            chunkTranscriber = AudioChunkTranscriber { _, _ -> "" }
         )
 
         val result = engine.transcribe(audioFile)

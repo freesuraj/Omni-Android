@@ -37,6 +37,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.suraj.apps.omni.core.data.provider.AudioTranscriptionMode
 import com.suraj.apps.omni.core.designsystem.theme.OmniSpacing
 
 @Composable
@@ -99,6 +100,72 @@ fun SettingsRoute() {
                             option = option,
                             onSelect = { viewModel.selectProvider(option.providerId) }
                         )
+                    }
+                }
+            }
+
+            Text(
+                text = stringResource(R.string.settings_section_audio_transcription),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.surface,
+                shape = MaterialTheme.shapes.large,
+                tonalElevation = 1.dp
+            ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { viewModel.selectAudioTranscriptionMode(AudioTranscriptionMode.ON_DEVICE) }
+                            .padding(horizontal = OmniSpacing.large, vertical = OmniSpacing.medium),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.settings_audio_transcription_on_device),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        if (uiState.selectedAudioTranscriptionMode == AudioTranscriptionMode.ON_DEVICE) {
+                            Icon(
+                                imageVector = Icons.Rounded.Check,
+                                contentDescription = stringResource(R.string.settings_selected_content_description),
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { viewModel.selectAudioTranscriptionMode(AudioTranscriptionMode.GEMINI) }
+                            .padding(horizontal = OmniSpacing.large, vertical = OmniSpacing.medium),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(
+                                text = stringResource(R.string.settings_audio_transcription_gemini),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Text(
+                                text = stringResource(R.string.settings_audio_transcription_gemini_free_limit),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        if (uiState.selectedAudioTranscriptionMode == AudioTranscriptionMode.GEMINI) {
+                            Icon(
+                                imageVector = Icons.Rounded.Check,
+                                contentDescription = stringResource(R.string.settings_selected_content_description),
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
                 }
             }

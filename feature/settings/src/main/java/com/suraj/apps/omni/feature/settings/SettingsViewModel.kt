@@ -3,6 +3,7 @@ package com.suraj.apps.omni.feature.settings
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import com.suraj.apps.omni.core.data.provider.AiProviderId
+import com.suraj.apps.omni.core.data.provider.AudioTranscriptionMode
 import com.suraj.apps.omni.core.data.provider.ProviderSettingsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,6 +20,7 @@ data class ProviderOptionUiState(
 data class SettingsUiState(
     val providerOptions: List<ProviderOptionUiState> = emptyList(),
     val selectedProvider: AiProviderId = AiProviderId.OMNI,
+    val selectedAudioTranscriptionMode: AudioTranscriptionMode = AudioTranscriptionMode.ON_DEVICE,
     val apiKeyInput: String = "",
     val hasSavedApiKeyForSelectedProvider: Boolean = false,
     val infoMessage: String? = null,
@@ -48,6 +50,11 @@ class SettingsViewModel(
 
     fun updateApiKeyInput(input: String) {
         _uiState.update { it.copy(apiKeyInput = input) }
+    }
+
+    fun selectAudioTranscriptionMode(mode: AudioTranscriptionMode) {
+        repository.selectAudioTranscriptionMode(mode)
+        refresh()
     }
 
     fun saveApiKey() {
@@ -107,6 +114,7 @@ class SettingsViewModel(
             it.copy(
                 providerOptions = options,
                 selectedProvider = selectedProvider,
+                selectedAudioTranscriptionMode = repository.selectedAudioTranscriptionMode(),
                 hasSavedApiKeyForSelectedProvider = selectedHasSavedKey,
                 apiKeyInput = if (clearInput) "" else it.apiKeyInput,
                 appVersion = appVersionName

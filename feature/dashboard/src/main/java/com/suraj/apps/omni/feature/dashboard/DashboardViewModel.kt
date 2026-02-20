@@ -97,12 +97,18 @@ class DashboardViewModel(
                 )
                 val statusView = statusView(document)
                 _uiState.update {
+                    val isActiveOnboardingSession =
+                        document.id == activeOnboardingDocumentId && onboardingJob?.isActive == true
                     it.copy(
                         document = document,
                         isOnboarding = document.isOnboarding,
                         showRetryAction = document.onboardingStatus == "transcription_failed",
-                        onboardingLabel = statusView.label,
-                        onboardingProgress = statusView.progress,
+                        onboardingLabel = if (isActiveOnboardingSession) it.onboardingLabel else statusView.label,
+                        onboardingProgress = if (isActiveOnboardingSession) {
+                            it.onboardingProgress
+                        } else {
+                            statusView.progress
+                        },
                         sourceStats = sourceStats,
                         sourceUrl = document.sourceUrl,
                         audioSourcePath = if (document.fileType == DocumentFileType.AUDIO) {
@@ -163,7 +169,7 @@ class DashboardViewModel(
     }
 
     private fun maybeStartOnboarding(document: DocumentEntity) {
-        if (!document.isOnboarding) return
+        if (!document.isOnboarding || document.onboardingStatus == "transcription_failed") return
         if (activeOnboardingDocumentId == document.id && onboardingJob?.isActive == true) return
 
         onboardingJob?.cancel()
@@ -188,8 +194,8 @@ class DashboardViewModel(
 
     private suspend fun runAudioOnboarding(documentId: String) {
         val transcriptionResult = repository.transcribeAudioDocument(documentId) { progress ->
-            val percent = (progress.progress * 100f).toInt().coerceIn(0, 100)
-            val overallProgress = progress.progress * 0.6f
+            val percent = (progress.progress * 100f).roundToInt().coerceIn(0, 100)
+            val overallProgress = (percent / 100f) * 0.6f
             _uiState.update {
                 it.copy(
                         isOnboarding = true,
@@ -199,25 +205,18 @@ class DashboardViewModel(
                         errorMessage = null
                 )
             }
-            viewModelScope.launch {
-                repository.updateOnboardingState(
-                    documentId = documentId,
-                    isOnboarding = true,
-                    onboardingStatus = "transcribing:$percent"
-                )
-            }
         }
 
         when (transcriptionResult) {
             is AudioTranscriptionResult.Failure -> {
                 repository.updateOnboardingState(
                     documentId = documentId,
-                    isOnboarding = true,
+                    isOnboarding = false,
                     onboardingStatus = "transcription_failed"
                 )
                 _uiState.update {
                     it.copy(
-                        isOnboarding = true,
+                        isOnboarding = false,
                         showRetryAction = true,
                         onboardingLabel = app.getString(R.string.dashboard_status_transcription_failed),
                         errorMessage = transcriptionResult.message
@@ -284,6 +283,12 @@ class DashboardViewModel(
         }
         if (status == "transcription_failed") {
             return StatusView(label = app.getString(R.string.dashboard_status_transcription_failed), progress = 0f)
+        }
+        if (status == "transcribing") {
+            return StatusView(
+                label = app.getString(R.string.dashboard_status_transcribing_audio, 0),
+                progress = 0f
+            )
         }
         if (status.startsWith("transcribing:")) {
             val percent = status.substringAfter("transcribing:").toIntOrNull()?.coerceIn(0, 100) ?: 0

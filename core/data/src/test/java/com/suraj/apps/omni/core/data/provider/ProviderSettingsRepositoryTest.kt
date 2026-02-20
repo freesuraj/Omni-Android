@@ -47,12 +47,19 @@ class ProviderSettingsRepositoryTest {
 
 private class InMemoryProviderSettingsStore : ProviderSettingsStore {
     private var selectedProvider = AiProviderId.OMNI
+    private var transcriptionMode = AudioTranscriptionMode.ON_DEVICE
     private val apiKeys = mutableMapOf<AiProviderId, String>()
 
     override fun getSelectedProviderId(): AiProviderId = selectedProvider
 
     override fun setSelectedProviderId(providerId: AiProviderId) {
         selectedProvider = providerId
+    }
+
+    override fun getAudioTranscriptionMode(): AudioTranscriptionMode = transcriptionMode
+
+    override fun setAudioTranscriptionMode(mode: AudioTranscriptionMode) {
+        transcriptionMode = mode
     }
 
     override fun getApiKey(providerId: AiProviderId): String? {

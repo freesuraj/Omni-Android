@@ -33,9 +33,17 @@ class ProviderSettingsRepository(
         return providerSettingsStore.getSelectedProviderId()
     }
 
+    fun selectedAudioTranscriptionMode(): AudioTranscriptionMode {
+        return providerSettingsStore.getAudioTranscriptionMode()
+    }
+
     fun selectProvider(providerId: AiProviderId): AiProviderSettingsSnapshot {
         providerSettingsStore.setSelectedProviderId(providerId)
         return loadSnapshot()
+    }
+
+    fun selectAudioTranscriptionMode(mode: AudioTranscriptionMode) {
+        providerSettingsStore.setAudioTranscriptionMode(mode)
     }
 
     fun hasConfiguredApiKey(providerId: AiProviderId): Boolean {
