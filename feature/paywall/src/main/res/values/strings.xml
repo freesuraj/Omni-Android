@@ -11,6 +11,7 @@
     <string name="paywall_renewal_note">Subscriptions renew automatically unless cancelled 24 hours before renewal.</string>
     <string name="paywall_message_unlocked">Omni Pro unlocked.</string>
     <string name="paywall_message_restored">Purchases restored.</string>
+    <string name="paywall_error_purchase_context_missing">Unable to start purchase from this screen.</string>
     <string name="paywall_badge_best_value_trial">Best value • 7-day trial</string>
     <string name="paywall_badge_best_value">Best value</string>
     <string name="paywall_badge_one_time">One-time</string>

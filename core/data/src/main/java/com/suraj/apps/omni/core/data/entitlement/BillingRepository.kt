@@ -1,7 +1,10 @@
 package com.suraj.apps.omni.core.data.entitlement
 
+import android.app.Activity
 import android.content.Context
+import com.android.billingclient.api.AcknowledgePurchaseParams
 import com.android.billingclient.api.BillingClient
+import com.android.billingclient.api.BillingFlowParams
 import com.android.billingclient.api.BillingClientStateListener
 import com.android.billingclient.api.BillingResult
 import com.android.billingclient.api.ProductDetails
@@ -11,6 +14,7 @@ import com.android.billingclient.api.QueryPurchasesParams
 import com.suraj.apps.omni.core.data.R
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
@@ -55,6 +59,7 @@ data class RemoteBillingProduct(
 interface BillingCatalogClient {
     suspend fun queryProductCatalog(): List<RemoteBillingProduct>
     suspend fun queryActivePurchases(): List<String>
+    suspend fun launchPurchase(activity: Activity, planId: String): BillingPurchaseResult
     fun disconnect()
 }
 
@@ -94,16 +99,25 @@ class BillingRepository(
         }
     }
 
-    suspend fun purchasePlan(planId: String): BillingPurchaseResult = withContext(ioDispatcher) {
+    suspend fun purchasePlan(
+        planId: String,
+        activity: Activity
+    ): BillingPurchaseResult = withContext(ioDispatcher) {
         if (planId !in PLAN_PRODUCT_IDS) {
             return@withContext BillingPurchaseResult.Failure(
                 appContext.getString(R.string.billing_error_selected_plan_unavailable)
             )
         }
 
-        premiumAccessStore.setPremiumUnlocked(true)
-        premiumAccessStore.setActivePlanId(planId)
-        BillingPurchaseResult.Success
+        when (val purchaseResult = billingCatalogClient.launchPurchase(activity, planId)) {
+            BillingPurchaseResult.Success -> {
+                premiumAccessStore.setPremiumUnlocked(true)
+                premiumAccessStore.setActivePlanId(planId)
+                BillingPurchaseResult.Success
+            }
+
+            is BillingPurchaseResult.Failure -> purchaseResult
+        }
     }
 
     suspend fun restorePurchases(): BillingRestoreResult = withContext(ioDispatcher) {
@@ -170,9 +184,13 @@ class GooglePlayBillingCatalogClient(
     context: Context,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : BillingCatalogClient {
+    private val appContext = context.applicationContext
+    private var purchaseContinuation: CancellableContinuation<BillingPurchaseResult>? = null
     private val billingClient = BillingClient.newBuilder(context)
         .enablePendingPurchases()
-        .setListener { _: BillingResult, _: MutableList<Purchase>? -> }
+        .setListener { result: BillingResult, purchases: MutableList<Purchase>? ->
+            handlePurchaseUpdate(result, purchases)
+        }
         .build()
 
     override suspend fun queryProductCatalog(): List<RemoteBillingProduct> = withContext(ioDispatcher) {
@@ -226,8 +244,105 @@ class GooglePlayBillingCatalogClient(
         val subscriptions = queryPurchases(BillingClient.ProductType.SUBS)
         val oneTime = queryPurchases(BillingClient.ProductType.INAPP)
         (subscriptions + oneTime)
+            .filter { it.purchaseState == Purchase.PurchaseState.PURCHASED }
             .flatMap { purchase -> purchase.products }
             .distinct()
+    }
+
+    override suspend fun launchPurchase(
+        activity: Activity,
+        planId: String
+    ): BillingPurchaseResult = withContext(ioDispatcher) {
+        if (!ensureConnected()) {
+            return@withContext BillingPurchaseResult.Failure(
+                activity.getString(R.string.billing_error_billing_unavailable)
+            )
+        }
+
+        val productType = if (planId == PLAN_LIFETIME) {
+            BillingClient.ProductType.INAPP
+        } else {
+            BillingClient.ProductType.SUBS
+        }
+        val details = queryProductDetails(
+            productIds = listOf(planId),
+            productType = productType
+        ).firstOrNull()
+            ?: return@withContext BillingPurchaseResult.Failure(
+                activity.getString(R.string.billing_error_selected_plan_unavailable)
+            )
+
+        val productParams = BillingFlowParams.ProductDetailsParams.newBuilder()
+            .setProductDetails(details)
+            .apply {
+                if (details.productType == BillingClient.ProductType.SUBS) {
+                    val offerToken = details.subscriptionOfferDetails
+                        ?.firstOrNull()
+                        ?.offerToken
+                    if (!offerToken.isNullOrBlank()) {
+                        setOfferToken(offerToken)
+                    }
+                }
+            }
+            .build()
+        val flowParams = BillingFlowParams.newBuilder()
+            .setProductDetailsParamsList(listOf(productParams))
+            .build()
+
+        withContext(Dispatchers.Main.immediate) {
+            suspendCancellableCoroutine<BillingPurchaseResult> { continuation ->
+                if (purchaseContinuation != null) {
+                    continuation.resume(
+                        BillingPurchaseResult.Failure(
+                            activity.getString(R.string.billing_error_purchase_in_progress)
+                        )
+                    )
+                    return@suspendCancellableCoroutine
+                }
+
+                purchaseContinuation = continuation
+                continuation.invokeOnCancellation { purchaseContinuation = null }
+
+                val launchResult = runCatching {
+                    billingClient.launchBillingFlow(activity, flowParams)
+                }.getOrElse {
+                    purchaseContinuation = null
+                    if (continuation.isActive) {
+                        continuation.resume(
+                            BillingPurchaseResult.Failure(
+                                activity.getString(R.string.billing_error_purchase_start_failed)
+                            )
+                        )
+                    }
+                    return@suspendCancellableCoroutine
+                }
+
+                when (launchResult.responseCode) {
+                    BillingClient.BillingResponseCode.OK -> Unit
+                    BillingClient.BillingResponseCode.USER_CANCELED -> {
+                        purchaseContinuation = null
+                        if (continuation.isActive) {
+                            continuation.resume(
+                                BillingPurchaseResult.Failure(
+                                    activity.getString(R.string.billing_error_purchase_cancelled)
+                                )
+                            )
+                        }
+                    }
+
+                    else -> {
+                        purchaseContinuation = null
+                        if (continuation.isActive) {
+                            continuation.resume(
+                                BillingPurchaseResult.Failure(
+                                    activity.getString(R.string.billing_error_purchase_start_failed)
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 
     override fun disconnect() {
@@ -292,6 +407,101 @@ class GooglePlayBillingCatalogClient(
                     continuation.resume(purchases)
                 } else {
                     continuation.resume(emptyList())
+                }
+            }
+        }
+    }
+
+    private fun handlePurchaseUpdate(
+        result: BillingResult,
+        purchases: List<Purchase>?
+    ) {
+        val continuation = purchaseContinuation ?: return
+        when (result.responseCode) {
+            BillingClient.BillingResponseCode.OK -> {
+                val purchase = purchases
+                    ?.firstOrNull { item ->
+                        item.products.any { it in PLAN_PRODUCT_IDS }
+                    }
+                if (purchase == null) {
+                    purchaseContinuation = null
+                    if (continuation.isActive) {
+                        continuation.resume(
+                            BillingPurchaseResult.Failure(
+                                appContext.getString(R.string.billing_error_purchase_start_failed)
+                            )
+                        )
+                    }
+                    return
+                }
+                if (purchase.purchaseState == Purchase.PurchaseState.PENDING) {
+                    purchaseContinuation = null
+                    if (continuation.isActive) {
+                        continuation.resume(
+                            BillingPurchaseResult.Failure(
+                                appContext.getString(R.string.billing_error_purchase_pending)
+                            )
+                        )
+                    }
+                    return
+                }
+                if (purchase.purchaseState != Purchase.PurchaseState.PURCHASED) {
+                    purchaseContinuation = null
+                    if (continuation.isActive) {
+                        continuation.resume(
+                            BillingPurchaseResult.Failure(
+                                appContext.getString(R.string.billing_error_purchase_start_failed)
+                            )
+                        )
+                    }
+                    return
+                }
+
+                if (purchase.isAcknowledged) {
+                    purchaseContinuation = null
+                    if (continuation.isActive) {
+                        continuation.resume(BillingPurchaseResult.Success)
+                    }
+                    return
+                }
+
+                val acknowledgeParams = AcknowledgePurchaseParams.newBuilder()
+                    .setPurchaseToken(purchase.purchaseToken)
+                    .build()
+                billingClient.acknowledgePurchase(acknowledgeParams) { acknowledgeResult ->
+                    purchaseContinuation = null
+                    if (!continuation.isActive) return@acknowledgePurchase
+                    if (acknowledgeResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                        continuation.resume(BillingPurchaseResult.Success)
+                    } else {
+                        continuation.resume(
+                            BillingPurchaseResult.Failure(
+                                appContext.getString(R.string.billing_error_purchase_acknowledge_failed)
+                            )
+                        )
+                    }
+                }
+            }
+
+            BillingClient.BillingResponseCode.USER_CANCELED -> {
+                purchaseContinuation = null
+                if (continuation.isActive) {
+                    continuation.resume(
+                        BillingPurchaseResult.Failure(
+                            appContext.getString(R.string.billing_error_purchase_cancelled)
+                        )
+                    )
+                }
+            }
+
+            else -> {
+                purchaseContinuation = null
+                if (continuation.isActive) {
+                    continuation.resume(
+                        BillingPurchaseResult.Failure(
+                            appContext.getString(R.string.billing_error_purchase_start_failed)
+                        )
+                    )
                 }
             }
         }

@@ -1,6 +1,9 @@
 package com.suraj.apps.omni.feature.paywall
 
 import android.app.Application
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -47,6 +50,7 @@ fun PaywallRoute(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val hostActivity = remember(context) { context.findActivity() }
     val application = context.applicationContext as Application
     val viewModel: PaywallViewModel = viewModel(
         factory = PaywallViewModel.factory(application)
@@ -184,7 +188,7 @@ fun PaywallRoute(
             }
 
             Button(
-                onClick = viewModel::purchaseSelectedPlan,
+                onClick = { viewModel.purchaseSelectedPlan(hostActivity) },
                 enabled = !uiState.isWorking && uiState.selectedPlanId != null,
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -205,4 +209,13 @@ fun PaywallRoute(
             )
         }
     }
+}
+
+private fun Context.findActivity(): Activity? {
+    var current: Context? = this
+    while (current is ContextWrapper) {
+        if (current is Activity) return current
+        current = current.baseContext
+    }
+    return null
 }

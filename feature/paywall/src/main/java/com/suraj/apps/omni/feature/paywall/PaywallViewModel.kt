@@ -1,6 +1,7 @@
 package com.suraj.apps.omni.feature.paywall
 
 import android.app.Application
+import android.app.Activity
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -53,11 +54,17 @@ class PaywallViewModel(
         _uiState.update { it.copy(selectedPlanId = planId) }
     }
 
-    fun purchaseSelectedPlan() {
+    fun purchaseSelectedPlan(activity: Activity?) {
+        if (activity == null) {
+            _uiState.update {
+                it.copy(errorMessage = app.getString(R.string.paywall_error_purchase_context_missing))
+            }
+            return
+        }
         val planId = _uiState.value.selectedPlanId ?: return
         viewModelScope.launch {
             _uiState.update { it.copy(isWorking = true, errorMessage = null, successMessage = null) }
-            when (val result = repository.purchasePlan(planId)) {
+            when (val result = repository.purchasePlan(planId, activity)) {
                 BillingPurchaseResult.Success -> {
                     _uiState.update {
                         it.copy(

@@ -9,6 +9,12 @@
     <string name="provider_generation_failed">Generation failed for %1$s.</string>
     <string name="billing_error_selected_plan_unavailable">Selected plan is unavailable.</string>
     <string name="billing_error_no_restorable_purchase">No restorable purchases found for this account.</string>
+    <string name="billing_error_billing_unavailable">Google Play Billing is unavailable on this device.</string>
+    <string name="billing_error_purchase_in_progress">Another purchase is already in progress.</string>
+    <string name="billing_error_purchase_start_failed">Unable to start purchase. Try again.</string>
+    <string name="billing_error_purchase_cancelled">Purchase was cancelled.</string>
+    <string name="billing_error_purchase_pending">Purchase is pending. It will unlock after confirmation.</string>
+    <string name="billing_error_purchase_acknowledge_failed">Purchase completed, but acknowledgement failed.</string>
     <string name="billing_plan_monthly_title">Monthly</string>
     <string name="billing_plan_monthly_subtitle">Flexible monthly access</string>
     <string name="billing_plan_monthly_price">$4.99/month</string>

@@ -1,6 +1,7 @@
 package com.suraj.apps.omni.core.data.entitlement
 
 import android.content.Context
+import android.app.Activity
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
@@ -9,6 +10,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.runner.RunWith
+import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -54,7 +56,7 @@ class BillingRepositoryTest {
             billingCatalogClient = FakeBillingCatalogClient()
         )
 
-        val result = repository.purchasePlan(PLAN_MONTHLY)
+        val result = repository.purchasePlan(PLAN_MONTHLY, createActivity())
 
         assertTrue(result is BillingPurchaseResult.Success)
         assertTrue(store.isPremiumUnlocked())
@@ -122,11 +124,18 @@ private class FakePremiumAccessStore : PremiumAccessStore {
 
 private class FakeBillingCatalogClient(
     private val catalog: List<RemoteBillingProduct> = emptyList(),
-    private val purchases: List<String> = emptyList()
+    private val purchases: List<String> = emptyList(),
+    private val purchaseResult: BillingPurchaseResult = BillingPurchaseResult.Success
 ) : BillingCatalogClient {
     override suspend fun queryProductCatalog(): List<RemoteBillingProduct> = catalog
 
     override suspend fun queryActivePurchases(): List<String> = purchases
 
+    override suspend fun launchPurchase(activity: Activity, planId: String): BillingPurchaseResult = purchaseResult
+
     override fun disconnect() = Unit
+}
+
+private fun createActivity(): Activity {
+    return Robolectric.buildActivity(Activity::class.java).setup().get()
 }
