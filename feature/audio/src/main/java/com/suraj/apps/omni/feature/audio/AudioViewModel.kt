@@ -21,6 +21,8 @@ private const val WAVEFORM_BAR_COUNT = 28
 private const val MIN_WAVE_AMPLITUDE = 0.08f
 private const val METER_POLL_MS = 90L
 private const val TIMER_POLL_MS = 120L
+private const val MIN_RECORDING_DURATION_MS = 30_000L
+private const val MIN_TRANSCRIPT_WORD_COUNT = 50
 
 enum class RecordingStatus {
     IDLE,
@@ -245,6 +247,16 @@ class AudioViewModel(
             var transcript = _uiState.value.transcript.trim()
             if (repository.isPlaceholderAudioTranscript(transcript)) {
                 transcript = ""
+            }
+            val transcriptWordCount = transcript
+                .split(Regex("\\s+"))
+                .count { it.isNotBlank() }
+            val isTooShort = elapsedBeforeCurrentRunMs < MIN_RECORDING_DURATION_MS ||
+                transcriptWordCount < MIN_TRANSCRIPT_WORD_COUNT
+            if (isTooShort) {
+                finalFile.delete()
+                resetToIdle(errorMessage = app.getString(R.string.audio_error_recording_too_short))
+                return@launch
             }
             when (val result = repository.importLiveRecording(finalFile, transcript)) {
                 is DocumentImportResult.Success -> {

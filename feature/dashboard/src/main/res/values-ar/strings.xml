@@ -41,6 +41,10 @@
         <item quantity="one">%d بطاقة</item>
         <item quantity="other">%d بطاقة</item>
     </plurals>
+    <plurals name="dashboard_time_spent_reading_minutes">
+        <item quantity="one">وقت القراءة: %d دقيقة</item>
+        <item quantity="other">وقت القراءة: %d دقائق</item>
+    </plurals>
     <string name="dashboard_onboarding_footer">قد يستغرق هذا لحظة...</string>
 
     <string name="dashboard_audio_preview_title">مشغل صوت + نص</string>

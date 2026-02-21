@@ -3,6 +3,7 @@ package com.suraj.apps.omni.feature.dashboard
 import android.app.Application
 import android.media.MediaMetadataRetriever
 import android.net.Uri
+import android.os.SystemClock
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -31,6 +32,7 @@ data class DashboardUiState(
     val sourceUrl: String? = null,
     val latestQuizQuestionCount: Int = 0,
     val studyNoteCount: Int = 0,
+    val readingTimeMinutes: Int = 0,
     val audioSourcePath: String? = null,
     val audioTranscript: String = "",
     val isPremiumUnlocked: Boolean = false,
@@ -52,6 +54,12 @@ class DashboardViewModel(
 
     private var onboardingJob: Job? = null
     private var activeOnboardingDocumentId: String? = null
+    private var readingTickerJob: Job? = null
+    private var readingSessionDocumentId: String? = null
+    private var readingSessionBaseSeconds: Double = 0.0
+    private var readingSessionElapsedSeconds: Double = 0.0
+    private var readingUnflushedSeconds: Double = 0.0
+    private var readingLastTickMs: Long? = null
 
     init {
         viewModelScope.launch {
@@ -73,65 +81,67 @@ class DashboardViewModel(
                             errorMessage = app.getString(R.string.dashboard_error_document_not_found)
                         )
                     }
-                    return@collect
-                }
-
-                val fullText = repository.readFullText(document.id).orEmpty()
-                val visibleAudioTranscript = if (
-                    document.fileType == DocumentFileType.AUDIO &&
-                    repository.isPlaceholderAudioTranscript(fullText)
-                ) {
-                    ""
                 } else {
-                    fullText
-                }
-                val audioSourcePath = resolveLocalSourcePath(document)
-                val sourceStats = buildSourceStats(
-                    document = document,
-                    fullText = if (document.fileType == DocumentFileType.AUDIO) {
-                        visibleAudioTranscript
+                    val fullText = repository.readFullText(document.id).orEmpty()
+                    val visibleAudioTranscript = if (
+                        document.fileType == DocumentFileType.AUDIO &&
+                        repository.isPlaceholderAudioTranscript(fullText)
+                    ) {
+                        ""
                     } else {
                         fullText
-                    },
-                    audioPath = audioSourcePath
-                )
-                val statusView = statusView(document)
-                _uiState.update {
-                    val isActiveOnboardingSession =
-                        document.id == activeOnboardingDocumentId && onboardingJob?.isActive == true
-                    it.copy(
+                    }
+                    val audioSourcePath = resolveLocalSourcePath(document)
+                    val sourceStats = buildSourceStats(
                         document = document,
-                        isOnboarding = document.isOnboarding,
-                        showRetryAction = document.onboardingStatus == "transcription_failed",
-                        onboardingLabel = if (isActiveOnboardingSession) it.onboardingLabel else statusView.label,
-                        onboardingProgress = if (isActiveOnboardingSession) {
-                            it.onboardingProgress
-                        } else {
-                            statusView.progress
-                        },
-                        sourceStats = sourceStats,
-                        sourceUrl = document.sourceUrl,
-                        audioSourcePath = if (document.fileType == DocumentFileType.AUDIO) {
-                            audioSourcePath
-                        } else {
-                            null
-                        },
-                        audioTranscript = if (document.fileType == DocumentFileType.AUDIO) {
+                        fullText = if (document.fileType == DocumentFileType.AUDIO) {
                             visibleAudioTranscript
                         } else {
-                            ""
+                            fullText
                         },
-                        isPremiumUnlocked = repository.isPremiumUnlocked(),
-                        errorMessage = if (document.onboardingStatus == "transcription_failed") {
-                            app.getString(R.string.dashboard_error_audio_transcription_failed_retry)
-                        } else {
-                            it.errorMessage
-                        }
+                        audioPath = audioSourcePath
                     )
+                    val statusView = statusView(document)
+                    initializeReadingSessionIfNeeded(document)
+                    _uiState.update {
+                        val isActiveOnboardingSession =
+                            document.id == activeOnboardingDocumentId && onboardingJob?.isActive == true
+                        it.copy(
+                            document = document,
+                            isOnboarding = document.isOnboarding,
+                            showRetryAction = document.onboardingStatus == "transcription_failed",
+                            onboardingLabel = if (isActiveOnboardingSession) it.onboardingLabel else statusView.label,
+                            onboardingProgress = if (isActiveOnboardingSession) {
+                                it.onboardingProgress
+                            } else {
+                                statusView.progress
+                            },
+                            sourceStats = sourceStats,
+                            readingTimeMinutes = totalReadingMinutes(),
+                            sourceUrl = document.sourceUrl,
+                            audioSourcePath = if (document.fileType == DocumentFileType.AUDIO) {
+                                audioSourcePath
+                            } else {
+                                null
+                            },
+                            audioTranscript = if (document.fileType == DocumentFileType.AUDIO) {
+                                visibleAudioTranscript
+                            } else {
+                                ""
+                            },
+                            isPremiumUnlocked = repository.isPremiumUnlocked(),
+                            errorMessage = if (document.onboardingStatus == "transcription_failed") {
+                                app.getString(R.string.dashboard_error_audio_transcription_failed_retry)
+                            } else {
+                                it.errorMessage
+                            }
+                        )
+                    }
+                    maybeStartOnboarding(document)
                 }
-                maybeStartOnboarding(document)
             }
         }
+        startReadingTicker()
     }
 
     fun retryOnboarding() {
@@ -166,6 +176,14 @@ class DashboardViewModel(
 
     fun consumeError() {
         _uiState.update { it.copy(errorMessage = null) }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        readingTickerJob?.cancel()
+        viewModelScope.launch {
+            flushReadingTime()
+        }
     }
 
     private fun maybeStartOnboarding(document: DocumentEntity) {
@@ -381,7 +399,75 @@ class DashboardViewModel(
         return String.format("%02d:%02d", minutes, seconds)
     }
 
+    private fun initializeReadingSessionIfNeeded(document: DocumentEntity) {
+        if (readingSessionDocumentId == document.id) return
+        readingSessionDocumentId = document.id
+        readingSessionBaseSeconds = document.timeSpentSeconds
+        readingSessionElapsedSeconds = 0.0
+        readingUnflushedSeconds = 0.0
+        readingLastTickMs = null
+    }
+
+    private fun startReadingTicker() {
+        readingTickerJob?.cancel()
+        readingTickerJob = viewModelScope.launch {
+            while (true) {
+                delay(READING_POLL_MS)
+                val state = _uiState.value
+                val document = state.document
+                if (document != null) {
+                    val now = SystemClock.elapsedRealtime()
+                    if (state.isOnboarding) {
+                        readingLastTickMs = now
+                    } else {
+                        if (readingSessionDocumentId != document.id) {
+                            initializeReadingSessionIfNeeded(document)
+                        }
+                        val lastTick = readingLastTickMs
+                        if (lastTick != null) {
+                            val deltaSeconds = ((now - lastTick).coerceAtLeast(0L)) / 1000.0
+                            if (deltaSeconds > 0.0) {
+                                readingSessionElapsedSeconds += deltaSeconds
+                                readingUnflushedSeconds += deltaSeconds
+                                _uiState.update { it.copy(readingTimeMinutes = totalReadingMinutes()) }
+                                if (readingUnflushedSeconds >= READING_FLUSH_INTERVAL_SECONDS) {
+                                    flushReadingTime()
+                                }
+                            }
+                        }
+                        readingLastTickMs = now
+                    }
+                }
+            }
+        }
+    }
+
+    private suspend fun flushReadingTime() {
+        val targetDocumentId = readingSessionDocumentId ?: return
+        val secondsToFlush = readingUnflushedSeconds
+        if (secondsToFlush <= 0.0) return
+        readingUnflushedSeconds = 0.0
+        runCatching {
+            repository.addDocumentReadingTime(
+                documentId = targetDocumentId,
+                deltaSeconds = secondsToFlush,
+                openedAtEpochMs = System.currentTimeMillis()
+            )
+        }.onFailure {
+            readingUnflushedSeconds += secondsToFlush
+        }
+    }
+
+    private fun totalReadingMinutes(): Int {
+        return ((readingSessionBaseSeconds + readingSessionElapsedSeconds) / 60.0)
+            .toInt()
+            .coerceAtLeast(0)
+    }
+
     companion object {
+        private const val READING_POLL_MS = 1_000L
+        private const val READING_FLUSH_INTERVAL_SECONDS = 10.0
+
         fun factory(
             application: Application,
             documentId: String

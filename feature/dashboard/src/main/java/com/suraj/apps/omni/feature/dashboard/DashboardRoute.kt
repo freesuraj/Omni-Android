@@ -197,6 +197,16 @@ fun DashboardRoute(
             featureCards.forEach { card ->
                 DashboardActionCard(card = card)
             }
+
+            Text(
+                text = pluralStringResource(
+                    R.plurals.dashboard_time_spent_reading_minutes,
+                    uiState.readingTimeMinutes,
+                    uiState.readingTimeMinutes
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

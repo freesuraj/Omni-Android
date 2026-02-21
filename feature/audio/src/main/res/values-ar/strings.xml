@@ -21,5 +21,6 @@
     <string name="audio_error_start_failed">تعذر بدء التسجيل. حاول مرة أخرى.</string>
     <string name="audio_error_resume_failed">تعذر استئناف التسجيل.</string>
     <string name="audio_error_recording_file_missing">لم يتم إنشاء ملف التسجيل.</string>
+    <string name="audio_error_recording_too_short">التسجيل قصير جدًا. سجّل لمدة 30 ثانية و50 كلمة على الأقل.</string>
     <string name="audio_error_speech_recognition_unavailable">التعرّف على الكلام غير متاح على هذا الجهاز.</string>
 </resources>
