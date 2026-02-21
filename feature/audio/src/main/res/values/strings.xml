@@ -1,6 +1,6 @@
 <resources>
-    <string name="audio_title">Live audio</string>
-    <string name="audio_subtitle">Record, pause, resume, and transcribe in real time.</string>
+    <string name="audio_title">Study from audio</string>
+    <string name="audio_subtitle">Record live audio from lectures, meetings or anywhere and Omni turns it into quizzes, flashcards, summaries, and Q&amp;A.</string>
     <string name="audio_elapsed_time">Elapsed %1$s</string>
     <string name="audio_cd_record_or_resume">Record or resume</string>
     <string name="audio_cd_pause">Pause</string>

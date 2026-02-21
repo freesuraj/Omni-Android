@@ -32,6 +32,7 @@
     <string name="dashboard_card_summary_trailing">أهم النقاط</string>
     <string name="dashboard_card_analysis_trailing">صفحة بصفحة</string>
     <string name="dashboard_card_qa_trailing">تعلّم بالذكاء الاصطناعي</string>
+    <string name="dashboard_lock_content_description">مقفل لـ Omni Pro</string>
     <plurals name="dashboard_card_quiz_generated">
         <item quantity="one">%d سؤال</item>
         <item quantity="other">%d أسئلة</item>

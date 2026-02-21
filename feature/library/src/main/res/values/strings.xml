@@ -4,7 +4,7 @@
     <string name="library_header_subtitle">Import with +, then open the dashboard to generate study outputs.</string>
     <string name="library_what_you_get">What you get</string>
     <string name="library_plan_guardrails_title">Plan guardrails</string>
-    <string name="library_plan_guardrails_subtitle">Free plan allows one stored document. Upgrade for unlimited storage.</string>
+    <string name="library_plan_guardrails_subtitle">Free plan allows up to 3 lifetime document imports. Upgrade for unlimited storage.</string>
     <string name="library_your_imports">Your imports</string>
     <string name="library_record_live_audio">Record live audio</string>
     <string name="library_open_dashboard">Open dashboard</string>

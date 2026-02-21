@@ -32,6 +32,7 @@
     <string name="dashboard_card_summary_trailing">Principais insights</string>
     <string name="dashboard_card_analysis_trailing">Página por página</string>
     <string name="dashboard_card_qa_trailing">Aprenda com IA</string>
+    <string name="dashboard_lock_content_description">Bloqueado para Omni Pro</string>
     <plurals name="dashboard_card_quiz_generated">
         <item quantity="one">%d pergunta</item>
         <item quantity="other">%d perguntas</item>

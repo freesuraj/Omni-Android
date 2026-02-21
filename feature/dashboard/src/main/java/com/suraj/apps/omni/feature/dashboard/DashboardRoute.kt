@@ -26,6 +26,7 @@ import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Chat
 import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material.icons.rounded.Help
+import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Notes
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.CircularProgressIndicator
@@ -143,6 +144,7 @@ fun DashboardRoute(
                 trailing = stringResource(R.string.dashboard_card_analysis_trailing),
                 color = Color(0xFF5660F7),
                 icon = Icons.Rounded.Search,
+                isLocked = !uiState.isPremiumUnlocked,
                 onClick = {
                     if (viewModel.requestPremiumFeatureAccess(analysisFeatureName)) {
                         onOpenAnalysis(documentId)
@@ -156,6 +158,7 @@ fun DashboardRoute(
                 trailing = stringResource(R.string.dashboard_card_qa_trailing),
                 color = Color(0xFF34C759),
                 icon = Icons.Rounded.Chat,
+                isLocked = !uiState.isPremiumUnlocked,
                 onClick = {
                     if (viewModel.requestPremiumFeatureAccess(qaFeatureName)) {
                         onOpenQa(documentId)
@@ -203,6 +206,7 @@ private data class DashboardFeatureCard(
     val trailing: String?,
     val color: Color,
     val icon: ImageVector,
+    val isLocked: Boolean = false,
     val onClick: () -> Unit
 )
 
@@ -368,6 +372,16 @@ private fun DashboardActionCard(card: DashboardFeatureCard) {
             )
 
             Row(verticalAlignment = Alignment.CenterVertically) {
+                if (card.isLocked) {
+                    Icon(
+                        imageVector = Icons.Rounded.Lock,
+                        contentDescription = stringResource(R.string.dashboard_lock_content_description),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier
+                            .padding(end = 6.dp)
+                            .size(16.dp)
+                    )
+                }
                 card.trailing?.let { trailing ->
                     Text(
                         text = trailing,
