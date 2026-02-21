@@ -41,6 +41,10 @@
         <item quantity="one">%d card</item>
         <item quantity="other">%d cards</item>
     </plurals>
+    <plurals name="dashboard_time_spent_reading_minutes">
+        <item quantity="one">Time spent reading: %d minute</item>
+        <item quantity="other">Time spent reading: %d minutes</item>
+    </plurals>
     <string name="dashboard_onboarding_footer">This might take a moment...</string>
 
     <string name="dashboard_audio_preview_title">Audio player + transcript</string>

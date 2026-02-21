@@ -41,6 +41,10 @@
         <item quantity="one">%d cartão</item>
         <item quantity="other">%d cartões</item>
     </plurals>
+    <plurals name="dashboard_time_spent_reading_minutes">
+        <item quantity="one">Tempo de leitura: %d minuto</item>
+        <item quantity="other">Tempo de leitura: %d minutos</item>
+    </plurals>
     <string name="dashboard_onboarding_footer">Isso pode levar um momento...</string>
 
     <string name="dashboard_audio_preview_title">Player de áudio + transcrição</string>

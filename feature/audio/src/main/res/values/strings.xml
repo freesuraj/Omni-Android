@@ -21,5 +21,6 @@
     <string name="audio_error_start_failed">Unable to start recording. Please try again.</string>
     <string name="audio_error_resume_failed">Unable to resume recording.</string>
     <string name="audio_error_recording_file_missing">Recording file was not created.</string>
+    <string name="audio_error_recording_too_short">Recording is too short. Record at least 30 seconds and 50 words.</string>
     <string name="audio_error_speech_recognition_unavailable">Speech recognition is unavailable on this device.</string>
 </resources>

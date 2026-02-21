@@ -21,5 +21,6 @@
     <string name="audio_error_start_failed">Não foi possível iniciar a gravação. Tente novamente.</string>
     <string name="audio_error_resume_failed">Não foi possível retomar a gravação.</string>
     <string name="audio_error_recording_file_missing">O arquivo de gravação não foi criado.</string>
+    <string name="audio_error_recording_too_short">A gravação é muito curta. Grave pelo menos 30 segundos e 50 palavras.</string>
     <string name="audio_error_speech_recognition_unavailable">O reconhecimento de fala não está disponível neste dispositivo.</string>
 </resources>

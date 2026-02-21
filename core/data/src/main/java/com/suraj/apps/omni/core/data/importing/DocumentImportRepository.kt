@@ -315,6 +315,19 @@ class DocumentImportRepository(
         textFile.readText()
     }
 
+    suspend fun addDocumentReadingTime(
+        documentId: String,
+        deltaSeconds: Double,
+        openedAtEpochMs: Long = System.currentTimeMillis()
+    ) = withContext(ioDispatcher) {
+        if (deltaSeconds <= 0.0) return@withContext
+        database.documentDao().addReadingTime(
+            documentId = documentId,
+            deltaSeconds = deltaSeconds,
+            openedAtEpochMs = openedAtEpochMs
+        )
+    }
+
     fun isPlaceholderAudioTranscript(value: String?): Boolean {
         val normalized = value.orEmpty().replace(Regex("\\s+"), " ").trim()
         return isPlaceholderAudioTranscriptValue(normalized)

@@ -32,6 +32,18 @@ interface DocumentDao {
     @Query("UPDATE documents SET title = :title WHERE id = :documentId")
     suspend fun rename(documentId: String, title: String)
 
+    @Query(
+        "UPDATE documents " +
+            "SET timeSpentSeconds = timeSpentSeconds + :deltaSeconds, " +
+            "lastOpenedAtEpochMs = :openedAtEpochMs " +
+            "WHERE id = :documentId"
+    )
+    suspend fun addReadingTime(
+        documentId: String,
+        deltaSeconds: Double,
+        openedAtEpochMs: Long
+    )
+
     @Query("DELETE FROM documents WHERE id = :documentId")
     suspend fun deleteById(documentId: String)
 
