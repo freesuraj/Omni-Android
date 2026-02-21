@@ -32,6 +32,17 @@ Native Android build of Omni using Jetpack Compose.
 OMNI_GEMINI_API_KEY=your_key_here ./gradlew :app:assembleDebug
 ```
 
+## Firebase monitoring (Analytics + Crashlytics)
+- Add Firebase Android app in Firebase Console using package id `com.suraj.apps.Doc2Quiz`.
+- Download `google-services.json` and place it at `app/google-services.json` (gitignored).
+- Once present, Gradle automatically enables:
+  - `com.google.gms.google-services`
+  - `com.google.firebase.crashlytics`
+- Included runtime SDKs:
+  - Firebase Analytics
+  - Firebase Crashlytics
+- Release builds generate native symbol tables (`ndk.debugSymbolLevel=SYMBOL_TABLE`) to improve native crash/ANR debugging.
+
 ## PR screenshot evidence (local emulator)
 - CI no longer generates PR screenshots.
 - For each PR, capture screenshots from your local emulator for the affected flow(s).

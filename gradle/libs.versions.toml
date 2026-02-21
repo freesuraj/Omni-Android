@@ -20,6 +20,9 @@ securityCrypto = "1.0.0"
 markwon = "4.6.2"
 pdfboxAndroid = "2.0.27.0"
 vosk = "0.3.47"
+firebaseBom = "33.10.0"
+googleServices = "4.4.2"
+firebaseCrashlyticsGradle = "3.0.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -53,6 +56,9 @@ androidx-security-crypto = { group = "androidx.security", name = "security-crypt
 markwon-core = { group = "io.noties.markwon", name = "core", version.ref = "markwon" }
 pdfbox-android = { group = "com.tom-roush", name = "pdfbox-android", version.ref = "pdfboxAndroid" }
 vosk-android = { group = "com.alphacephei", name = "vosk-android", version.ref = "vosk" }
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
+firebase-analytics-ktx = { group = "com.google.firebase", name = "firebase-analytics-ktx" }
+firebase-crashlytics-ktx = { group = "com.google.firebase", name = "firebase-crashlytics-ktx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -62,3 +68,5 @@ kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "ko
 kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
 hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 ksp = { id = "com.google.devtools.ksp", version = "2.0.21-1.0.28" }
+google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
+firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlyticsGradle" }

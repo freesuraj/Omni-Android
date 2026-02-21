@@ -8,6 +8,7 @@
     <string name="settings_saved_key_notice">A key is already saved on this device.</string>
     <string name="settings_clear_key">Clear key</string>
     <string name="settings_get_api_key">Get API Key</string>
+    <string name="settings_upgrade_to_pro">Upgrade to Omni Pro</string>
     <string name="settings_section_about">About</string>
     <string name="settings_app_version_label">Omni app version</string>
     <string name="settings_terms_of_use">Terms of Use</string>

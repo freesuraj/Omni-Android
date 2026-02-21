@@ -5,6 +5,7 @@ import android.content.Context
 const val ACCESS_PREFS_NAME = "omni_access"
 const val KEY_PREMIUM_UNLOCKED = "premium_unlocked"
 const val KEY_LIVE_RECORDINGS_CREATED = "live_recordings_created"
+const val KEY_DOCUMENTS_IMPORTED = "documents_imported"
 const val KEY_ACTIVE_PLAN_ID = "active_plan_id"
 
 interface PremiumAccessStore {
@@ -12,6 +13,8 @@ interface PremiumAccessStore {
     fun setPremiumUnlocked(unlocked: Boolean)
     fun getLiveRecordingsCreated(): Int
     fun setLiveRecordingsCreated(count: Int)
+    fun getDocumentsImported(): Int
+    fun setDocumentsImported(count: Int)
     fun getActivePlanId(): String?
     fun setActivePlanId(planId: String?)
 }
@@ -35,6 +38,14 @@ class SharedPrefsPremiumAccessStore(
 
     override fun setLiveRecordingsCreated(count: Int) {
         prefs.edit().putInt(KEY_LIVE_RECORDINGS_CREATED, count.coerceAtLeast(0)).apply()
+    }
+
+    override fun getDocumentsImported(): Int {
+        return prefs.getInt(KEY_DOCUMENTS_IMPORTED, 0)
+    }
+
+    override fun setDocumentsImported(count: Int) {
+        prefs.edit().putInt(KEY_DOCUMENTS_IMPORTED, count.coerceAtLeast(0)).apply()
     }
 
     override fun getActivePlanId(): String? {

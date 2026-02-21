@@ -8,6 +8,7 @@
     <string name="settings_saved_key_notice">يوجد مفتاح محفوظ بالفعل على هذا الجهاز.</string>
     <string name="settings_clear_key">مسح المفتاح</string>
     <string name="settings_get_api_key">الحصول على مفتاح API</string>
+    <string name="settings_upgrade_to_pro">الترقية إلى Omni Pro</string>
     <string name="settings_section_about">حول</string>
     <string name="settings_app_version_label">إصدار تطبيق Omni</string>
     <string name="settings_terms_of_use">شروط الاستخدام</string>

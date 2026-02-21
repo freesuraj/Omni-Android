@@ -8,6 +8,7 @@
     <string name="settings_saved_key_notice">Uma chave já está salva neste dispositivo.</string>
     <string name="settings_clear_key">Limpar chave</string>
     <string name="settings_get_api_key">Obter chave de API</string>
+    <string name="settings_upgrade_to_pro">Fazer upgrade para Omni Pro</string>
     <string name="settings_section_about">Sobre</string>
     <string name="settings_app_version_label">Versão do app Omni</string>
     <string name="settings_terms_of_use">Termos de uso</string>

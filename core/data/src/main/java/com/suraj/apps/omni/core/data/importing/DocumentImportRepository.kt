@@ -54,7 +54,7 @@ class SharedPrefsPremiumAccessChecker(
     constructor(context: Context) : this(SharedPrefsPremiumAccessStore(context))
 
     override fun isPremiumUnlocked(): Boolean {
-        return premiumAccessStore.isPremiumUnlocked() || BuildConfig.DEBUG
+        return premiumAccessStore.isPremiumUnlocked()
     }
 }
 
@@ -122,6 +122,9 @@ class DocumentImportRepository(
         sourceAudioFile: File,
         transcript: String
     ): DocumentImportResult = withContext(ioDispatcher) {
+        if (!canImportDocument()) {
+            return@withContext DocumentImportResult.RequiresPremium
+        }
         if (!canCreateLiveRecording()) {
             return@withContext DocumentImportResult.RequiresPremium
         }
@@ -164,6 +167,7 @@ class DocumentImportRepository(
             )
         )
         recordLiveRecordingCreation()
+        recordDocumentImport()
         DocumentImportResult.Success(documentId)
     }
 
@@ -204,6 +208,7 @@ class DocumentImportRepository(
                 timeSpentSeconds = 0.0
             )
         )
+        recordDocumentImport()
         DocumentImportResult.Success(documentId)
     }
 
@@ -378,12 +383,19 @@ class DocumentImportRepository(
                 timeSpentSeconds = 0.0
             )
         )
+        recordDocumentImport()
         DocumentImportResult.Success(documentId)
     }
 
     private suspend fun canImportDocument(): Boolean {
         if (premiumAccessChecker.isPremiumUnlocked()) return true
-        return database.documentDao().count() < FREE_DOCUMENT_LIMIT
+        val currentStoredCount = database.documentDao().count()
+        // Backfill legacy installs that predate lifetime tracking.
+        val lifetimeCount = maxOf(documentImportCount(), currentStoredCount)
+        if (lifetimeCount != documentImportCount()) {
+            premiumAccessStore.setDocumentsImported(lifetimeCount)
+        }
+        return lifetimeCount < FREE_DOCUMENT_LIMIT
     }
 
     private fun canCreateLiveRecording(): Boolean {
@@ -398,6 +410,15 @@ class DocumentImportRepository(
 
     private fun liveRecordingCreationCount(): Int {
         return premiumAccessStore.getLiveRecordingsCreated()
+    }
+
+    private fun recordDocumentImport() {
+        if (premiumAccessChecker.isPremiumUnlocked()) return
+        premiumAccessStore.setDocumentsImported(documentImportCount() + 1)
+    }
+
+    private fun documentImportCount(): Int {
+        return premiumAccessStore.getDocumentsImported()
     }
 
     private fun detectDocumentType(uri: Uri): DocumentFileType? {
@@ -596,7 +617,7 @@ class DocumentImportRepository(
     }
 
     companion object {
-        const val FREE_DOCUMENT_LIMIT = 1
+        const val FREE_DOCUMENT_LIMIT = 3
         const val FREE_LIVE_RECORDING_LIMIT = 2
         private val TEXT_EXTENSIONS = setOf("txt", "md", "csv", "rtf")
         private const val PLACEHOLDER_IMPORTED_AUDIO_TEXT =

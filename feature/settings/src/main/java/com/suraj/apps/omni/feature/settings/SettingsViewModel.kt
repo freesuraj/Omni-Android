@@ -2,12 +2,15 @@ package com.suraj.apps.omni.feature.settings
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.suraj.apps.omni.core.data.entitlement.BillingRepository
 import com.suraj.apps.omni.core.data.provider.AiProviderId
 import com.suraj.apps.omni.core.data.provider.ProviderSettingsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 data class ProviderOptionUiState(
     val providerId: AiProviderId,
@@ -21,6 +24,7 @@ data class SettingsUiState(
     val selectedProvider: AiProviderId = AiProviderId.OMNI,
     val apiKeyInput: String = "",
     val hasSavedApiKeyForSelectedProvider: Boolean = false,
+    val isPremiumUnlocked: Boolean = false,
     val infoMessage: String? = null,
     val errorMessage: String? = null,
     val appVersion: String = "1.0.0"
@@ -30,6 +34,7 @@ class SettingsViewModel(
     application: Application
 ) : AndroidViewModel(application) {
     private val repository = ProviderSettingsRepository(application.applicationContext)
+    private val billingRepository = BillingRepository(application.applicationContext)
     private val appVersionName = resolveAppVersion(application)
 
     private val _uiState = MutableStateFlow(
@@ -39,6 +44,7 @@ class SettingsViewModel(
 
     init {
         refresh()
+        refreshPremiumState()
     }
 
     fun selectProvider(providerId: AiProviderId) {
@@ -111,6 +117,13 @@ class SettingsViewModel(
                 apiKeyInput = if (clearInput) "" else it.apiKeyInput,
                 appVersion = appVersionName
             )
+        }
+    }
+
+    private fun refreshPremiumState() {
+        viewModelScope.launch {
+            val isPremium = billingRepository.entitlement().isPremiumUnlocked
+            _uiState.update { it.copy(isPremiumUnlocked = isPremium) }
         }
     }
 

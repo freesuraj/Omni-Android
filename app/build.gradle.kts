@@ -6,6 +6,12 @@ plugins {
     alias(libs.plugins.hilt.android)
 }
 
+val hasGoogleServicesConfig = file("google-services.json").exists()
+if (hasGoogleServicesConfig) {
+    apply(plugin = "com.google.gms.google-services")
+    apply(plugin = "com.google.firebase.crashlytics")
+}
+
 android {
     namespace = "com.suraj.apps.omni"
     compileSdk = 35
@@ -52,6 +58,9 @@ android {
         release {
             isMinifyEnabled = true
             signingConfig = signingConfigs.findByName("release")
+            ndk {
+                debugSymbolLevel = "SYMBOL_TABLE"
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -107,6 +116,9 @@ dependencies {
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
     kapt(libs.hilt.compiler)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics.ktx)
+    implementation(libs.firebase.crashlytics.ktx)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

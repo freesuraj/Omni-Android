@@ -32,6 +32,7 @@
     <string name="dashboard_card_summary_trailing">Key insights</string>
     <string name="dashboard_card_analysis_trailing">Page-by-page</string>
     <string name="dashboard_card_qa_trailing">Learn with AI</string>
+    <string name="dashboard_lock_content_description">Locked for Omni Pro</string>
     <plurals name="dashboard_card_quiz_generated">
         <item quantity="one">%d Question</item>
         <item quantity="other">%d Questions</item>

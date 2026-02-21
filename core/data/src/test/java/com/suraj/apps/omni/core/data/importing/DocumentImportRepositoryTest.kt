@@ -8,7 +8,7 @@ import com.tom_roush.pdfbox.pdmodel.PDPage
 import com.tom_roush.pdfbox.pdmodel.PDPageContentStream
 import com.tom_roush.pdfbox.pdmodel.font.PDType1Font
 import com.suraj.apps.omni.core.data.local.OmniDatabase
-import com.suraj.apps.omni.core.data.local.entity.DocumentEntity
+import com.suraj.apps.omni.core.data.entitlement.KEY_DOCUMENTS_IMPORTED
 import com.suraj.apps.omni.core.data.transcription.AudioTranscriptionEngine
 import com.suraj.apps.omni.core.data.transcription.AudioTranscriptionProgress
 import com.suraj.apps.omni.core.data.transcription.AudioTranscriptionResult
@@ -102,31 +102,27 @@ class DocumentImportRepositoryTest {
     }
 
     @Test
-    fun importBlockedForNonPremiumAfterOneDocument() = runBlocking {
-        database.documentDao().upsert(
-            DocumentEntity(
-                id = "existing-doc",
-                title = "Existing",
-                createdAtEpochMs = System.currentTimeMillis(),
-                fileBookmarkData = null,
-                fileType = DocumentFileType.PDF,
-                sourceUrl = null,
-                extractedTextHash = null,
-                extractedTextPreview = null,
-                lastOpenedAtEpochMs = null,
-                isOnboarding = false,
-                onboardingStatus = null,
-                timeSpentSeconds = 0.0
-            )
-        )
-        val sourceFile = File(appContext.cacheDir, "blocked-import.txt").apply { writeText("data") }
+    fun importBlockedForNonPremiumAfterThreeLifetimeImportsEvenAfterDelete() = runBlocking {
         val repository = DocumentImportRepository(
             context = appContext,
             database = database,
             premiumAccessChecker = FakePremiumAccessChecker(isPremium = false)
         )
+        repeat(3) { index ->
+            val sourceFile = File(appContext.cacheDir, "free-limit-$index.txt").apply {
+                writeText("data-$index")
+            }
+            val importResult = repository.importDocument(Uri.fromFile(sourceFile))
+            assertTrue(importResult is DocumentImportResult.Success)
+            if (index == 1) {
+                val documentId = (importResult as DocumentImportResult.Success).documentId
+                val deleteResult = repository.deleteDocument(documentId)
+                assertTrue(deleteResult is DocumentImportResult.Success)
+            }
+        }
+        val blockedFile = File(appContext.cacheDir, "blocked-import.txt").apply { writeText("blocked") }
 
-        val result = repository.importDocument(Uri.fromFile(sourceFile))
+        val result = repository.importDocument(Uri.fromFile(blockedFile))
 
         assertTrue(result is DocumentImportResult.RequiresPremium)
     }
@@ -181,6 +177,30 @@ class DocumentImportRepositoryTest {
 
         assertTrue(blockedResult is DocumentImportResult.RequiresPremium)
         assertEquals(0, repository.remainingFreeLiveRecordings())
+    }
+
+    @Test
+    fun importLiveRecordingRequiresPremiumAfterThreeLifetimeDocumentImports() = runBlocking {
+        appContext
+            .getSharedPreferences("omni_access", android.content.Context.MODE_PRIVATE)
+            .edit()
+            .putInt(KEY_DOCUMENTS_IMPORTED, 3)
+            .commit()
+
+        val repository = DocumentImportRepository(
+            context = appContext,
+            database = database,
+            premiumAccessChecker = FakePremiumAccessChecker(isPremium = false)
+        )
+
+        val blockedResult = repository.importLiveRecording(
+            sourceAudioFile = File(appContext.cacheDir, "live-source-at-doc-limit.m4a").apply {
+                writeBytes(byteArrayOf(5))
+            },
+            transcript = "Blocked by lifetime document limit"
+        )
+
+        assertTrue(blockedResult is DocumentImportResult.RequiresPremium)
     }
 
     @Test

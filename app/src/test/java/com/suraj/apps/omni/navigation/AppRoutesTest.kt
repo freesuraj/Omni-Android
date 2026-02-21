@@ -17,6 +17,7 @@ class AppRoutesTest {
             AppRoutes.SUMMARY,
             AppRoutes.QA,
             AppRoutes.ANALYSIS,
+            AppRoutes.PAYWALL_BENEFITS,
             AppRoutes.PAYWALL
         )
 

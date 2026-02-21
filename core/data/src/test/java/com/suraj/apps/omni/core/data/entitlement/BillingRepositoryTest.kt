@@ -101,6 +101,7 @@ class BillingRepositoryTest {
 private class FakePremiumAccessStore : PremiumAccessStore {
     private var premiumUnlocked: Boolean = false
     private var liveRecordings: Int = 0
+    private var documentsImported: Int = 0
     private var activePlanId: String? = null
 
     override fun isPremiumUnlocked(): Boolean = premiumUnlocked
@@ -113,6 +114,12 @@ private class FakePremiumAccessStore : PremiumAccessStore {
 
     override fun setLiveRecordingsCreated(count: Int) {
         liveRecordings = count
+    }
+
+    override fun getDocumentsImported(): Int = documentsImported
+
+    override fun setDocumentsImported(count: Int) {
+        documentsImported = count
     }
 
     override fun getActivePlanId(): String? = activePlanId

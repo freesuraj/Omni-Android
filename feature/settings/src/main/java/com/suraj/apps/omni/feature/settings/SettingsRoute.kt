@@ -13,6 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -41,7 +42,9 @@ import com.suraj.apps.omni.core.designsystem.theme.OmniSpacing
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun SettingsRoute() {
+fun SettingsRoute(
+    onOpenPaywall: () -> Unit = {}
+) {
     val viewModel: SettingsViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
     val snackbars = remember { SnackbarHostState() }
@@ -73,6 +76,23 @@ fun SettingsRoute() {
                 .padding(OmniSpacing.large),
             verticalArrangement = Arrangement.spacedBy(OmniSpacing.large)
         ) {
+            if (!uiState.isPremiumUnlocked) {
+                Button(
+                    onClick = onOpenPaywall,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Star,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Text(
+                        text = stringResource(R.string.settings_upgrade_to_pro),
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
+            }
+
             Text(
                 text = stringResource(R.string.settings_section_llm_provider),
                 style = MaterialTheme.typography.titleMedium,

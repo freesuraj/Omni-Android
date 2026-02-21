@@ -18,6 +18,7 @@ object AppRoutes {
     const val QA_ARG_DOCUMENT_ID = "documentId"
     const val ANALYSIS = "analysis/{documentId}"
     const val ANALYSIS_ARG_DOCUMENT_ID = "documentId"
+    const val PAYWALL_BENEFITS = "paywall/benefits"
     const val PAYWALL = "paywall"
 
     fun dashboard(documentId: String): String = "dashboard/$documentId"
