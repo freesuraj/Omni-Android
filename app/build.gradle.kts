@@ -14,8 +14,15 @@ android {
         applicationId = "com.suraj.apps.Doc2Quiz"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        val resolvedVersionCode = providers.gradleProperty("OMNI_VERSION_CODE")
+            .orElse("2")
+            .get()
+            .toInt()
+        val resolvedVersionName = providers.gradleProperty("OMNI_VERSION_NAME")
+            .orElse("1.0.1")
+            .get()
+        versionCode = resolvedVersionCode
+        versionName = resolvedVersionName
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

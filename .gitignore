@@ -47,3 +47,5 @@ local-artifacts/
 # Bundler
 .bundle/
 vendor/bundle/
+
+release-builds/
